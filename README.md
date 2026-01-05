@@ -10,7 +10,7 @@
 
 <div align="center">
   
-![Port Management System Login](Docs/Screenshots/1-login.png)
+![Port Management System Login](Docs/Screenshots/8.png)
 
 *Modern port operations management with real-time 3D visualization*
 
@@ -1217,32 +1217,9 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-## 🙏 Acknowledgments
-
-**Academic Supervisors:**
-- Special thanks to all professors for guidance throughout the project
-- ISEP's Faculty of Engineering for providing resources and support
-
-**Technologies & Frameworks:**
-- .NET Foundation for the ASP.NET Core framework
-- MongoDB team for excellent database platform
-- Three.js contributors for WebGL library
-- SWI-Prolog community for AI planning capabilities
-
-**Open Source Libraries:**
-- Entity Framework Core team
-- Angular team and community
-- Express.js maintainers
-- Jest and Cypress testing frameworks
 
 Developed with ❤️ at ISEP - 2025/2026
 
 ---
 
-**For questions, issues, or contributions:**
-- 📧 Contact the team via the emails listed above
-- 📝 Check [Sprint Documentation](Docs/) for detailed specifications
-- 🐛 Report issues on GitHub repository
-
-**Happy Coding! ⚓**
 
