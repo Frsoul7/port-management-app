@@ -89,7 +89,7 @@ npm start
 
 ![Dashboard](Docs/Screenshots/2-login.png)
 
-*Role-based dashboard with comprehensive port management features*
+*Google OAuth integration for secure authentication*
 
 </div>
 
@@ -97,13 +97,13 @@ npm start
 
 <div align="center">
 
-![Vessel Registration](Docs/Screenshots/3.png)
+![Shipping Companies](Docs/Screenshots/3.png)
 
-*Vessel registration with IMO validation and type classification*
+*Register companies and its representatives*
 
-![Visit Notifications](Docs/Screenshots/4.png)
+![Shipping Companies](Docs/Screenshots/4.png)
 
-*Create and manage Vessel Visit Notifications (VVN) with cargo manifest*
+*Register companies and its representatives*
 
 </div>
 
@@ -111,13 +111,13 @@ npm start
 
 <div align="center">
 
-![3D Port View](Docs/Screenshots/5.png)
+![Manage vessels and its types](Docs/Screenshots/5.png)
 
-*Real-time 3D visualization of port layout with WebGL rendering*
+*Manage vessels and its types*
 
-![Operations Management](Docs/Screenshots/6.png)
+![Port's physical resources management](Docs/Screenshots/6.png)
 
-*Interactive dock assignment and vessel positioning*
+*Add and edit physical resources and its availability*
 
 </div>
 
@@ -125,17 +125,17 @@ npm start
 
 <div align="center">
 
-![Operation Plans](Docs/Screenshots/7.png)
+![User management](Docs/Screenshots/7.png)
 
-*AI-generated operation plans with Prolog optimization*
+*Add users, their roles and current access. Activate and deactivate accounts*
 
-![Execution Tracking](Docs/Screenshots/8.png)
+![Real-time 3D visualization of port layout with WebGL rendering](Docs/Screenshots/8.png)
 
 *Real-time vessel visit execution monitoring*
 
-![Resource Allocation](Docs/Screenshots/9.png)
+![Privacy Policy applied to Port's Management](Docs/Screenshots/9.png)
 
-*Intelligent resource allocation and dock balancing*
+*Add and edit privacy policies*
 
 </div>
 
