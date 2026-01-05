@@ -1,0 +1,50 @@
+@LEI_SEM5_PI_2025_26_3DE_05_HostAddress = http://localhost:5000
+
+GET {{LEI_SEM5_PI_2025_26_3DE_05_HostAddress}}/weatherforecast/
+Accept: application/json
+
+### Admin: Activate User and Assign Role (sends email)
+POST {{LEI_SEM5_PI_2025_26_3DE_05_HostAddress}}/api/users/activate
+Content-Type: application/json
+Authorization: Bearer {{admin_jwt_token}}
+
+{
+  "userId": "user-guid-here",
+  "role": "SHIPPING_AGENT_REPRESENTATIVE",
+  "activate": true
+}
+
+### Admin: Get All Users
+GET {{LEI_SEM5_PI_2025_26_3DE_05_HostAddress}}/api/users
+Authorization: Bearer {{admin_jwt_token}}
+
+### Admin: Get User By ID
+GET {{LEI_SEM5_PI_2025_26_3DE_05_HostAddress}}/api/users/user-guid-here
+Authorization: Bearer {{admin_jwt_token}}
+
+
+### Approve VVN
+POST {{host}}/api/vesselvisitnotifications/{{vvnId}}/approve
+X-UserId: 11111111-1111-1111-1111-111111111111
+X-Role: PortAuthorityOfficer
+Content-Type: application/json
+
+{
+  "dockCode": "D1",
+  "berthFrom": "2025-10-24T08:00:00Z",
+  "berthTo": "2025-10-24T16:00:00Z",
+  "notes": "Morning window"
+}
+
+### Reject VVN
+POST {{host}}/api/vesselvisitnotifications/{{vvnId}}/reject
+X-UserId: 11111111-1111-1111-1111-111111111111
+X-Role: PortAuthorityOfficer
+Content-Type: application/json
+
+{
+  "reason": "Missing crew list"
+}
+
+
+###

@@ -1,0 +1,14 @@
+@startuml
+title SSD - Submit VVN
+
+actor "Shipping Agent Representative" as Agent
+participant "System" as System
+
+Agent -> System : Submit VVN (vvnId)
+alt All rules satisfied
+  System --> Agent : State changed to SUBMITTED
+else Missing data / policy not satisfied
+  System --> Agent : Error (e.g., crew required due to hazardous cargo)
+end
+
+@enduml

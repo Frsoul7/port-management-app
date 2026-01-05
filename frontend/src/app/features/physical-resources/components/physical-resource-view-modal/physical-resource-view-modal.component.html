@@ -1,0 +1,118 @@
+<div class="modal-overlay" *ngIf="show" (click)="close()">
+  <div class="modal modal-view" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ 'RESOURCES.VIEW_TITLE' | translate }}</h2>
+      <button class="close-btn" (click)="close()">×</button>
+    </div>
+
+    <div class="modal-body" *ngIf="physicalResource">
+      <div class="detail-grid">
+        <div class="detail-item">
+          <label>{{ 'RESOURCES.CODE' | translate }}</label>
+          <div class="detail-value">{{ physicalResource.code }}</div>
+        </div>
+
+        <div class="detail-item">
+          <label>{{ 'RESOURCES.RESOURCE_TYPE' | translate }}</label>
+          <div class="detail-value">
+            <span class="type-badge" [class]="'type-' + physicalResource.resourceType.toLowerCase().replace('_', '-')">
+              {{ getResourceTypeKey(physicalResource.resourceType) | translate }}
+            </span>
+          </div>
+        </div>
+
+        <div class="detail-item">
+          <label>{{ 'RESOURCES.DESCRIPTION' | translate }}</label>
+          <div class="detail-value">{{ physicalResource.description || '-' }}</div>
+        </div>
+
+        <div class="detail-item">
+          <label>{{ 'RESOURCES.AVAILABILITY' | translate }}</label>
+          <div class="detail-value">
+            <span class="availability-badge"
+                  [class]="physicalResource.availability.toLowerCase().replace('_', '-')">
+              {{ getAvailabilityKey(physicalResource.availability) | translate }}
+            </span>
+          </div>
+        </div>
+
+        <div class="detail-item">
+          <label>{{ 'RESOURCES.SETUP_TIME' | translate }}</label>
+          <div class="detail-value">{{ physicalResource.setupTimeSeconds }} seconds</div>
+        </div>
+
+        <div class="detail-item">
+          <label>{{ 'RESOURCES.STATUS' | translate }}</label>
+          <div class="detail-value">
+            <span class="status-badge" [class]="isActive(physicalResource) ? 'status-active' : 'status-inactive'">
+              {{ (isActive(physicalResource) ? 'RESOURCES.ACTIVE' : 'RESOURCES.INACTIVE') | translate }}
+            </span>
+          </div>
+        </div>
+
+        <div class="detail-item">
+          <label>{{ 'RESOURCES.CREATED_AT' | translate }}</label>
+          <div class="detail-value">{{ formatDate(physicalResource.createdAt) }}</div>
+        </div>
+
+        <div class="detail-item" *ngIf="!isActive(physicalResource)">
+          <label>{{ 'RESOURCES.DEACTIVATED_AT' | translate }}</label>
+          <div class="detail-value">{{ formatDate(physicalResource.deactivatedAt) }}</div>
+        </div>
+
+        <div class="detail-item" *ngIf="physicalResource.deactivationReason">
+          <label>{{ 'RESOURCES.DEACTIVATION_REASON' | translate }}</label>
+          <div class="detail-value notes">{{ physicalResource.deactivationReason }}</div>
+        </div>
+
+        <!-- STS Crane Specific -->
+        <div class="detail-item" *ngIf="physicalResource.resourceType === 'STS_CRANE'">
+          <label>{{ 'RESOURCES.AVG_CONTAINERS_PER_HOUR' | translate }}</label>
+          <div class="detail-value">{{ physicalResource.avgContainersPerHour || '-' }}</div>
+        </div>
+
+        <div class="detail-item" *ngIf="physicalResource.resourceType === 'STS_CRANE'">
+          <label>{{ 'RESOURCES.INSTALLED_AT_DOCK' | translate }}</label>
+          <div class="detail-value">{{ physicalResource.installedAtDockCode || '-' }}</div>
+        </div>
+
+        <!-- Mobile Equipment Specific -->
+        <div class="detail-item" *ngIf="physicalResource.resourceType === 'MOBILE_EQUIPMENT'">
+          <label>{{ 'RESOURCES.MOBILE_TYPE' | translate }}</label>
+          <div class="detail-value">{{ physicalResource.mobileEquipmentType ? (getMobileTypeKey(physicalResource.mobileEquipmentType) | translate) : '-' }}</div>
+        </div>
+
+        <div class="detail-item" *ngIf="physicalResource.resourceType === 'MOBILE_EQUIPMENT'">
+          <label>{{ 'RESOURCES.MAX_SPEED' | translate }}</label>
+          <div class="detail-value">{{ physicalResource.maxSpeedKph ? physicalResource.maxSpeedKph + ' km/h' : '-' }}</div>
+        </div>
+
+        <div class="detail-item" *ngIf="physicalResource.resourceType === 'MOBILE_EQUIPMENT'">
+          <label>{{ 'RESOURCES.CONTAINERS_PER_TRIP' | translate }}</label>
+          <div class="detail-value">{{ physicalResource.containersPerTrip || '-' }}</div>
+        </div>
+
+        <div class="detail-item" *ngIf="physicalResource.resourceType === 'MOBILE_EQUIPMENT'">
+          <label>{{ 'RESOURCES.CURRENT_DOCK' | translate }}</label>
+          <div class="detail-value">{{ physicalResource.currentDockCode || '-' }}</div>
+        </div>
+
+        <div class="detail-item" *ngIf="physicalResource.requiredQualifications.length > 0">
+          <label>{{ 'RESOURCES.REQUIRED_QUALIFICATIONS' | translate }}</label>
+          <div class="detail-value">
+            <div class="qualification-list">
+              <span *ngFor="let qual of physicalResource.requiredQualifications" class="qualification-badge">
+                {{ qual.name }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="close()">{{ 'RESOURCES.CLOSE' | translate }}</button>
+      <button class="btn btn-primary" (click)="edit()">{{ 'RESOURCES.EDIT' | translate }}</button>
+    </div>
+  </div>
+</div>

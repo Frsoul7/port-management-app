@@ -1,0 +1,54 @@
+@startuml
+title SSD – Reject VVN
+
+actor "Port Authority Officer" as Officer
+participant "API Client" as Client
+participant "VesselVisitNotificationsController" as C
+participant "PortDbContext" as Db
+participant "VesselVisitNotification (Domain)" as VVN
+participant "DecisionLog (Domain)" as DL
+database "EF (InMemory)" as Store
+
+Officer -> Client : POST /vvns/{id}/reject\n{ Reason, Notes }
+Client -> C : Reject(id, request)
+activate C
+
+C -> C : ValidatePortAuthorityAccess(caller)
+alt not Port Authority
+  C --> Client : 403 Forbidden\n"Only Port Authority Officers can perform this action"
+else missing rejection reason
+  C --> Client : 422 Unprocessable Entity\n"A rejection reason is required"
+else VVN not found
+  C -> Db : FindAsync(VVN where VvnGuid == id)
+  Db -> Store : query
+  Store --> Db : null
+  C --> Client : 404 Not Found
+else VVN not in SUBMITTED state
+  C -> Db : FindAsync(VVN where VvnGuid == id)
+  Db -> Store : query
+  Store --> Db : vvn (state != SUBMITTED)
+  C --> Client : 409 Conflict\n"Only pending (SUBMITTED) VVNs can be rejected"
+else successful rejection
+  C -> Db : FindAsync(VVN where VvnGuid == id)
+  Db -> Store : query
+  Store --> Db : vvn
+  
+  C -> VVN : Reject(rejectorUserId, reason)
+  VVN --> C : state = REJECTED
+  
+  C -> DL : Rejected(vvnId, rejectorUserId, reason, timestamp, notes)
+  DL --> C : decisionLog
+  
+  C -> Db : DecisionLogs.Add(decisionLog)
+  C -> Db : SaveChangesAsync()
+  Db -> Store : commit transaction
+  Store --> Db : ok
+  
+  C -> Db : Load organization details
+  Db -> Store : query orgs
+  Store --> Db : organizations
+  
+  C --> Client : 200 OK + RejectVvnResponse\n{ VvnId, Status: REJECTED, RejectionReason,\n  RejectorInfo, SubmitterInfo }
+end
+deactivate C
+@enduml

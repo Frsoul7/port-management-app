@@ -1,0 +1,55 @@
+@startuml
+title US 4.1.2 - Generate Operation Plan (C4 Level 4 - Code)
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+LAYOUT_TOP_DOWN()
+
+Container_Boundary(service_code, "OperationPlanService.generatePlanSimple()") {
+    Component(step1, "1. Check Duplicate", "Code Block", "findByTargetDate()")
+    Component(step2, "2. Fetch VVNs", "Code Block", "coreClient.getApprovedVvnsForDate()")
+    Component(step3, "3. Filter VVNs", "Code Block", "Filter by vvnIds if provided")
+    Component(step4, "4. Call Planning", "Code Block", "planningClient.generatePlan()")
+    Component(step5, "5. Parse Response", "Code Block", "Map to PlannedOperation[]")
+    Component(step6, "6. Create Entity", "Code Block", "new OperationPlan({...})")
+    Component(step7, "7. Save Plan", "Code Block", "repository.save()")
+    Component(step8, "8. Return DTO", "Code Block", "toDto(savedPlan)")
+}
+
+Container_Boundary(entity_code, "OperationPlan Entity Constructor") {
+    Component(val1, "Validate targetDate", "Code", "if (!props.targetDate) throw")
+    Component(val2, "Validate algorithm", "Code", "if (!props.algorithm) throw")
+    Component(val3, "Check past date", "Code", "if (targetDate < today) throw")
+    Component(val4, "Validate operations", "Code", "if (operations.empty) throw")
+    Component(val5, "Initialize audit log", "Code", "auditLog = [{ CREATED, ... }]")
+}
+
+Container_Boundary(repo_code, "OperationPlanRepository") {
+    Component(find, "findByTargetDate()", "Method", "db.findOne({ targetDate })")
+    Component(save, "save()", "Method", "db.insertOne(document)")
+    Component(map, "toDomain()", "Method", "Document → Entity")
+}
+
+Rel(step1, find, "Calls")
+Rel(step2, step3, "Then")
+Rel(step3, step4, "Then")
+Rel(step4, step5, "Then")
+Rel(step5, step6, "Then")
+Rel(step6, val1, "Triggers validation")
+Rel(val1, val2, "Then")
+Rel(val2, val3, "Then")
+Rel(val3, val4, "Then")
+Rel(val4, val5, "Then")
+Rel(step6, step7, "Then")
+Rel(step7, save, "Calls")
+Rel(step7, step8, "Then")
+
+note right of step1
+  Error handling at each step:
+  • Duplicate → 409 Conflict
+  • No VVNs → 404 Not Found
+  • Planning error → 500 Internal
+  • Validation error → 422 Unprocessable
+end note
+
+@enduml

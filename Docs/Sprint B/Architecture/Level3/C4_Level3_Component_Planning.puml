@@ -1,0 +1,206 @@
+@startuml C4_Level3_Component_Planning
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+skinparam componentStyle uml2
+skinparam shadowing false
+skinparam DefaultFontName Arial
+skinparam DefaultFontSize 11
+skinparam linetype ortho
+skinparam nodesep 180
+skinparam ranksep 200
+skinparam padding 30
+
+title Component Diagram (C4 Level 3)\nPlanning & Scheduling Container - Internal Structure\n[Sprint B - US 3.4.x]
+
+' ============================================
+' EXTERNAL ACTORS (TOP)
+' ============================================
+
+actor "Logistics Operator" as LogisticsOperator
+
+' ============================================
+' CONTAINER BOUNDARY - PLANNING CONTAINER
+' ============================================
+
+rectangle "<<component>>\n<<C4 Container>>\n**Planning & Scheduling Container**" as PlanningContainer {
+
+    ' ============================================
+    ' API LAYER - REST ENDPOINTS
+    ' ============================================
+    
+    rectangle "<<component>>\n**Scheduling API**" as SchedulingAPI #LightBlue
+    note right of SchedulingAPI
+      REST API Controller
+      Port: 8080
+      
+      Endpoints:
+      - POST /api/schedule/daily
+      - POST /api/schedule/optimal
+      - POST /api/schedule/heuristic
+      - POST /api/schedule/multi-crane
+      - GET /api/schedule/{id}
+    end note
+
+    ' ============================================
+    ' BUSINESS LOGIC - ALGORITHM SERVICES
+    ' ============================================
+    
+    rectangle "<<component>>\n**Optimal Scheduler Service**" as OptimalScheduler #LightGreen
+    note right of OptimalScheduler
+      US 3.4.2: Minimize vessel delays
+      
+      Strategy: Exact optimization
+      Complexity: NP-hard
+      Constraints:
+      - One vessel per dock
+      - One crane per operation
+      - Staff availability windows
+      - Resource operational hours
+    end note
+    
+    rectangle "<<component>>\n**Heuristic Scheduler Service**" as HeuristicScheduler #LightGreen
+    note right of HeuristicScheduler
+      US 3.4.4: Fast good solution
+      
+      Strategy: Greedy/Local search
+      Trade-off: Speed over optimality
+      Suitable for large instances
+    end note
+    
+    rectangle "<<component>>\n**Multi-Crane Scheduler Service**" as MultiCraneScheduler #LightGreen
+    note right of MultiCraneScheduler
+      US 3.4.5: Multi-crane allocation
+      
+      Strategy:
+      1. Try single-crane first
+      2. If delays > 0, allow multiple cranes
+      3. Minimize crane usage intensity
+    end note
+    
+    rectangle "<<component>>\n**Schedule Validator**" as ScheduleValidator #LightGreen
+    note right of ScheduleValidator
+      Validates schedule feasibility:
+      - Resource availability
+      - Staff qualifications
+      - Time window conflicts
+      - Dock capacity constraints
+    end note
+
+    ' ============================================
+    ' PROLOG ENGINE LAYER
+    ' ============================================
+    
+    rectangle "<<component>>\n**Prolog Engine Interface**" as PrologEngine #Wheat
+    note right of PrologEngine
+      Technology: SWI-Prolog
+      
+      Provides:
+      - Constraint solving
+      - Logic inference
+      - Backtracking search
+      - Predicate evaluation
+    end note
+    
+    rectangle "<<component>>\n**Scheduling Rules**" as SchedulingRules #Wheat
+    note right of SchedulingRules
+      Prolog predicates (.pl files):
+      - vessel_schedule/3
+      - resource_available/4
+      - staff_qualified/3
+      - dock_compatible/2
+      - calculate_delay/3
+    end note
+
+    ' ============================================
+    ' DATA ACCESS LAYER - REST CLIENTS
+    ' ============================================
+    
+    rectangle "<<component>>\n**Backend API Client**" as BackendAPIClient #LightCoral
+    note right of BackendAPIClient
+      Consumes data from Backend:
+      - Vessel records
+      - VVN cargo manifests
+      - Dock specifications
+      - Storage area capacity
+      - Resource availability
+      - Staff qualifications
+      - Human resources schedules
+    end note
+    
+    rectangle "<<component>>\n**Data Transformer**" as DataTransformer #LightCoral
+    note right of DataTransformer
+      Converts REST JSON to Prolog facts:
+      - vessel(Id, Type, Capacity)
+      - dock(Id, MaxDraft, AllowedTypes)
+      - crane(Id, Capacity, Status)
+      - staff(Id, Qualifications, Window)
+    end note
+
+}
+
+' ============================================
+' EXTERNAL SYSTEMS (BOTTOM)
+' ============================================
+
+rectangle "<<component>>\n**Frontend SPA**" as FrontendSPA #LightGray
+rectangle "<<component>>\n**Backend Container**" as BackendContainer #LightGray
+
+' ============================================
+' RELATIONSHIPS - EXTERNAL TO API LAYER
+' ============================================
+
+LogisticsOperator --> FrontendSPA : "Requests daily schedule"
+
+FrontendSPA --> SchedulingAPI : "POST /api/schedule/daily\n(targetDate, algorithm)"
+
+' ============================================
+' RELATIONSHIPS - API TO BUSINESS LOGIC
+' ============================================
+
+SchedulingAPI --> OptimalScheduler : "Execute optimal algorithm"
+SchedulingAPI --> HeuristicScheduler : "Execute heuristic algorithm"
+SchedulingAPI --> MultiCraneScheduler : "Execute multi-crane algorithm"
+SchedulingAPI --> ScheduleValidator : "Validate feasibility"
+
+' ============================================
+' RELATIONSHIPS - BUSINESS LOGIC TO PROLOG
+' ============================================
+
+OptimalScheduler --> PrologEngine : "Query optimal solution"
+HeuristicScheduler --> PrologEngine : "Query heuristic solution"
+MultiCraneScheduler --> PrologEngine : "Query multi-crane solution"
+ScheduleValidator --> PrologEngine : "Query constraint violations"
+
+PrologEngine --> SchedulingRules : "Load predicates"
+
+' ============================================
+' RELATIONSHIPS - BUSINESS LOGIC TO DATA ACCESS
+' ============================================
+
+OptimalScheduler --> DataTransformer : "Request transformed data"
+HeuristicScheduler --> DataTransformer : "Request transformed data"
+MultiCraneScheduler --> DataTransformer : "Request transformed data"
+ScheduleValidator --> DataTransformer : "Request transformed data"
+
+' ============================================
+' RELATIONSHIPS - DATA ACCESS TO BACKEND
+' ============================================
+
+BackendAPIClient --> BackendContainer : "GET /api/vessels\nGET /api/vvn\nGET /api/docks\nGET /api/storage\nGET /api/resources\nGET /api/staff"
+
+DataTransformer --> BackendAPIClient : "Fetch raw data"
+
+BackendContainer --> BackendAPIClient : "JSON responses"
+
+' ============================================
+' RELATIONSHIPS - RESULTS FLOW BACK
+' ============================================
+
+OptimalScheduler --> SchedulingAPI : "Schedule result"
+HeuristicScheduler --> SchedulingAPI : "Schedule result"
+MultiCraneScheduler --> SchedulingAPI : "Schedule result"
+ScheduleValidator --> SchedulingAPI : "Validation result"
+
+SchedulingAPI --> FrontendSPA : "JSON: Schedule[\nvessel, dock, crane,\nstaff, startTime,\nendTime, delay\n]"
+
+@enduml

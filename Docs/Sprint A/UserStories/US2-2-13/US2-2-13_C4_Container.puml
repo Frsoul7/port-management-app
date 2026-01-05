@@ -1,0 +1,42 @@
+@startuml
+title C4 Container – US 2.2.13 Qualifications
+
+actor "Logistics\nOperator" as Operator
+
+node "Client Layer" {
+  [UI / API Client] as Client
+}
+
+node "Web API" {
+  [QualificationsController] as Ctl
+}
+
+node "Application Layer" {
+  [QualificationService] as Svc
+}
+
+database "Persistence" as Db
+node "Domain" as Dom {
+  [Qualification] as Q
+  [StaffMember] as Staff
+  [PhysicalResource] as Resource
+}
+
+Operator --> Client : manage qualifications
+Client --> Ctl : POST/PUT/GET/DELETE
+Ctl --> Svc : CRUD operations
+Svc --> Db : persist/retrieve
+Svc ..> Q : create/update
+Staff --> Q : requires qualifications
+Resource --> Q : requires qualifications
+
+note right of Q
+  Qualification:
+  - Code (max 15 chars, unique)
+  - Name (≥2 words, max 150)
+  - Description (optional)
+  - Code immutable after creation
+  - Referenced by staff/resources
+end note
+
+@enduml

@@ -1,0 +1,34 @@
+@startuml
+title SSD - US 4.1.15 Create Complementary Task (Black-box)
+
+skinparam shadowing false
+skinparam responseMessageBelowArrow true
+
+actor "Logistics Operator" as Op
+boundary "SPA" as SPA
+system "OEM System" as OEM
+
+Op -> SPA : Fill task form\n(categoryId, startTime, endTime,\nblocksOperations, notes)
+SPA -> OEM : POST /vessel-visit-executions/{vveId}/complementary-tasks\n{categoryId,startTime,endTime,blocksOperations,notes}
+
+alt Unauthorized
+  OEM --> SPA : 401/403\n{error}
+  SPA --> Op : Show access error
+else Invalid input
+  OEM --> SPA : 400/422\n{error: invalid time window / missing fields}
+  SPA --> Op : Show validation error
+else VVE not found
+  OEM --> SPA : 404\n{error}
+  SPA --> Op : Show not found
+else Category invalid
+  OEM --> SPA : 422\n{error}
+  SPA --> Op : Show category error
+else VVE completed and not allowed
+  OEM --> SPA : 403\n{error}
+  SPA --> Op : Show restriction message
+else Created
+  OEM --> SPA : 201 Created\n{task}
+  SPA --> Op : Confirm task recorded
+end
+
+@enduml

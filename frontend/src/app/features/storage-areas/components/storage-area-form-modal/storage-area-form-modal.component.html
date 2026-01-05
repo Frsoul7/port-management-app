@@ -1,0 +1,139 @@
+<div class="modal-overlay" *ngIf="show" (click)="close()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ isEditMode ? ('STORAGE.EDIT' | translate) : ('STORAGE.ADD_NEW' | translate) }}</h2>
+      <button class="close-btn" (click)="close()">×</button>
+    </div>
+    
+    <form (ngSubmit)="save()" #storageAreaForm="ngForm">
+      <div class="modal-body">
+        <!-- Name -->
+        <div class="form-group">
+          <label for="name">Name *</label>
+          <input 
+            type="text" 
+            id="name"
+            name="name"
+            [(ngModel)]="currentStorageArea.name"
+            required
+            minlength="3"
+            placeholder="Enter storage area name"
+            class="form-control">
+        </div>
+
+        <!-- Location -->
+        <div class="form-group">
+          <label for="location">Location *</label>
+          <input 
+            type="text" 
+            id="location"
+            name="location"
+            [(ngModel)]="currentStorageArea.location"
+            required
+            placeholder="Enter location"
+            class="form-control">
+        </div>
+
+        <!-- Max Capacity -->
+        <div class="form-group">
+          <label for="maxCapacityTEU">Maximum Capacity (TEU) *</label>
+          <input 
+            type="number" 
+            id="maxCapacityTEU"
+            name="maxCapacityTEU"
+            [(ngModel)]="currentStorageArea.maxCapacityTEU"
+            required
+            min="1"
+            placeholder="Enter maximum capacity"
+            class="form-control">
+        </div>
+
+        <!-- Type (readonly in edit mode) -->
+        <div class="form-group">
+          <label for="type">Storage Area Type *</label>
+          <select 
+            id="type"
+            name="type"
+            [(ngModel)]="currentStorageArea.type"
+            [disabled]="isEditMode"
+            required
+            class="form-control"
+            [class.readonly]="isEditMode">
+            <option *ngFor="let type of storageAreaTypes" [value]="type.value">
+              {{ type.label }}
+            </option>
+          </select>
+          <small class="form-hint" *ngIf="isEditMode">Type cannot be changed after creation</small>
+        </div>
+
+        <!-- Yard Notes (only for YARD type) -->
+        <div class="form-group" *ngIf="currentStorageArea.type === StorageAreaType.YARD">
+          <label for="yardNotes">Yard Notes</label>
+          <textarea 
+            id="yardNotes"
+            name="yardNotes"
+            [(ngModel)]="currentStorageArea.yardNotes"
+            rows="3"
+            placeholder="Enter yard-specific notes"
+            class="form-control"></textarea>
+        </div>
+
+        <!-- Warehouse Notes (only for WAREHOUSE type) -->
+        <div class="form-group" *ngIf="currentStorageArea.type === StorageAreaType.WAREHOUSE">
+          <label for="warehouseNotes">Warehouse Notes</label>
+          <textarea 
+            id="warehouseNotes"
+            name="warehouseNotes"
+            [(ngModel)]="currentStorageArea.warehouseNotes"
+            rows="3"
+            placeholder="Enter warehouse-specific notes"
+            class="form-control"></textarea>
+        </div>
+
+        <!-- Serves All Docks -->
+        <div class="form-group">
+          <div class="checkbox-item">
+            <input 
+              type="checkbox" 
+              id="servesAllDocks"
+              name="servesAllDocks"
+              [(ngModel)]="currentStorageArea.servesAllDocks"
+              (change)="onServesAllDocksChange()">
+            <label for="servesAllDocks">
+              Serves All Docks
+            </label>
+          </div>
+          <small class="form-hint">If unchecked, you can select specific docks below</small>
+        </div>
+
+        <!-- Served Docks (only if not serving all) -->
+        <div class="form-group" *ngIf="!currentStorageArea.servesAllDocks">
+          <label>Served Docks *</label>
+          <div class="checkbox-group">
+            <div *ngFor="let dock of docks" class="checkbox-item">
+              <input 
+                type="checkbox" 
+                [id]="'dock-' + dock.code"
+                [checked]="selectedDocks[dock.code]"
+                (change)="toggleDock(dock.code)">
+              <label [for]="'dock-' + dock.code">
+                {{ dock.code }} - {{ dock.name }}
+              </label>
+            </div>
+          </div>
+          <small class="form-hint">Select which docks this storage area serves</small>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="close()">Cancel</button>
+        <button type="submit" class="btn btn-primary" [disabled]="!storageAreaForm.form.valid || saving">
+          {{ saving ? 'Saving...' : (isEditMode ? 'Update Storage Area' : 'Create Storage Area') }}
+        </button>
+      </div>
+    </form>
+    
+    <!-- Loading Overlay for Saving -->
+    <app-loading *ngIf="saving" [message]="'COMMON.SAVING'"></app-loading>
+  </div>
+</div>

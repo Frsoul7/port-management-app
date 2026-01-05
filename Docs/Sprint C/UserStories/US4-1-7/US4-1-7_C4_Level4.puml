@@ -1,0 +1,76 @@
+@startuml
+title US 4.1.7 - Create VVE (C4 Level 4 - Code)
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+LAYOUT_TOP_DOWN()
+
+Container_Boundary(service_code, "VVEService.initializeVveFromPlan()") {
+    Component(step1, "1. Fetch Plan", "Code", "operationPlanRepository.findById()")
+    Component(step2, "2. Verify Status", "Code", "if (plan.status !== APPROVED) throw")
+    Component(step3, "3. Filter Operations", "Code", "operations.filter(op => op.vvnId === dto.vvnId)")
+    Component(step4, "4. Check Duplicate", "Code", "vveRepository.findByVvnId()")
+    Component(step5, "5. Generate ID", "Code", "VveIdGenerator.generate(sequentialNumber)")
+    Component(step6, "6. Map Operations", "Code", "map PlannedOp → ExecutedOp")
+    Component(step7, "7. Create VVE", "Code", "new VesselVisitExecution({...})")
+    Component(step8, "8. Save VVE", "Code", "vveRepository.save()")
+    Component(step9, "9. Update Plan", "Code", "plan.startExecution(); repo.update()")
+    Component(step10, "10. Return DTO", "Code", "toDto(savedVve)")
+}
+
+Container_Boundary(id_gen, "VveIdGenerator.generate()") {
+    Component(pad, "Pad Number", "Code", "sequentialNumber.toString().padStart(6, '0')")
+    Component(format, "Format ID", "Code", "return `VVE-${paddedNumber}`")
+}
+
+Container_Boundary(mapping, "Map PlannedOp → ExecutedOp") {
+    Component(map1, "Extract Fields", "Code", "operationType, assignedCranes, assignedStaff")
+    Component(map2, "Set Initial Values", "Code", "containersProcessed=0, status=STARTED")
+    Component(map3, "Link to Plan", "Code", "plannedOperationId = uniqueId")
+    Component(map4, "Create VO", "Code", "new ExecutedOperation({...})")
+}
+
+Container_Boundary(entity_create, "VesselVisitExecution Constructor") {
+    Component(val1, "Validate vvnId", "Code", "if (!vvnId || vvnId.trim().length === 0) throw")
+    Component(val2, "Validate Timestamps", "Code", "if (berthTime <= arrivalTime) throw")
+    Component(val3, "Copy Operations", "Code", "operations = [...props.operations]")
+    Component(val4, "Set Defaults", "Code", "status = IN_PROGRESS, incidents = []")
+}
+
+Rel(step1, step2, "→")
+Rel(step2, step3, "→")
+Rel(step3, step4, "→")
+Rel(step4, step5, "→")
+Rel(step5, pad, "Calls")
+Rel(pad, format, "→")
+Rel(step5, step6, "→")
+Rel(step6, map1, "For each operation")
+Rel(map1, map2, "→")
+Rel(map2, map3, "→")
+Rel(map3, map4, "→")
+Rel(step6, step7, "→")
+Rel(step7, val1, "Triggers validation")
+Rel(val1, val2, "→")
+Rel(val2, val3, "→")
+Rel(val3, val4, "→")
+Rel(step7, step8, "→")
+Rel(step8, step9, "→")
+Rel(step9, step10, "→")
+
+note right of step4
+  Error Handling:
+  • Plan not found → 404
+  • Not approved → 422
+  • No operations → 404
+  • Duplicate VVE → 409
+  • Validation error → 422
+end note
+
+note bottom of id_gen
+  Example:
+  sequentialNumber = 1
+  → paddedNumber = "000001"
+  → vveId = "VVE-000001"
+end note
+
+@enduml

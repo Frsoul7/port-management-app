@@ -1,0 +1,46 @@
+@startuml
+title US 4.1.2 - Nível 3 (Sequence Diagram / Componentes Internos)
+
+skinparam shadowing false
+skinparam responseMessageBelowArrow true
+
+actor "SPA" as SPA
+control "Auth Middleware" as Auth
+control "VesselVisitExecutionController" as C
+control "VesselVisitExecutionService" as S
+entity "IVesselVisitExecutionRepository" as Repo
+database "MongoDB" as DB
+entity "VesselVisitExecution (Domain)" as VVE
+
+SPA -> Auth : request + JWT
+alt invalid token/role
+  Auth --> SPA : 403 Forbidden
+else authorized
+  Auth -> C : forward request
+
+  C -> C : validate (id, berthTime)
+
+  C -> S : startVve(vveId, berthTime, userId)
+  S -> Repo : findById(vveId)
+  Repo -> DB : findOne({id})
+  DB --> Repo : vveDocument
+  Repo --> S : VVE
+
+  S -> VVE : recordBerthing(berthTime, userId)
+
+  alt business rule violation
+    VVE --> S : throws DomainError\n(wrong state / invalid timestamp /\nberthTime <= arrivalTime)
+    S --> C : map to 409/422
+    C --> SPA : error response
+  else ok
+    VVE --> S : updated aggregate (status=IN_PROGRESS)
+    S -> Repo : update(VVE)
+    Repo -> DB : updateOne({id}, newState)
+    DB --> Repo : updatedDocument
+    Repo --> S : updatedVVE
+    S --> C : VVEDTO
+    C --> SPA : 200 OK VVEDTO
+  end
+end
+
+@enduml

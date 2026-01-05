@@ -1,0 +1,47 @@
+@startuml
+title US 4.1.2 - Generate Operation Plan (C4 Level 2 - Container)
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+LAYOUT_WITH_LEGEND()
+
+Person(operator, "Logistics Operator")
+
+System_Ext(spa, "SPA", "Angular")
+System_Ext(core, "Core Backend", ".NET")
+System_Ext(planning, "Planning Service", "Prolog")
+
+Container_Boundary(oem, "OEM Backend") {
+    Container(api, "REST API", "Express.js", "/operation-plans/generate")
+    Container(service, "OperationPlanService", "TypeScript", "Orchestrates plan generation")
+    Container(domain, "Domain Layer", "TypeScript", "OperationPlan entity\nwith business rules")
+    ContainerDb(db, "MongoDB", "NoSQL", "Stores operation plans")
+    Container(http_clients, "HTTP Clients", "Axios", "CoreBackendClient\nPlanningClient")
+}
+
+Rel(operator, spa, "Selects date & algorithm")
+Rel(spa, api, "POST /generate", "HTTPS/JSON + JWT")
+
+Rel(api, service, "generatePlanSimple()")
+Rel(service, http_clients, "Fetch VVNs, request plan")
+Rel(http_clients, core, "GET /vvns?date&status=APPROVED")
+Rel(http_clients, planning, "POST /generate-plan")
+
+Rel(service, domain, "Creates OperationPlan entity")
+Rel(service, db, "Saves plan", "Mongoose")
+
+Rel(service, api, "Returns OperationPlanDto")
+Rel(api, spa, "201 Created + plan data")
+Rel(spa, operator, "Displays plan")
+
+note right of service
+  Orchestration Steps:
+  1. Check for duplicate plan
+  2. Fetch VVNs from Core
+  3. Call Planning Service
+  4. Create domain entity
+  5. Save to MongoDB
+  6. Log audit entry
+end note
+
+@enduml

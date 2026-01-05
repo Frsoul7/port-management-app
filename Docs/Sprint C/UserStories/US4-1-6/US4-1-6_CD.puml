@@ -1,0 +1,71 @@
+@startuml
+title CD - US 4.1.6 (Classes principais)
+
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+
+' --- Application ---
+class ResourceAllocationService {
+  - repo: IOperationPlanRepository
+  + getAllocationSummary(resourceId: string, type: ResourceType, from: DateTime, to: DateTime): AllocationSummary
+}
+
+' --- Domain / Contracts ---
+interface IOperationPlanRepository {
+  + findByResourceAndPeriod(resourceId: string, type: ResourceType, from: DateTime, to: DateTime): List<OperationPlan>
+}
+
+enum ResourceType {
+  crane
+  dock
+  staff
+}
+
+class AllocationSummary {
+  + resourceId: string
+  + type: ResourceType
+  + from: DateTime
+  + to: DateTime
+  + totalAllocatedMinutes: int
+  + operationCount: int
+}
+
+class OperationPlan {
+  + id: string
+  + planDate: Date
+  + operations: List<PlannedOperation>
+}
+
+class PlannedOperation {
+  + id: string
+  + plannedStart: DateTime
+  + plannedEnd: DateTime
+  + resources: List<ResourceRef>
+  + durationMinutes(): int
+}
+
+class ResourceRef {
+  + resourceId: string
+  + type: ResourceType
+}
+
+' --- Infrastructure (example) ---
+class MongoOperationPlanRepository {
+  + findByResourceAndPeriod(...): List<OperationPlan>
+}
+
+ResourceAllocationService --> IOperationPlanRepository : depends (DIP)
+IOperationPlanRepository <|.. MongoOperationPlanRepository : implements
+
+ResourceAllocationService ..> AllocationSummary
+OperationPlan "1" o-- "*" PlannedOperation
+PlannedOperation "*" o-- "*" ResourceRef
+PlannedOperation ..> ResourceType
+ResourceRef ..> ResourceType
+
+note right of ResourceAllocationService
+SRP: calcula agregados e devolve summary.
+Sem HTTP/DB aqui.
+end note
+
+@enduml

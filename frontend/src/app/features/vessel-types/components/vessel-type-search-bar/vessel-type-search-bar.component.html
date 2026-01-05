@@ -1,0 +1,21 @@
+<div class="toolbar">
+  <div class="search-section">
+    <input
+      type="text"
+      [placeholder]="'VESSEL_TYPES.SEARCH_NAME' | translate"
+      [(ngModel)]="searchParams.name"
+      (keyup.enter)="search()"
+      class="search-input">
+    <input
+      type="text"
+      [placeholder]="'VESSEL_TYPES.SEARCH_DESCRIPTION' | translate"
+      [(ngModel)]="searchParams.description"
+      (keyup.enter)="search()"
+      class="search-input">
+    <button class="btn btn-primary" (click)="search()">{{ 'VESSEL_TYPES.SEARCH' | translate }}</button>
+  </div>
+  <div class="action-buttons">
+    <button class="btn btn-secondary" (click)="clear()">{{ 'VESSEL_TYPES.CLEAR' | translate }}</button>
+    <button class="btn btn-success" (click)="addVesselType()">{{ 'VESSEL_TYPES.CREATE' | translate }}</button>
+  </div>
+</div>

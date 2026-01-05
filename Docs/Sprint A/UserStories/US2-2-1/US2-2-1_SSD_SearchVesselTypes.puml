@@ -1,0 +1,40 @@
+@startuml
+title SSD – Search Vessel Types
+
+actor "Port Authority Officer" as User
+participant "Scalar / API Client" as Client
+participant "VesselTypesController" as C
+participant "PortDbContext" as Db
+database "EF (InMemory)" as Store
+
+User -> Client : GET /api/vessel-types/search\n?nameFilter=tanker&searchOperator=contains
+activate Client
+Client -> C : Search(nameFilter, descriptionFilter, searchOperator)
+activate C
+
+alt invalid authentication
+  C --> Client : 403 Forbidden\n"Authentication required"
+  Client --> User : Error: Access denied
+else authenticated user
+  C -> Db : VesselTypes query\nwhere (nameFilter == null OR Name.Contains(nameFilter))\nand (descriptionFilter == null OR Description.Contains(descriptionFilter))
+  activate Db
+  Db -> Store : query (case-insensitive)
+  activate Store
+  Store --> Db : vesselTypes[]
+  deactivate Store
+  deactivate Db
+  
+  C --> Client : 200 OK + VesselTypeResponseDto[]\n[{ VesselTypeId, Name, Description,\nMaxCapacityTEU, MaxRows, MaxBays,\nMaxTiers, MaxLength, MaxBeam, MaxDraft }, ...]
+  Client --> User : Display filtered vessel types list\n(e.g., "Oil Tanker", "Gas Tanker", "Chemical Tanker")
+end
+
+deactivate C
+deactivate Client
+
+note right of User
+  Search supports partial matching 
+  by default (searchOperator="contains").
+  User can refine search with 
+  searchOperator="equals" for exact match.
+end note
+@enduml

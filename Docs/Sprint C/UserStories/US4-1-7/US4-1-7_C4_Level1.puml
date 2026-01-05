@@ -1,0 +1,43 @@
+@startuml
+title US 4.1.7 - Create VVE (C4 Level 1 - System Context)
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+LAYOUT_WITH_LEGEND()
+
+Person(operator, "Logistics Operator", "Monitors vessel arrivals")
+
+System_Boundary(backend, "Backend Systems") {
+    System(oem, "OEM Backend", "Operations & Execution\nManagement Module")
+    System(core, "Core Backend", ".NET\nVVN Repository")
+}
+
+System_Ext(spa, "SPA", "Angular Frontend")
+System_Ext(vessel, "Vessel", "Physical vessel\narriving at port")
+
+Rel(vessel, operator, "Arrives at port")
+Rel(operator, spa, "Records arrival")
+Rel(spa, oem, "POST /vessel-visit-executions/initialize", "HTTPS/JSON")
+
+Rel(oem, oem, "Fetch operation plan\nfrom MongoDB")
+Rel(oem, spa, "Returns VVE\n(VVE-000001, status=IN_PROGRESS)", "JSON")
+Rel(spa, operator, "Displays VVE details")
+
+note right of oem
+  **US 4.1.7 Flow:**
+  1. Receive: planId, vvnId, arrivalTime
+  2. Validate: plan is APPROVED
+  3. Check: no duplicate VVE
+  4. Generate: sequential VVE ID
+  5. Derive: ExecutedOps from PlannedOps
+  6. Create: VVE with IN_PROGRESS status
+  7. Update: plan to IN_EXECUTION
+end note
+
+note left of vessel
+  Vessel arrival triggers
+  the transition from
+  planning to execution
+end note
+
+@enduml

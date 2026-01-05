@@ -1,0 +1,83 @@
+<div class="table-container">
+  <!-- Desktop Table View -->
+  <table class="docks-table desktop-table" *ngIf="docks.length > 0; else noDocks">
+    <thead>
+      <tr>
+        <th>{{ 'DOCKS.CODE' | translate }}</th>
+        <th>{{ 'DOCKS.NAME' | translate }}</th>
+        <th>{{ 'DOCKS.LOCATION' | translate }}</th>
+        <th>{{ 'DOCKS.MAX_LENGTH' | translate }} (m)</th>
+        <th>Depth (m)</th>
+        <th>{{ 'DOCKS.MAX_DRAFT' | translate }} (m)</th>
+        <th>{{ 'COMMON.ACTIONS' | translate }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let dock of docks" class="dock-row">
+        <td [attr.data-label]="'DOCKS.CODE' | translate"><strong>{{ dock.code }}</strong></td>
+        <td [attr.data-label]="'DOCKS.NAME' | translate">{{ dock.name }}</td>
+        <td [attr.data-label]="'DOCKS.LOCATION' | translate">{{ dock.location }}</td>
+        <td data-label="Length">{{ dock.lengthM }}</td>
+        <td data-label="Depth">{{ dock.depthM }}</td>
+        <td data-label="Max Draft">{{ dock.maxDraftM }}</td>
+        <td class="actions" [attr.data-label]="'COMMON.ACTIONS' | translate">
+          <button class="btn-icon btn-view" (click)="viewDock(dock)" [title]="'DOCKS.VIEW_DETAILS' | translate">
+            👁️
+          </button>
+          <button class="btn-icon btn-edit" (click)="editDock(dock)" [title]="'DOCKS.EDIT' | translate">
+            ✏️
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Mobile Card View -->
+  <div class="docks-cards mobile-cards" *ngIf="docks.length > 0">
+    <div *ngFor="let dock of docks" class="dock-card">
+      <div class="card-header">
+        <h3>{{ dock.name }}</h3>
+        <div class="card-actions">
+          <button class="btn-icon btn-view" (click)="viewDock(dock)" [title]="'DOCKS.VIEW_DETAILS' | translate">
+            👁️
+          </button>
+          <button class="btn-icon btn-edit" (click)="editDock(dock)" [title]="'DOCKS.EDIT' | translate">
+            ✏️
+          </button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="card-row">
+          <span class="label">{{ 'DOCKS.CODE' | translate }}:</span>
+          <span class="value"><strong>{{ dock.code }}</strong></span>
+        </div>
+        <div class="card-row">
+          <span class="label">{{ 'DOCKS.LOCATION' | translate }}:</span>
+          <span class="value">{{ dock.location }}</span>
+        </div>
+        <div class="card-row">
+          <span class="label">Length (m):</span>
+          <span class="value">{{ dock.lengthM }}</span>
+        </div>
+        <div class="card-row">
+          <span class="label">Depth (m):</span>
+          <span class="value">{{ dock.depthM }}</span>
+        </div>
+        <div class="card-row">
+          <span class="label">Max Draft (m):</span>
+          <span class="value">{{ dock.maxDraftM }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ng-template #noDocks>
+    <div class="no-data">
+      <div class="no-data-icon">⚓</div>
+      <p>{{ 'DOCKS.NO_DOCKS' | translate }}</p>
+    </div>
+  </ng-template>
+</div>
+
+<!-- Loading Indicator -->
+<app-loading *ngIf="loading" [message]="'DOCKS.LOADING'"></app-loading>

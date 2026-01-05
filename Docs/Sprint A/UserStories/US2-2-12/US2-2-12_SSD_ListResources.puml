@@ -1,0 +1,30 @@
+@startuml
+title SSD – List / Search Physical Resources
+
+actor "Logistics Operator" as Operator
+participant "API Client" as Client
+participant "PhysicalResourcesController" as C
+participant "PhysicalResourceRepository" as Repo
+participant "PortDbContext" as Db
+database "EF (InMemory)" as Store
+
+Operator -> Client : GET /api/resources?code=&type=&qualification=
+Client -> C : GetAll(code?, description?, type?, availability?, qualification?)
+activate C
+
+C -> Repo : SearchAsync(...) or GetAllAsync(includeQualifications: true)
+activate Repo
+Repo -> Db : Query PhysicalResources (+ join RequiredQualifications if needed)
+activate Db
+Db -> Store : SQL/EF query
+Store --> Db : resources[]
+deactivate Db
+Db --> Repo : resources[]
+deactivate Repo
+
+C -> C : Map to PhysicalResourceResponseDto[] (include qualification names)
+C --> Client : 200 OK + resources[]
+deactivate C
+
+Client --> Operator : Display resources (filter/sort)
+@enduml

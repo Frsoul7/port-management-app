@@ -1,0 +1,60 @@
+<div class="storage-areas-container">
+  <!-- Header -->
+  <div class="header">
+    <div class="header-content">
+      <h1>{{ 'STORAGE.TITLE' | translate }}</h1>
+      <button class="back-btn" (click)="goBack()">{{ 'NAV.BACK_TO_DASHBOARD' | translate }}</button>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="content">
+    <!-- Search Bar Component -->
+    <app-storage-area-search-bar 
+      (onSearch)="onSearch($event)"
+      (onAdd)="openCreateModal()">
+    </app-storage-area-search-bar>
+
+    <!-- Storage Area Table Component -->
+    <app-storage-area-table
+      [storageAreas]="filteredStorageAreas"
+      [loading]="loading"
+      (onView)="onView($event)"
+      (onEdit)="onEdit($event)"
+      (onDelete)="onDelete($event)">
+    </app-storage-area-table>
+
+    <!-- Alert Banners -->
+    <app-alert-banner
+      [message]="errorMessage"
+      [type]="'error'"
+      (onClose)="errorMessage = ''">
+    </app-alert-banner>
+
+    <app-alert-banner
+      [message]="successMessage"
+      [type]="'success'"
+      (onClose)="successMessage = ''">
+    </app-alert-banner>
+  </div>
+
+  <!-- Form Modal Component -->
+  <app-storage-area-form-modal
+    [show]="showFormModal"
+    [storageArea]="selectedStorageArea"
+    [isEditMode]="isEditMode"
+    [docks]="docks"
+    [saving]="saving"
+    (onClose)="closeFormModal()"
+    (onCreate)="onFormCreate($event)"
+    (onUpdate)="onFormUpdate($event)">
+  </app-storage-area-form-modal>
+
+  <!-- View Modal Component -->
+  <app-storage-area-view-modal
+    [show]="showViewModal"
+    [storageArea]="selectedStorageArea"
+    (onClose)="closeViewModal()"
+    (onEdit)="onEdit($event)">
+  </app-storage-area-view-modal>
+</div>

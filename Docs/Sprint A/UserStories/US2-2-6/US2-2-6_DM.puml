@@ -1,0 +1,51 @@
+@startuml
+title Domain Model – US 2.2.6 (Manage Representatives)
+
+class Organization {
+  + OrganizationId : Guid
+  + Identifier : string
+  + LegalName : string
+  + AlternativeName : string
+  + AddressLine : string
+  + TaxNumber : string
+  + Type : OrganizationType
+  --
+  + AddRepresentative(rep:Representative) : void
+  + RemoveRepresentative(rep:Representative) : void
+}
+
+
+class Representative {
+  + RepresentativeId : Guid
+  + Name : string
+  + CitizenId : string
+  + Nationality : string
+  + Email : string
+  + Phone : string
+  + IsActive : bool
+  + CreatedAt : DateTime
+  --
+  + UpdateDetails(name:string, citizenId:string, nationality:string, email:string, phone:string) : void
+  + Activate() : void
+  + Deactivate() : void
+}
+
+class OrganizationType {
+  <<enumeration>>
+  + SHIPPING_AGENT
+  + PORT_AUTHORITY
+  + TERMINAL_OPERATOR
+}
+
+' Relationships
+Organization "1" --> "0..*" Representative : manages
+Organization "1" --> "1" OrganizationType : type
+
+note right of Representative
+**Business Rules:**
+- Each representative belongs to exactly one organization
+- Required details: name, citizen ID, nationality, email, phone
+- Can be activated or deactivated for system access
+end note
+
+@enduml

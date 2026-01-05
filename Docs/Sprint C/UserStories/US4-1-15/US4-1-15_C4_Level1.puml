@@ -1,0 +1,24 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+title C4 L1 - System Context (US 4.1.15 - Complementary Tasks)
+
+Person(operator, "Logistics Operator", "Records and manages complementary tasks associated with a vessel visit execution")
+
+System(spa, "Port Management SPA", "Web application used by port operators")
+
+System_Boundary(oemBoundary, "OEM Service") {
+  System(oem, "Operations & Execution Management (OEM)", "Manages Operation Plans, VVEs, Incidents and Complementary Tasks")
+}
+
+System_Ext(iam, "IAM Provider", "Authentication and authorization tokens")
+System_Ext(core, "Core Backend", "VVNs and master data (vessels, docks, resources)")
+System_Ext(planning, "Planning & Scheduling Service", "Generates operation plans (used by other OEM features)")
+
+Rel(operator, spa, "Uses", "HTTPS")
+Rel(spa, iam, "Authenticates", "OIDC/OAuth2")
+Rel(spa, oem, "Creates/queries complementary tasks for a VVE", "HTTPS/JSON")
+Rel(oem, iam, "Validates tokens and roles", "JWT/OIDC")
+Rel(oem, core, "Optional contextual queries (e.g., VVE/VVN context)", "REST/JSON")
+Rel(oem, planning, "Used for plan generation (other US)", "REST/JSON")
+
+@enduml

@@ -1,0 +1,356 @@
+@startuml DomainModel
+
+hide methods
+skinparam classBackgroundColor whitesmoke
+skinparam ArrowColor black
+skinparam packageBackgroundColor gainsboro
+skinparam classAttributeIconSize 0
+left to right direction
+
+package "<<aggregate>> VesselVisitNotification" {
+    entity VesselVisitNotification <<entity>> <<root>>
+    class VVNUniqueID <<(V,orange) value object>>
+    class VesselIMO <<(V,orange) value object>>
+    class VisitPeriod <<(V,orange) value object>>
+    class CaptainName <<(V,orange) value object>>
+    class CrewNumber <<(V,orange) value object>>
+    class DesignatedCrewSafetyOfficers <<(V,orange) value object>>
+    enum VisitPurpose <<enum>>
+    enum VVNCurrentStatus <<enum>>
+    entity CargoManifest <<entity>>
+    class CargoManifestUniqueID <<(V,orange) value object>>
+    entity CargoManifestEntry <<entity>>
+    class CargoManifestEntryUniqueID <<(V,orange) value object>>
+    class ContainerUniqueID <<(V,orange) value object>>
+    class ContainerBayNr <<(V,orange) value object>>
+    class ContainerRowNr <<(V,orange) value object>>
+    class ContainerTierNr <<(V,orange) value object>>
+    class GoodsDescription <<(V,orange) value object>>
+    enum HazardousGoods <<boolean>>
+
+    note right of VVNCurrentStatus
+  DRAFT or IN PROGRESS → content editable.
+  SUBMITTED or PENDING on approval → content immutable.
+  APPROVED with CURRENT DOCK assignment → creates ScheduledVisit.
+  REJECTED → reason required; Agent may revert to DRAFT.
+  end note
+
+    note right of VisitPurpose
+  LOAD → Loading Cargo Manifest applies.
+  UNLOAD → Unloading Cargo Manifest applies.
+  BOTH → Loading and Unloading Cargo Manifests apply.
+  MAINTENANCE → Cargo Manifest does not apply
+  end note
+
+  note right of HazardousGoods
+  YES → Container has hazardous goods.
+  NO → Container has no hazardous goods.
+  end note
+}
+
+package "<<aggregate>> SystemUser" {
+    entity SystemUser <<entity>> <<root>>
+    class SystemUserID <<(V,orange) value object>>
+    class SystemUserName <<(V,orange) value object>>
+    class SystemUserEmail <<(V,orange) value object>>
+    enum SystemUserRole <<enum>>
+
+    entity Organization <<entity>>
+    class organizationID <<(V,orange) value object>>
+    class organizationName <<(V,orange) value object>>
+    class organizationType <<(V,orange) value object>>
+
+      note right of SystemUserRole
+  SHIPPING_AGENT_REPRESENTATIVE
+  PORT_AUTHORITY_OFFICER
+  LOGISTICS_OPERATOR
+  end note
+}
+
+package "aggregate>> Vessels" {
+    entity Vessel <<entity>> <<root>>
+    class VesselIMONr <<(V,orange) value object>>
+    class VesselName <<(V,orange) value object>>
+    class VesselOwner <<(V,orange) value object>>
+    class VesselSize <<(V,orange) value object>>
+    class VesselTEU <<(V,orange) value object>>
+    class VesselType <<entity>>
+    class VesselTypeID <<(V,orange) value object>>
+    class VesselTypeName <<(V,orange) value object>>
+    class VesselTypeDescription <<(V,orange) value object>>
+    class VesselTypeOperationalConstraints <<(V,orange) value object>>
+    class VesselTypeMaxLength <<(V,orange) value object>>
+    class VesselTypeMaxBeam <<(V,orange) value object>>
+    class VesselTypeMaxDraft <<(V,orange) value object>>
+}
+
+package "<<aggregate>> Docks" {
+    entity Dock <<entity>> <<root>>
+    class DockUniqueID <<(V,orange) value object>>
+    class DockName <<(V,orange) value object>>
+    class DockLocation <<(V,orange) value object>>
+    class DockLength <<(V,orange) value object>>
+    class DockDepth <<(V,orange) value object>>
+    class DockMaxDraft <<(V,orange) value object>>
+}
+
+package "<<aggregate>> PhysicalResources"{
+    entity STSCrane <<entity>> <<root>>
+    entity MobileEquipment <<entity>> <<root>>
+    class PResourceID <<(V,orange) value object>>
+    class PResourceCode <<(V,orange) value object>>
+    class PResourceDescription <<(V,orange) value object>>
+    class PResourceAvailability <<(V,orange) value object>>
+    class PResourceStaffQualificationRequirement <<(V,orange) value object>>
+    class PResourceSetupTime <<(V,orange) value object>>
+    class PResourceWeeklyRule <<(V,orange) value object>>
+    class PResourceExceptionRule <<(V,orange) value object>>
+    class STSCraneAverageContainerHour <<(V,orange) value object>>
+    enum MobileEquipmentType <<enum>>
+
+      note right of MobileEquipmentType
+  YARD_GANTRY_CRANE
+  TRUCK
+  end note
+}
+
+package "<<aggregate>> HumanResources"{
+    entity StaffMember <<entity>> <<root>>
+    class StaffMemberMecanographicNumber <<(V,orange) value object>>
+    class StaffMemberShortName <<(V,orange) value object>>
+    class StaffMemberEmail <<(V,orange) value object>>
+    class StaffMemberPhone <<(V,orange) value object>>
+    class StaffMemberWeeklyRule <<(V,orange) value object>>
+    class StaffMemberExceptionRule <<(V,orange) value object>>
+    enum StaffMemberStatus <<enum>>
+    
+    entity StaffMemberQualification <<entity>>
+    class StaffMemberQualificationID <<(V,orange) value object>>
+    class StaffMemberQualificationType <<(V,orange) value object>>
+    class StaffMemberQualificationDescription <<(V,orange) value object>>
+
+      note right of StaffMemberStatus
+  AVAILABLE
+  UNAVAILABLE
+  TEMPORARILY_REASSIGNED
+  end note
+}
+
+package "<<aggregate>> DockAssignment"{
+    entity DockAssignment <<entity>> <<root>>
+    class DockAssignmentID <<(V,orange) value object>>
+    class VVNID <<(V,orange) value object>>
+    class DockAssignmentScheduledArrival <<(V,orange) value object>>
+    class DockAssignmentScheduledDeparture <<(V,orange) value object>>
+    enum DockAssignmentStatus <<enum>>
+
+note right of DockAssignmentStatus
+  IN PROGRESS
+  COMPLETED
+  CANCELED
+  end note
+}
+
+
+
+package "<<aggregate>> StorageAreas"{
+    entity StorageArea <<entity>> <<root>>
+    class StorageAreaID <<(V,orange) value object>>
+    class StorageAreaName <<(V,orange) value object>>
+    class StorageAreaLocation <<(V,orange) value object>>
+    class StorageAreaMaxCapacityTEU <<(V,orange) value object>>
+    class StorageAreaCurrentOccupancyTEU <<(V,orange) value object>>
+    class DistanceToDock <<(V,orange) value object>>
+    enum StorageAreaType <<enum>>
+
+note right of DistanceToDock
+  Probably better done by using a Service
+  end note
+
+note right of StorageAreaType
+  GENERAL
+  SPECIFIC: YARD
+  SPECIFIC: WAREHOUSE
+  end note
+}
+
+package "<<aggregate>> Log" {
+    entity Log <<entity>> <<root>>
+    class LogUniqueId <<(V,orange) value object>>
+    class LogOfficerID <<(V,orange) value object>>
+    class LogTimestamp <<(V,orange) value object>>
+    enum LogAction <<enum>>
+
+    note right of LogAction
+  APPROVE
+  REJECT
+  end note
+}
+
+' ### EVENTS ###
+
+class VesselVisitNotificationStatusChange <<event>>
+note left of VesselVisitNotificationStatusChange
+  When VVN status is changed by Shipping Agent, 
+  an event is created to be consumed by Port Authority.
+  end note
+VesselVisitNotificationStatusChange ...> VesselVisitNotification
+
+
+' --- DockAssignment domain events ---
+package "<<events>> DockAssignment" as DA_EVENTS {
+  together {
+    class DockAssigned <<event>>
+    class UnloadingComplete <<event>>
+    class LoadingComplete <<event>>
+  }
+
+  note right of DockAssigned
+    When a Dock is Assigned for a Vessel, 
+    request Storage reservations for UNLOAD TEU.
+  end note
+
+  note right of UnloadingComplete
+    Increment StorageArea occupancy and release 
+    Resources allocations.
+  end note
+
+  note right of LoadingComplete
+    Decrement StorageArea occupancy and release 
+    Resources allocations.
+  end note
+}
+
+' --- Links from the aggregate to the grouped events ---
+DockAssignment ...> DA_EVENTS.DockAssigned
+DockAssignment ...> DA_EVENTS.UnloadingComplete
+DockAssignment ...> DA_EVENTS.LoadingComplete
+
+
+' ### SERVICES ###
+
+' ### RELANTIONSHIPS BETWEEN ENTITIES AND VO'S ###
+
+VesselVisitNotification "1" --> "1" VVNUniqueID : identified by
+VesselVisitNotification "1" --> "1" VesselIMO : refers to
+VesselVisitNotification "1" --> "1" VisitPurpose : has a
+VesselVisitNotification "1" --> "1" VisitPeriod : related to
+VesselVisitNotification "1" --> "1" VVNCurrentStatus
+VesselVisitNotification "1" *-- "0,1" CargoManifest : may have for loading
+VesselVisitNotification "1" *-- "0,1" CargoManifest : may have for unloading
+VesselVisitNotification "1" --> "1" CaptainName
+VesselVisitNotification "1" --> "1" CrewNumber
+VesselVisitNotification "1" --> "0..*" DesignatedCrewSafetyOfficers
+VesselVisitNotification "1" --[#black,bold]> "1" DockAssignment : on approval, generates
+
+CargoManifest "1" --> "1" CargoManifestUniqueID : defined by
+CargoManifest "1" *-- "1..*" CargoManifestEntry : lists
+CargoManifestEntry "1" --> "1" CargoManifestEntryUniqueID : defined by
+CargoManifestEntry "1" --> "1" ContainerUniqueID
+CargoManifestEntry "1..*" --> "1" ContainerBayNr
+CargoManifestEntry "1..*" --> "1" ContainerRowNr
+CargoManifestEntry "1..*" --> "1" ContainerTierNr
+CargoManifestEntry "1..*" --> "1" GoodsDescription
+CargoManifestEntry "1..*" --> "1" HazardousGoods
+
+SystemUser "1" --[#black,bold]> "1..*" VesselVisitNotification : submits (SHIPPING AGENT)
+SystemUser "1" --[#black,bold]> "1..*" VesselVisitNotification : approves (PORT AUTHORITY)
+SystemUser "1" --[#black,bold]> "1..*" VesselVisitNotification : rejects (PORT AUTHORITY)
+SystemUser "1" --[#black,bold]> "1..*" DockAssignment : consults (LOGISTIC PLANNER)
+
+SystemUser "1" --> "1" SystemUserID
+SystemUser "1" --> "1" SystemUserName
+SystemUser "1" --> "1" SystemUserEmail
+SystemUser "1" --> "1" SystemUserRole
+SystemUser "1..*" --* "1" Organization : belongs to
+Organization "1" --> "1" organizationID : defined by
+Organization "1" --> "1" organizationName
+Organization "1..*" --> "1" organizationType
+
+Vessel "1" --> "1" VesselIMONr : identified by
+Vessel "1..*" --> "1" VesselType
+Vessel "1..*" --> "1" VesselSize
+Vessel "1" --> "1" VesselName
+Vessel "1..*" --> "1" VesselTEU
+Vessel "1..*" --> "1" VesselOwner
+VesselType "1" --> "1" VesselTypeID
+VesselType "1" --> "1" VesselTypeName
+VesselType "1" --> "1" VesselTypeDescription
+VesselType "1" --> "1" VesselTypeOperationalConstraints
+VesselTypeOperationalConstraints "1" --> "1" VesselTypeMaxLength
+VesselTypeOperationalConstraints "1" --> "1" VesselTypeMaxDraft
+VesselTypeOperationalConstraints "1" --> "1" VesselTypeMaxBeam
+
+Vessel "1" --[#black,bold]> "1" Dock : is assigned to
+
+Dock "1" --> "1" DockUniqueID : is identified by
+Dock "1" --> "1" DockName
+Dock "1" --> "1" DockLocation
+Dock "1" --> "1" DockDepth
+Dock "1" --> "1" DockLength
+Dock "1" --> "1" DockMaxDraft
+
+STSCrane "1" --> "1" PResourceID
+STSCrane "1" --> "1" PResourceCode
+STSCrane "1" --> "1" PResourceDescription
+STSCrane "1" --> "1" PResourceAvailability
+STSCrane "1" --> "1..*" PResourceExceptionRule
+STSCrane "1" --> "1" PResourceWeeklyRule
+STSCrane "1" --> "1" PResourceStaffQualificationRequirement
+STSCrane "1" --> "1" PResourceSetupTime
+STSCrane "1" --> "1" STSCraneAverageContainerHour
+
+STSCrane "1..*" --[#black,bold]> "1" Dock : installed at
+MobileEquipment "1..*" --[#black,bold]> "1" Dock : currently located at
+
+MobileEquipment "1" --> "1" PResourceID
+MobileEquipment "1" --> "1" PResourceCode
+MobileEquipment "1" --> "1" PResourceDescription
+MobileEquipment "1" --> "1" PResourceAvailability
+MobileEquipment "1" --> "1..*" PResourceExceptionRule
+MobileEquipment "1" --> "1" PResourceWeeklyRule
+MobileEquipment "1" --> "1" PResourceStaffQualificationRequirement
+MobileEquipment "1" --> "1" PResourceSetupTime
+MobileEquipment "1..*" --> "1" MobileEquipmentType
+
+StaffMember "1" --> "1..*" StaffMemberQualification
+StaffMember "1" --> "1" StaffMemberStatus
+StaffMember "1" --> "1" StaffMemberEmail
+StaffMember "1" --> "1" StaffMemberShortName
+StaffMember "1" --> "1" StaffMemberPhone
+StaffMember "1" --> "1" StaffMemberMecanographicNumber
+StaffMember "1" --> "1" StaffMemberWeeklyRule
+StaffMember "1" --> "1" StaffMemberExceptionRule
+StaffMemberQualification "1" --> "1" StaffMemberQualificationID
+StaffMemberQualification "1..*" --> "1" StaffMemberQualificationDescription
+StaffMemberQualification "1" --> "1" StaffMemberQualificationType
+
+StaffMember "1" --[#black,bold]> "0..1" MobileEquipment : operates
+StaffMember "1" --[#black,bold]> "0..1" STSCrane : operates
+
+DockAssignment "1" --> "1" DockAssignmentID
+DockAssignment "1" --> "1" VVNID
+DockAssignment "1..*" --> "1" DockAssignmentScheduledArrival
+DockAssignment "1..*" --> "1" DockAssignmentScheduledDeparture
+DockAssignment "1..*" --> "1" DockAssignmentStatus
+
+DockAssignment "1" --[#black,bold]> "1..*" StaffMember : requires allocation of
+DockAssignment "1" --[#black,bold]> "1..*" MobileEquipment : requires allocation of
+
+StorageArea "1" --> "1" StorageAreaID : is identified by
+StorageArea "1" --> "1" StorageAreaName
+StorageArea "1" --> "1" StorageAreaCurrentOccupancyTEU
+StorageArea "1" --> "1" StorageAreaLocation
+StorageArea "1" --> "1" StorageAreaMaxCapacityTEU
+StorageArea "1" --> "1" StorageAreaType
+StorageArea "1" --> "1..*" DistanceToDock
+StorageArea "1" --[#black,bold]> "1..*" Dock : serves
+
+Log "1" --> "1" LogUniqueId : is identified by
+Log "1" --> "1" LogOfficerID : records action of
+Log "1" --> "1" LogAction
+Log "1" --> "1" LogTimestamp
+Log "*" --[#black,bold]> "1" VesselVisitNotification : keeps historic of
+Log "*" --[#black,bold]> "1" SystemUser : created by action of
+
+@enduml

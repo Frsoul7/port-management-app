@@ -1,0 +1,280 @@
+@startuml
+title Class Diagram – US 2.2.7 Review and Approve/Reject VVNs
+
+' ===== Controllers =====
+class VesselVisitNotificationsController {
+  - _svc : VesselVisitService
+  - _db : PortDbContext
+  --
+  + Approve(id:Guid, request:ApproveVvnRequest, ct:CancellationToken) : Task<ActionResult<ApproveVvnResponse>>
+  + Reject(id:Guid, request:RejectVvnRequest, ct:CancellationToken) : Task<ActionResult<RejectVvnResponse>>
+  + GetAll() : Task<ActionResult<IEnumerable<VvnSummaryResponse>>>
+  + GetById(id:Guid) : Task<ActionResult<VvnSummaryResponse>>
+  - ValidatePortAuthorityAccessAsync(caller:CallerContext) : Task<ActionResult?>
+  - Forbidden(detail:string?) : ActionResult
+}
+
+' ===== Domain Entities =====
+class VesselVisitNotification <<Aggregate Root>> {
+  + VvnGuid : Guid
+  + VvnBusinessId : string
+  + State : VVNState
+  + VesselImo : string
+  + VisitPurpose : VisitPurpose
+  + Eta : DateTime
+  + Etd : DateTime
+  + OrganizationId : OrganizationId
+  + SubmittedById : UserId?
+  + SubmittedAt : DateTime?
+  + ApprovedById : UserId?
+  + ApprovedAt : DateTime?
+  + RejectedById : UserId?
+  + RejectedAt : DateTime?
+  + RejectionReason : string?
+  + DockAssignment : DockAssignment?
+  + CreatedAt : DateTime
+  --
+  + Approve(approver:UserId, dockAssignmentId:Guid) : void
+  + Reject(rejector:UserId, reason:string) : void
+  + Submit(submittedBy:UserId) : void
+}
+
+enum VVNState {
+  DRAFT = 0
+  SUBMITTED = 1
+  APPROVED = 2
+  REJECTED = 3
+  CANCELLED = 4
+}
+
+class DockAssignment <<Entity>> {
+  + DockAssignmentId : Guid
+  + VvnId : Guid
+  + DockCode : string
+  + BerthFrom : DateTime
+  + BerthTo : DateTime
+  + AssignedByUserId : string
+  + AssignedAt : DateTime
+  + Status : DockAssignmentStatus
+  --
+  + {static} Create(vvnId:Guid, dockCode:string, berthFromUtc:DateTime, berthToUtc:DateTime, assignedByUserId:string, assignedAtUtc:DateTime) : DockAssignment
+}
+
+enum DockAssignmentStatus {
+  ACTIVE = 1
+  COMPLETED = 2
+  CANCELLED = 3
+}
+
+class DecisionLog <<Entity>> {
+  + DecisionLogId : Guid
+  + VvnGuid : Guid
+  + Outcome : DecisionOutcome
+  + OfficerUserId : UserId
+  + AtUtc : DateTime
+  + DockAssignmentId : Guid?
+  + Reason : string?
+  + Notes : string?
+  --
+  + {static} Approved(vvnId:Guid, officer:UserId, dockAssignmentId:Guid, atUtc:DateTime, notes:string?) : DecisionLog
+  + {static} Rejected(vvnId:Guid, officer:UserId, reason:string, atUtc:DateTime, notes:string?) : DecisionLog
+}
+
+enum DecisionOutcome {
+  Approved = 1
+  Rejected = 2
+}
+
+class Dock <<Entity>> {
+  + Code : string
+  + Name : string
+  + Length : decimal
+  + Depth : decimal
+  + Type : DockType
+}
+
+class Organization <<Entity>> {
+  + OrganizationId : OrganizationId
+  + LegalName : string
+  + Type : OrganizationType
+  + Representatives : ICollection<Representative>?
+}
+
+enum OrganizationType {
+  PORT_AUTHORITY
+  SHIPPING_AGENT
+  PORT_OPERATOR
+}
+
+class OrganizationId <<Value Object>> {
+  + Value : Guid
+  --
+  + OrganizationId(value:Guid)
+}
+
+class UserId <<Value Object>> {
+  + Value : Guid
+  --
+  + UserId(value:Guid)
+}
+
+' ===== DTOs =====
+class ApproveVvnRequest {
+  + DockCode : string
+  + BerthFrom : DateTime
+  + BerthTo : DateTime
+  + Notes : string?
+}
+
+class ApproveVvnResponse {
+  + VvnId : Guid
+  + VvnBusinessId : string
+  + Status : string
+  + AssignedDock : string
+  + BerthFrom : DateTime
+  + BerthTo : DateTime
+  + DockAssignmentId : Guid
+  + ApprovedByOrgId : Guid
+  + ApprovedByOrgName : string
+  + ApprovedByUserId : Guid?
+  + ApprovedAt : DateTime
+  + SubmittedByOrgId : Guid
+  + SubmittedByOrgName : string
+  + SubmittedByUserId : Guid?
+  + SubmittedAt : DateTime?
+}
+
+class RejectVvnRequest {
+  + Reason : string
+  + Notes : string?
+}
+
+class RejectVvnResponse {
+  + VvnId : Guid
+  + VvnBusinessId : string
+  + Status : string
+  + RejectionReason : string
+  + RejectedByOrgId : Guid
+  + RejectedByOrgName : string
+  + RejectedByUserId : Guid?
+  + RejectedAt : DateTime
+  + SubmittedByOrgId : Guid
+  + SubmittedByOrgName : string
+  + SubmittedByUserId : Guid?
+  + SubmittedAt : DateTime?
+}
+
+class VvnSummaryResponse {
+  + Id : Guid
+  + VvnBusinessId : string
+  + Status : string
+  + Purpose : string
+  + Eta : DateTime
+  + Etd : DateTime
+  + SubmittedAt : DateTime?
+  + VesselImo : string
+  + VesselName : string?
+  + VesselType : string?
+  + AssignedDock : string?
+}
+
+' ===== Security =====
+class CallerContext {
+  + UserId : Guid
+  + OrgId : Guid?
+  + Role : AppRole
+  --
+  + {static} FromHeaders(headers:IHeaderDictionary, requireUserId:bool) : CallerContext
+}
+
+class CallerContextFactory <<static>> {
+  + {static} FromHeaders(headers:IHeaderDictionary, requireUserId:bool) : CallerContext
+}
+
+enum AppRole {
+  Admin
+  PortAuthorityOfficer
+  ShippingAgentRep
+  PortOperator
+}
+
+' ===== Infrastructure =====
+class PortDbContext {
+  + VesselVisitNotifications : DbSet<VesselVisitNotification>
+  + DockAssignments : DbSet<DockAssignment>
+  + DecisionLogs : DbSet<DecisionLog>
+  + Docks : DbSet<Dock>
+  + Organizations : DbSet<Organization>
+  + Users : DbSet<User>
+  --
+  + PortDbContext(options:DbContextOptions<PortDbContext>)
+  # OnModelCreating(modelBuilder:ModelBuilder) : void
+}
+
+' ===== Relationships =====
+
+' Controller relationships
+VesselVisitNotificationsController --> PortDbContext : uses
+VesselVisitNotificationsController ..> ApproveVvnRequest : consumes
+VesselVisitNotificationsController ..> ApproveVvnResponse : produces
+VesselVisitNotificationsController ..> RejectVvnRequest : consumes
+VesselVisitNotificationsController ..> RejectVvnResponse : produces
+VesselVisitNotificationsController ..> VvnSummaryResponse : produces
+VesselVisitNotificationsController ..> CallerContext : uses
+
+' CallerContext relationships
+CallerContext --> AppRole : has
+CallerContextFactory ..> CallerContext : creates
+
+' Domain relationships
+VesselVisitNotification --> VVNState : has
+VesselVisitNotification --> OrganizationId : submitted by
+VesselVisitNotification --> UserId : submitted/approved/rejected by
+VesselVisitNotification "1" o-- "0..1" DockAssignment : has
+
+DockAssignment --> DockAssignmentStatus : has
+DockAssignment --> Dock : assigned to
+
+DecisionLog --> DecisionOutcome : has
+DecisionLog --> UserId : decided by
+DecisionLog ..> VesselVisitNotification : logs decision for
+DecisionLog ..> DockAssignment : references (if approved)
+
+Organization --> OrganizationId : identified by
+Organization --> OrganizationType : has
+
+' DbContext relationships
+PortDbContext --> VesselVisitNotification : manages
+PortDbContext --> DockAssignment : manages
+PortDbContext --> DecisionLog : manages
+PortDbContext --> Dock : manages
+PortDbContext --> Organization : manages
+
+note right of VesselVisitNotification
+  State Transitions:
+  DRAFT → SUBMITTED → APPROVED/REJECTED
+  
+  Approve() and Reject() enforce
+  state = SUBMITTED precondition
+end note
+
+note right of DecisionLog
+  Immutable audit log
+  Factory methods ensure
+  correct initialization
+end note
+
+note right of DockAssignment
+  Created only on approval
+  Prevents double-booking
+  via overlap validation
+end note
+
+note bottom of CallerContext
+  Port Authority: X-Org-Id + X-Role
+  (X-User-Id optional)
+  
+  Shipping Agent: All 3 required
+end note
+
+@enduml

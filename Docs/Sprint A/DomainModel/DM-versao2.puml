@@ -1,0 +1,361 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+hide stereotype
+title Domain Model
+
+' ===== Actors as domain references =====
+
+class Organization {
+  orgId: String
+  name: String
+  type: OrganizationType
+}
+
+enum OrganizationType {
+  SHIPPING_AGENT
+  PORT_AUTHORITY
+  TERMINAL_OPERATOR
+}
+
+class User {
+  userId: String
+  name: String
+  email: String
+}
+
+' One user belongs to exactly one organization (for Sprint A)
+User "1" --> "1" Organization : belongsTo
+
+' Link to VVN: who submitted
+VesselVisitNotification "1" --> "1" User : submittedBy
+
+' Port Authority approves/refuses; keep audit of action
+VesselVisitNotification "0..1" --> "1" User : approvedBy
+VesselVisitNotification "0..1" --> "1" User : rejectedBy
+
+' Dock assignment events track who did the reassignment
+DockAssignmentEvent "1" --> "1" User : assignedBy
+
+' Logistics planner responsible for assigning mobile equipment
+MobileEquipment "0..*" --> "0..1" User : controlledBy
+
+
+' ===== Vessels and Visits =====
+
+class Vessel {
+  imoNumber: String   ' unique identifier
+  name: String
+  capacityTEU: int
+}
+
+class VesselType {
+  vesselTypeId: String
+  name: String
+  description: String
+  operationalConstraints: String
+}
+
+Vessel "0..*" --> "1" VesselType : classified as
+
+note right of VesselVisitNotification
+Content fields are editable only when state IN { DRAFT }.
+On SUBMITTED, content becomes immutable.
+Port Authority can only change state and decision metadata:
+- APPROVED → approvedBy, approvedAt (+ creates ScheduledVisit)
+- REJECTED → rejectedBy, rejectedAt, rejectionReason
+Agent may revert to DRAFT after REJECTED to edit and resubmit.
+end note
+
+class VesselVisitNotification {
+  vvnId: String
+  state: VVNState
+  visitPurpose: VisitPurpose
+  eta: DateTime
+  etd: DateTime
+  submittedAt: DateTime        ' optional: set on submit
+  approvedAt: DateTime         ' set when state=APPROVED
+  rejectedAt: DateTime         ' set when state=REJECTED
+  rejectionReason: String      ' filled when state=REJECTED
+}
+
+enum VVNState {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+}
+
+enum VisitPurpose {
+  LOAD
+  UNLOAD
+  BOTH
+  MAINTENANCE
+}
+
+VesselVisitNotification "0..*" --> "1" Vessel : concerns
+VesselVisitNotification ..> VVNState   
+VesselVisitNotification ..> VisitPurpose
+
+class ScheduledVisit {
+  scheduledVisitId: String
+  scheduledArrival: DateTime
+  scheduledDeparture: DateTime
+  status: ScheduledVisitStatus
+  ' Current, effective assignment (mutable)
+  ' Overwritten on reassignment; history kept below
+  currentDock: Dock
+}
+
+enum ScheduledVisitStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+' Value-object style history entries owned by the visit
+class DockAssignmentEvent {
+  assignedAt: DateTime
+  assignedBy: String
+  fromDockCode: String
+  toDockCode: String
+  reason: String
+}
+
+' Visit owns zero or more historical events
+ScheduledVisit *-- "0..*" DockAssignmentEvent : assignmentHistory
+
+' Current assignment link
+ScheduledVisit "1" --> "0..1" Dock : currentDock
+
+'
+' VVN owns the scheduled visit created on approval (0 or 1)
+VesselVisitNotification "1" *-- "0..1" ScheduledVisit : creates on approval
+ScheduledVisit ..> ScheduledVisitStatus : typed by
+
+
+' ===== Cargo Manifests and Containers =====
+
+class CargoManifest {
+  manifestId: String
+}
+
+class LoadingCargoManifest extends CargoManifest
+class UnloadingCargoManifest extends CargoManifest
+
+' VVN owns at most one of each type of manifest (1load and 1unload)
+VesselVisitNotification "1" *-- "0..1" LoadingCargoManifest   : loading
+VesselVisitNotification "1" *-- "0..1" UnloadingCargoManifest : unloading
+
+' ===== Manifest Entries (containers listed as entries within each manifest) =====
+class ManifestEntry {
+  containerId: String       ' ISO 6346
+  bay: int                  ' vessel slot: bay
+  row: int                  ' vessel slot: row
+  tier: int                 ' vessel slot: tier
+  goodsDescription: String  ' e.g., fruits, car, batteries
+  hazardous: boolean        ' dangerous goods flag
+  size: String              ' e.g., 20ft, 40ft   (optional, Sprint A)
+  weightKg: double          ' optional, Sprint A
+}
+
+' Each manifest lists one or more container entries
+CargoManifest "1" *-- "1..*" ManifestEntry : lists
+
+' ===== Base Resource =====
+abstract class Resource {
+  resourceId: String
+}
+
+' ===== Human Resources =====
+class HumanResource {
+  mecanographicNumber: Long
+  shortName: String
+  email: String
+  phone: String
+  humanResourceStatus: HumanResourceStatus
+  hrOperationalWindow: HROperationalWindow
+}
+
+class HROperationalWindow {
+  timezone: String
+  notes: String
+}
+
+class HRWeeklyRule {
+  dayOfWeek: String   ' MON..SUN
+  startTime: String   ' "08:00"
+  endTime: String     ' "16:00"
+}
+
+class HRExceptionRule {
+  date: String        ' "2025-12-25"
+  type: String        ' OPEN | CLOSED | PARTIAL
+  startTime: String   ' optional when CLOSED
+  endTime: String     ' optional when CLOSED
+  reason: String
+}
+
+HROperationalWindow *-- "1..*" HRWeeklyRule
+HROperationalWindow *-- "0..*" HRExceptionRule
+
+' Qualification as CRUD-managed entity
+class Qualification {
+  qualificationId: String
+  qualificationType: String 'STS_CRANE_OPERATOR,
+  YARD_GANTRY_CRANE_OPERATOR, TRUCK_DRIVER, YARD_PLANNER
+  description: String
+}
+
+PhysicalResource "1" --> "1" Qualification : requires
+
+enum HumanResourceStatus {
+  AVAILABLE
+  UNAVAILABLE
+  TEMPORARILY_REASSIGNED
+}
+
+HumanResource ..> HumanResourceStatus : has
+' A staff member can hold multiple qualifications,
+' and a qualification can belong to many staff members.
+HumanResource "*" -- "*" Qualification : holds
+HumanResource "1" *-- "1" HROperationalWindow
+
+' ===== Physical Resources =====
+abstract class PhysicalResource {
+  code: String   ' unique alphanumeric
+  description: String
+  physicalResourceAvailability: PhysicalResourceAvailability
+  operationalWindow: EquipmentOperationalWindow
+  operatingStaffRequirement: int
+  setupTimeMin: int
+}
+
+enum PhysicalResourceAvailability {
+  AVAILABLE
+  MAINTENANCE
+  TEMP_OUT_OF_SERVICE
+}
+
+class EquipmentOperationalWindow {
+  timezone: String
+  notes: String
+}
+
+class EquipmentWeeklyRule {
+  dayOfWeek: String
+  startTime: String
+  endTime: String
+}
+
+class EquipmentExceptionRule {
+  date: String
+  kind: String        ' OPEN | CLOSED | PARTIAL
+  startTime: String
+  endTime: String
+  reason: String
+}
+
+EquipmentOperationalWindow *-- "1..*" EquipmentWeeklyRule
+EquipmentOperationalWindow *-- "0..*" EquipmentExceptionRule
+
+PhysicalResource ..> PhysicalResourceAvailability : has
+PhysicalResource "1" *-- "1" EquipmentOperationalWindow : has
+
+
+' Current allocation relates to a dock
+class Dock {
+  code: String
+  name: String
+  lengthM: double
+  depthM: double
+  maxDraftM: double
+}
+' Which vessel types can berth here
+Dock "0..*" --> "0..*" VesselType : allowed
+
+MobileEquipment "0..*" --> "0..1" Dock : currentAllocation
+
+' ===== Physical Specializations =====
+' Mobile equipment (truck or yard gantry crane)
+class MobileEquipment {
+  mobileEquipmentType: MobileEquipmentType
+  maxSpeedKph: int
+
+  ' Capacity (type-dependent):
+  containersPerTrip: int     ' used when mobileEquipmentType = TRUCK
+  avgContainersPerHour: int  ' used when mobileEquipmentType = YARD_GANTRY_CRANE
+}
+
+MobileEquipment ..> MobileEquipmentType : has a
+
+enum MobileEquipmentType {
+  TRUCK
+  YARD_GANTRY_CRANE
+}
+
+' STS Crane
+class STSCrane {
+  avgContainersPerHour: int   ' capacity metric for STS cranes
+}
+
+STSCrane "1" --> "1" Dock : installedAt
+
+' ===== Inheritance =====
+Resource <|-- HumanResource
+Resource <|-- PhysicalResource
+PhysicalResource <|-- MobileEquipment
+PhysicalResource <|-- STSCrane
+
+' ===== Storage Areas =====
+class StorageArea {
+  storageAreaId: String            ' unique id
+  name: String
+  location: String        ' free-text or structured
+  maxCapacityTEU: int
+  currentOccupancyTEU: int
+  servesAllDocks: boolean
+  type: StorageAreaType   ' reference to enum
+  ' Invariant: currentOccupancyTEU <= capacityTEU
+}
+
+note right of StorageArea
+{xor} YardSpec, WarehouseSpec
+type = ORDINARY   -> no spec
+type = YARD       -> YardSpec present (0..1)
+type = WAREHOUSE  -> WarehouseSpec present (0..1)
+end note
+
+
+enum StorageAreaType {
+  ORDINARY 
+  YARD
+  WAREHOUSE
+}
+
+StorageArea ..> StorageAreaType : typed by
+
+' Type-specific specs are optional and only present for matching type
+class YardSpec {
+  notes: String
+}
+
+class WarehouseSpec {
+  notes: String
+}
+
+StorageArea *-- "0..1" YardSpec
+StorageArea *-- "0..1" WarehouseSpec
+StorageArea "0..*" -- "0..*" Dock : serves (when servesAllDocks=false)
+
+' Distances for future planning/optimization
+class DockStorageDistance {
+  distanceMeters: int
+}
+
+DockStorageDistance "1" --> "1" StorageArea
+DockStorageDistance "1" --> "1" Dock
+
+
+@enduml

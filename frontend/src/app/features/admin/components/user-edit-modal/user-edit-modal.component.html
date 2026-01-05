@@ -1,0 +1,83 @@
+<div class="modal-overlay" *ngIf="show" (click)="handleBackdropClick($event)">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Edit User</h2>
+      <button class="close-btn" (click)="close()">×</button>
+    </div>
+    
+    <form (ngSubmit)="save()" #userForm="ngForm">
+      <div class="modal-body">
+        <!-- Name -->
+        <div class="form-group">
+          <label for="name">Name *</label>
+          <input
+            type="text"
+            id="name"
+            name="name"
+            [(ngModel)]="editForm.name"
+            required
+            minlength="3"
+            placeholder="Enter user name"
+            class="form-control"
+            [disabled]="saving">
+        </div>
+
+        <!-- Email (readonly) -->
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input
+            type="email"
+            id="email"
+            [value]="user?.email"
+            class="form-control readonly"
+            disabled
+            readonly>
+          <small class="form-hint">Email cannot be changed</small>
+        </div>
+
+        <!-- Organization -->
+        <div class="form-group">
+          <label for="organization">Organization *</label>
+          <select
+            id="organization"
+            name="organizationId"
+            [(ngModel)]="editForm.organizationId"
+            required
+            class="form-control"
+            [disabled]="saving">
+            <option value="">-- Select Organization --</option>
+            <option *ngFor="let org of organizations" [value]="org.id">
+              {{ org.legalName }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Role -->
+        <div class="form-group">
+          <label for="role">Role *</label>
+          <select
+            id="role"
+            name="role"
+            [(ngModel)]="editForm.role"
+            required
+            class="form-control"
+            [disabled]="saving">
+            <option value="">-- Select Role --</option>
+            <option *ngFor="let role of availableRoles" [value]="role.value">
+              {{ role.label }}
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="close()" [disabled]="saving">
+          Cancel
+        </button>
+        <button type="submit" class="btn btn-primary" [disabled]="!userForm.form.valid || saving">
+          {{ saving ? 'Saving...' : 'Update User' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

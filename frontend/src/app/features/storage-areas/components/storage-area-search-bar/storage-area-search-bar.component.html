@@ -1,0 +1,29 @@
+<div class="toolbar">
+  <div class="search-section">
+    <input 
+      type="text" 
+      [placeholder]="'STORAGE.SEARCH_NAME' | translate" 
+      [(ngModel)]="searchParams.name"
+      (keyup.enter)="handleEnter()"
+      class="search-input">
+    <input 
+      type="text" 
+      [placeholder]="'STORAGE.LOCATION' | translate" 
+      [(ngModel)]="searchParams.location"
+      (keyup.enter)="handleEnter()"
+      class="search-input">
+    <select 
+      [(ngModel)]="searchParams.type"
+      (change)="search()"
+      class="search-input">
+      <option *ngFor="let type of storageAreaTypes" [value]="type.value">
+        {{ type.label }}
+      </option>
+    </select>
+    <button class="btn btn-primary" (click)="search()">{{ 'COMMON.SEARCH' | translate }}</button>
+  </div>
+  <div class="action-buttons">
+    <button class="btn btn-secondary" (click)="clear()">{{ 'COMMON.CLEAR' | translate }}</button>
+    <button class="btn btn-success" (click)="addStorageArea()">{{ 'STORAGE.CREATE' | translate }}</button>
+  </div>
+</div>

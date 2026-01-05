@@ -1,0 +1,60 @@
+@startuml
+title SSD – Register Dock (Create)
+
+actor "Port Authority Officer" as User
+participant "Scalar / API Client" as Client
+participant "DocksController" as C
+participant "DockRepository" as DR
+participant "VesselTypeRepository" as VTR
+participant "PortDbContext" as Db
+participant "Dock (Domain)" as D
+database "EF (InMemory)" as Store
+
+User -> Client : POST /api/docks\n{ Code, Name, Location, LengthM, DepthM, MaxDraftM, AllowedVesselTypeIds }
+Client -> C : Create(dto)
+activate C
+
+C -> C : validate DTO\n(required fields, positive values)
+
+C -> DR : ExistsAsync(codeUpper)
+activate DR
+DR -> Store : query
+Store --> DR : false
+deactivate DR
+
+alt vessel types provided
+  C -> VTR : GetByIdsAsync(dto.AllowedVesselTypeIds)
+  activate VTR
+  VTR -> Store : query
+  Store --> VTR : List<VesselType>
+  deactivate VTR
+  
+  alt some vessel types not found
+    C --> Client : 400 Bad Request\n"Vessel type(s) not found: ..."
+    deactivate C
+  end
+end
+
+C -> D : new Dock(codeUpper, dto.Name, dto.Location,\ndto.LengthM, dto.DepthM, dto.MaxDraftM)
+activate D
+D -> D : validate business rules\n(positive values, required fields)
+D --> C : dock
+deactivate D
+
+alt vessel types provided
+  C -> D : SetAllowedVesselTypes(vesselTypes)
+  activate D
+  D -> D : clear and add vessel types
+  deactivate D
+end
+
+C -> DR : AddAsync(dock)
+activate DR
+C -> Db : SaveChangesAsync()
+Db -> Store : insert
+Store --> Db : ok
+deactivate DR
+
+C --> Client : 201 Created + DockResponseDto\n(Code, Name, Location, dimensions, allowedVesselTypes)
+deactivate C
+@enduml

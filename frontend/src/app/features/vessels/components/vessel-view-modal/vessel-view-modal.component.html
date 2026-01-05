@@ -1,0 +1,42 @@
+<div class="modal-overlay" *ngIf="show" (click)="close()">
+  <div class="modal modal-view" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ 'VESSELS.VESSEL_INFO' | translate }}</h2>
+      <button class="close-btn" (click)="close()">×</button>
+    </div>
+    
+    <div class="modal-body" *ngIf="vessel">
+      <div class="detail-grid">
+        <div class="detail-item">
+          <label>{{ 'VESSELS.IMO' | translate }}</label>
+          <div class="detail-value">{{ vessel.imoNumber }}</div>
+        </div>
+
+        <div class="detail-item">
+          <label>{{ 'VESSELS.NAME' | translate }}</label>
+          <div class="detail-value">{{ vessel.name }}</div>
+        </div>
+
+        <div class="detail-item">
+          <label>{{ 'VESSELS.TYPE' | translate }}</label>
+          <div class="detail-value">{{ vessel.vesselTypeName || vessel.vesselTypeId }}</div>
+        </div>
+
+        <div class="detail-item">
+          <label>{{ 'VESSELS.ORGANIZATION' | translate }}</label>
+          <div class="detail-value">{{ vessel.organizationName || vessel.organizationId }}</div>
+        </div>
+
+        <div class="detail-item">
+          <label>{{ 'VESSELS.CAPACITY' | translate }}</label>
+          <div class="detail-value">{{ vessel.capacityTEU || 'Not specified' }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="close()">{{ 'COMMON.CLOSE' | translate }}</button>
+      <button class="btn btn-primary" (click)="edit()">{{ 'VESSELS.EDIT' | translate }}</button>
+    </div>
+  </div>
+</div>

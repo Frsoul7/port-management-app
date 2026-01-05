@@ -1,0 +1,52 @@
+@startuml
+title US 4.1.7 - Create VVE (C4 Level 3 - Component)
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+LAYOUT_WITH_LEGEND()
+
+Container_Ext(spa, "SPA", "Angular")
+ContainerDb_Ext(mongodb, "MongoDB", "NoSQL")
+System_Ext(core, "Core Backend", ".NET")
+
+Container_Boundary(oem, "OEM Backend - VVE Creation") {
+    Component(routes, "VVE Routes", "Express Router", "/vessel-visit-executions/initialize")
+    Component(auth, "Auth Middleware", "JWT Validator", "Validates JWT token")
+    Component(controller, "VVEController", "TypeScript", "initializeFromPlan()")
+    Component(service, "VVEService", "TypeScript", "Orchestrates VVE creation")
+    
+    Component(vveEntity, "VesselVisitExecution", "Domain Entity", "Aggregate root")
+    Component(execOp, "ExecutedOperation", "Value Object", "Operation details")
+    Component(idGen, "VveIdGenerator", "Domain Service", "Sequential ID generation")
+    
+    Component(vveRepo, "VVERepository", "Mongoose", "VVE persistence")
+    Component(planRepo, "OperationPlanRepository", "Mongoose", "Plan fetching")
+}
+
+Rel(spa, routes, "POST /initialize", "HTTPS/JSON + JWT")
+Rel(routes, auth, "Validate token")
+Rel(auth, controller, "Authenticated request")
+
+Rel(controller, service, "initializeVveFromPlan()")
+Rel(service, planRepo, "findById(), update()")
+Rel(service, vveRepo, "findByVvnId(), save()")
+Rel(service, idGen, "generate()")
+
+Rel(service, vveEntity, "Creates")
+Rel(vveEntity, execOp, "Contains")
+
+Rel(vveRepo, mongodb, "CRUD operations")
+Rel(planRepo, mongodb, "Read/Update")
+
+note right of service
+  US 4.1.7 Flow:
+  1. Fetch operation plan (must be APPROVED)
+  2. Check duplicate (findByVvnId)
+  3. Generate VVE ID (VVE-000001, ...)
+  4. Map PlannedOps → ExecutedOps
+  5. Create VVE (status=IN_PROGRESS)
+  6. Save VVE
+  7. Update plan (status=IN_EXECUTION)
+end note
+
+@enduml

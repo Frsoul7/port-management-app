@@ -1,0 +1,124 @@
+@startuml
+
+package UserPackage {
+    class User {
+    }
+
+    class UserRole {
+        + Role
+        + AssignedPage
+    }
+}
+
+package StaffPackage {
+    class Staff {
+        +ShortName
+        +MecanographicNumber
+        +Email
+        +PhoneNumber
+    }
+
+    enum StaffStatus {
+
+    }
+
+    enum StaffRole {
+
+    }
+
+    class Qualifications {
+        +Name
+    }
+
+    class OperationalWindow {
+        +WeekDay
+        +StartTime
+        +EndTime
+    }
+
+    Staff "*" -- "1" StaffStatus : has
+    Staff "*" -- "1" StaffRole : has
+    Staff "1" -- "*" Qualifications : has
+    Staff "1" -- "*" OperationalWindow : has
+}
+
+package VesselPackage {
+
+    class Vessel {
+
+    }
+
+    enum VesselType {
+
+    }
+
+    class VesselVisitNotification {
+
+    }
+
+    enum VesselVisitNotificationType {
+
+    }
+
+
+    class CargoManifestLoading {
+        
+    }
+
+
+    class CargoManifestUnloading {
+        
+    }
+
+    class Container {
+        +Number
+        +Position
+    }
+
+    class Material {
+        +isHAZMAT
+    }
+
+    Vessel "*" -- "1" VesselType : has
+    VesselVisitNotification "*" -- "1" VesselVisitNotificationType : has
+    VesselVisitNotification "1" -- "0..1" CargoManifestLoading : declares
+    VesselVisitNotification "1" -- "0..1" CargoManifestUnloading : declares
+    Vessel "0" -- "*" VesselVisitNotification : has
+    Container "*" -- "1" CargoManifestLoading : has
+    Container "*" -- "1" CargoManifestUnloading : has
+    Material "*" -- "1" Container : has
+}
+
+class Dock {
+
+}
+
+class Resource {
+    +CurrentAvailabilityStatus
+    +SetupTime
+    +StaffQualificationsRequired
+}
+
+enum ResourceType {
+
+}
+
+
+class ShippingAgentOrganization {}
+
+class ShippingAgentRepresentative {}
+
+ShippingAgentOrganization "1" -- "*" ShippingAgentRepresentative : has
+ShippingAgentRepresentative "1" -- "*" VesselVisitNotification : submits
+
+class StorageArea {
+    
+}
+
+enum StorageAreaType {
+    
+}
+StorageArea "*" -- "1" StorageAreaType : has
+Resource "*" -- "1" ResourceType : has
+VesselVisitNotification "*" -- "0..1" Dock : is assigned
+@enduml

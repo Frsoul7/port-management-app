@@ -1,0 +1,45 @@
+@startuml
+title Class Diagram – US 2.2.12 (Physical Resources)
+
+class PhysicalResourcesController {
+  + CreateSTSCrane(dto)
+  + CreateMobileEquipment(dto)
+  + UpdateSTSCrane(code, dto)
+  + UpdateMobileEquipment(code, dto)
+  + Deactivate(code, dto)
+  + Activate(code)
+  + GetAll(...)
+  + GetByCode(code)
+}
+
+class PhysicalResourceRepository {
+  + GetByCodeAsync(code)
+  + ExistsAsync(code)
+  + SearchAsync(...)
+  + AddAsync(resource)
+  + Update(resource)
+}
+
+class QualificationRepository {
+  + SearchAsync(ids)
+  + GetByIdAsync(id)
+}
+
+class PortDbContext {
+  + PhysicalResources : DbSet<PhysicalResource>
+  + Qualifications : DbSet<StaffMemberQualification>
+  + Docks : DbSet<Dock>
+  + StorageAreas : DbSet<StorageArea>
+}
+
+class CreateSTSCraneDto
+class CreateMobileEquipmentDto
+class UpdateSTSCraneDto
+class UpdateMobileEquipmentDto
+class PhysicalResourceResponseDto
+
+PhysicalResourcesController ..> PhysicalResourceRepository
+PhysicalResourcesController ..> QualificationRepository
+PhysicalResourcesController ..> PortDbContext
+PhysicalResourceRepository ..> PortDbContext
+@enduml

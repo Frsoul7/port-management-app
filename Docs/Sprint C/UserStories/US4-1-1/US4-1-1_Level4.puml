@@ -1,0 +1,110 @@
+@startuml
+title US 4.1.1 - Nível 4 (Class Diagram / Estrutura do Código)
+
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+
+package "Domain Layer" {
+  interface IRepository<T> {
+    + findById(id: string): Promise<T>
+    + findAll(): Promise<T[]>
+    + create(entity: T): Promise<T>
+    + update(entity: T): Promise<T>
+    + delete(id: string): Promise<void>
+  }
+
+  abstract class Entity {
+    # id: string
+    # createdAt: Date
+    # updatedAt: Date
+    + getId(): string
+    + equals(other: Entity): boolean
+  }
+
+  abstract class ValueObject {
+    + equals(other: ValueObject): boolean
+    # validate(): void
+  }
+}
+
+package "Application Layer" {
+  class Service {
+    - repository: IRepository<T>
+    + constructor(repository: IRepository<T>)
+    + execute(request: DTO): Promise<ResponseDTO>
+  }
+
+  class DTO {
+    + toJSON(): object
+    + static fromEntity(entity: Entity): DTO
+  }
+}
+
+package "Infrastructure Layer" {
+  class MongoRepository<T> {
+    - model: Model<T>
+    + constructor(model: Model<T>)
+    + findById(id: string): Promise<T>
+    + findAll(): Promise<T[]>
+    + create(entity: T): Promise<T>
+    + update(entity: T): Promise<T>
+    + delete(id: string): Promise<void>
+  }
+
+  class MongooseModel {
+    + schema: Schema
+    + find(): Query
+    + findById(): Query
+    + create(): Promise<Document>
+    + updateOne(): Promise<UpdateResult>
+    + deleteOne(): Promise<DeleteResult>
+  }
+}
+
+package "Presentation Layer" {
+  class Controller {
+    - service: Service
+    + constructor(service: Service)
+    + handleRequest(req: Request, res: Response): Promise<void>
+    - mapToDTO(body: any): DTO
+    - handleError(error: Error, res: Response): void
+  }
+
+  class Router {
+    + routes: Route[]
+    + register(app: Express): void
+  }
+
+  class AuthMiddleware {
+    + authenticate(req: Request, res: Response, next: NextFunction): void
+    + authorize(roles: string[]): Middleware
+  }
+}
+
+IRepository <|.. MongoRepository : implements
+Entity <|-- "DomainEntity"
+Service --> IRepository : depends on (DIP)
+Controller --> Service : uses
+MongoRepository --> MongooseModel : uses
+Router --> Controller : registers
+
+note right of IRepository
+Dependency Inversion Principle:
+Application and Domain depend on
+abstractions (interfaces), not
+concrete implementations.
+end note
+
+note right of MongoRepository
+Infrastructure layer provides
+concrete implementations of
+domain interfaces.
+end note
+
+note right of Controller
+Controllers are thin adapters
+that delegate to application
+services.
+end note
+
+@enduml

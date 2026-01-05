@@ -1,0 +1,38 @@
+@startuml
+title US 4.1.15 - Nível 3 (Layered Sequence Diagram)
+
+skinparam shadowing false
+skinparam responseMessageBelowArrow true
+
+actor "SPA" as SPA
+control "ComplementaryTaskController" as C
+control "ComplementaryTaskService" as S
+entity "IVVERepository" as VVERepo
+entity "IComplementaryTaskRepository" as TaskRepo
+entity "VesselVisitExecution" as VVE
+database "MongoDB" as DB
+
+SPA -> C : POST complementary task
+C -> C : validate request
+
+C -> S : createTask(vveId, dto)
+
+S -> VVERepo : findById(vveId)
+VVERepo -> DB : query VVE
+DB --> VVERepo : VVE data
+VVERepo --> S : VVE
+
+alt VVE completed and not allowed
+  S --> C : BusinessError
+  C --> SPA : 403 Forbidden
+else ok
+  S -> VVE : check state
+  S -> TaskRepo : save(ComplementaryTask)
+  TaskRepo -> DB : insert
+  DB --> TaskRepo : persisted task
+  TaskRepo --> S : task
+  S --> C : task DTO
+  C --> SPA : 201 Created
+end
+
+@enduml

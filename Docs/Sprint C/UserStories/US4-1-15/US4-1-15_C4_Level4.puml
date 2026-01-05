@@ -1,0 +1,86 @@
+@startuml
+title C4 L4 - Code (US 4.1.15 - Complementary Tasks)
+
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+
+enum VveStatus {
+  IN_PROGRESS
+  COMPLETED
+}
+
+class VesselVisitExecution {
+  +id: string
+  +status: VveStatus
+  +isCompleted(): boolean
+}
+
+class ComplementaryTask {
+  +id: string
+  +vveId: string
+  +categoryId: string
+  +startTime: DateTime
+  +endTime: DateTime
+  +blocksOperations: boolean
+  +notes: string
+  +validateTimeWindow()
+}
+
+class ComplementaryTaskCategory {
+  +id: string
+  +name: string
+  +description: string
+}
+
+interface IVesselVisitExecutionRepository {
+  +findById(id: string): VesselVisitExecution
+}
+
+interface IComplementaryTaskRepository {
+  +create(task: ComplementaryTask): ComplementaryTask
+  +findByVveId(vveId: string): List<ComplementaryTask>
+  +update(task: ComplementaryTask): ComplementaryTask
+}
+
+interface ITaskCategoryRepository {
+  +findById(id: string): ComplementaryTaskCategory
+}
+
+class ComplementaryTaskService {
+  -vveRepo: IVesselVisitExecutionRepository
+  -taskRepo: IComplementaryTaskRepository
+  -catRepo: ITaskCategoryRepository
+  +createForVve(vveId: string, dto, userId: string): ComplementaryTask
+  +listForVve(vveId: string): List<ComplementaryTask>
+}
+
+class MongoVVERepository
+class MongoComplementaryTaskRepository
+class MongoTaskCategoryRepository
+
+ComplementaryTaskService --> IVesselVisitExecutionRepository : DIP
+ComplementaryTaskService --> IComplementaryTaskRepository : DIP
+ComplementaryTaskService --> ITaskCategoryRepository : DIP
+
+IVesselVisitExecutionRepository <|.. MongoVVERepository
+IComplementaryTaskRepository <|.. MongoComplementaryTaskRepository
+ITaskCategoryRepository <|.. MongoTaskCategoryRepository
+
+VesselVisitExecution ..> VveStatus
+ComplementaryTask --> ComplementaryTaskCategory : categorized by
+
+note right of ComplementaryTask
+Invariants:
+- startTime < endTime
+- category required
+- blocksOperations is explicit
+end note
+
+note right of ComplementaryTaskService
+Policy:
+- VVE must exist
+- if VVE is COMPLETED, restrict changes
+- category must exist
+end note
+
+@enduml

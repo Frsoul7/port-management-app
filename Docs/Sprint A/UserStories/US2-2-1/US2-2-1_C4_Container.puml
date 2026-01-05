@@ -1,0 +1,39 @@
+@startuml
+title C4 Container – US 2.2.1 Vessel Types
+
+actor "Port Authority\nOfficer" as Officer
+
+node "Client Layer" {
+  [UI / API Client] as Client
+}
+
+node "Web API" {
+  [VesselTypesController] as Ctl
+}
+
+node "Application Layer" {
+  [VesselTypeService] as Svc
+}
+
+database "Persistence" as Db
+node "Domain" as Dom {
+  [VesselType] as VT
+  [Dimensions] as Dims
+}
+
+Officer --> Client : manages vessel types
+Client --> Ctl : POST/PUT/GET/DELETE
+Ctl --> Svc : CRUD operations
+Svc --> Db : persist/retrieve
+Svc ..> VT : create/update
+VT *-- Dims : physical constraints
+
+note right of VT
+  Vessel Type defines:
+  - Name (unique)
+  - Max dimensions (L/B/D)
+  - Max TEU capacity
+  - Max bays/rows/tiers
+end note
+
+@enduml

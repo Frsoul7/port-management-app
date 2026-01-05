@@ -1,0 +1,34 @@
+@startuml
+title SSD – Search Storage Areas
+
+actor "Port Authority Officer" as User
+participant "Scalar / API Client" as Client
+participant "StorageAreasController" as C
+participant "StorageAreaRepository" as Repo
+participant "PortDbContext" as Db
+database "EF (InMemory)" as Store
+
+User -> Client : GET /api/storageareas?name=...&location=...&type=...&servesAllDocks=...
+Client -> C : Search(name?, location?, type?, servesAllDocks?)
+activate C
+
+C -> Repo : SearchAsync(name, location, type, servesAllDocks)
+activate Repo
+
+Repo -> Db : query StorageAreas.Include(sa => sa.Docks)
+Db -> Store : apply filters:
+note right
+- if (name) where sa.Name contains
+- if (location) where sa.Location contains
+- if (type) where sa.Type == type
+- if (servesAllDocks) where sa.ServesAllDocks == servesAllDocks
+end note
+Store --> Db : list
+Db --> Repo : List<StorageArea>
+Repo --> C : List<StorageArea>
+deactivate Repo
+
+C -> C : map to List<StorageAreaResponseDto>
+C --> Client : 200 OK [StorageAreaResponseDto...]
+deactivate C
+@enduml

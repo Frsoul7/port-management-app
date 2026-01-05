@@ -1,0 +1,128 @@
+<div class="modal-overlay" *ngIf="show" (click)="close()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Register Shipping Agent Organization</h2>
+      <button class="close-btn" (click)="close()">×</button>
+    </div>
+
+    <div class="modal-body">
+      <form>
+        <!-- Organization Information -->
+        <div class="form-section">
+          <h3>Organization Information</h3>
+
+          <div class="form-group">
+            <label>Identifier* <span class="hint">(Alphanumeric, max 10)</span></label>
+            <input type="text" [(ngModel)]="organization.identifier" name="identifier" maxlength="10"
+              pattern="^[A-Za-z0-9]+$" required class="form-control" #identifierInput="ngModel">
+            <span class="error-text"
+              *ngIf="identifierInput.invalid && (identifierInput.dirty || identifierInput.touched)">
+              <span *ngIf="identifierInput.errors?.['pattern']">⚠️ Must be alphanumeric (no spaces/symbols)</span>
+              <span *ngIf="identifierInput.errors?.['required']">⚠️ Required</span>
+            </span>
+          </div>
+
+          <div class="form-group">
+            <label>Legal Name*</label>
+            <input type="text" [(ngModel)]="organization.legalName" name="legalName" required maxlength="200"
+              class="form-control">
+          </div>
+
+          <div class="form-group">
+            <label>Alternative Name*</label>
+            <input type="text" [(ngModel)]="organization.alternativeName" name="alternativeName" required
+              maxlength="200" class="form-control">
+          </div>
+
+          <div class="form-group">
+            <label>Address*</label>
+            <textarea [(ngModel)]="organization.address" name="address" rows="3" required maxlength="500"
+              class="form-control"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>Tax Number*</label>
+            <input type="text" [(ngModel)]="organization.taxNumber" name="taxNumber" required maxlength="64"
+              class="form-control">
+          </div>
+        </div>
+
+        <!-- Representatives Section -->
+        <div class="form-section">
+          <div class="section-header">
+            <h3>Representatives* (At least one required)</h3>
+            <button type="button" class="btn btn-secondary" (click)="addRepresentative()">
+              ➕ Add Representative
+            </button>
+          </div>
+
+          <div class="info-box">
+            <strong>📧 Gmail Required:</strong> Representatives must use Gmail addresses for authentication.
+            User accounts will be created automatically and activation emails sent.
+          </div>
+
+          <div class="representatives-list">
+            <div *ngFor="let rep of representatives; let i = index" class="representative-item">
+              <div class="rep-header">
+                <h4>Representative #{{i + 1}}</h4>
+                <button type="button" *ngIf="representatives.length > 1" class="btn-remove"
+                  (click)="removeRepresentative(i)">
+                  ❌ Remove
+                </button>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Name*</label>
+                  <input type="text" [(ngModel)]="rep.name" [name]="'repName' + i" required class="form-control">
+                </div>
+
+                <div class="form-group">
+                  <label>Citizen ID*</label>
+                  <input type="text" [(ngModel)]="rep.citizenId" [name]="'repCitizenId' + i" required
+                    class="form-control">
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Nationality*</label>
+                  <input type="text" [(ngModel)]="rep.nationality" [name]="'repNationality' + i" required
+                    class="form-control" pattern="^[A-Za-z]{2}$" maxlength="2" style="text-transform: uppercase;"
+                    #natInput="ngModel">
+                  <span class="error-text" *ngIf="natInput.invalid && (natInput.dirty || natInput.touched)">
+                    <span *ngIf="natInput.errors?.['pattern']">⚠️ Must be 2 letters (e.g. PT)</span>
+                  </span>
+                </div>
+
+                <div class="form-group">
+                  <label>Email* <span class="hint">(Gmail only)</span></label>
+                  <input type="email" [(ngModel)]="rep.email" [name]="'repEmail' + i"
+                    [class.invalid]="rep.email && !isGmailAddress(rep.email)" required class="form-control">
+                  <span class="error-text" *ngIf="rep.email && !isGmailAddress(rep.email)">
+                    ⚠️ Must be a Gmail address (@gmail.com)
+                  </span>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>Phone*</label>
+                <input type="tel" [(ngModel)]="rep.phone" [name]="'repPhone' + i" required class="form-control">
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="close()" [disabled]="saving">Cancel</button>
+      <button class="btn btn-primary" (click)="save()" [disabled]="!isFormValid() || saving">
+        {{ saving ? 'Creating...' : 'Create Organization' }}
+      </button>
+    </div>
+
+    <!-- Loading Overlay for Saving -->
+    <app-loading *ngIf="saving" [message]="'COMMON.SAVING'"></app-loading>
+  </div>
+</div>

@@ -1,0 +1,40 @@
+@startuml
+title SSD – Create Qualification
+
+actor "Logistics Operator" as Operator
+participant "API Client" as Client
+participant "QualificationsController" as C
+participant "PortDbContext" as Db
+database "EF (InMemory)" as Store
+
+Operator -> Client : POST /api/qualifications\n{QualificationId, Name, Description}
+Client -> C : Create(dto)
+activate C
+
+C -> C : Validate QualificationId (alphanumeric, max 15)\nValidate Name (min 2 words, max 150)
+
+C -> Db : Qualifications.AnyAsync(q => q.QualificationId == ...)
+activate Db
+Db -> Store : SELECT COUNT(*) FROM Qualifications WHERE QualificationId = ?
+Store --> Db : count
+deactivate Db
+
+alt exists
+  C --> Client : 409 Conflict ("Qualification already exists")
+else proceed
+  C -> C : new StaffMemberQualification(id, name, description)
+  C -> Db : Qualifications.Add(entity)
+  activate Db
+  Db -> Store : INSERT INTO Qualifications
+  Store --> Db : ok
+  deactivate Db
+
+  C -> Db : SaveChangesAsync()
+  Db -> Store : commit
+  Store --> Db : ok
+  Db --> C : ok
+
+  C --> Client : 201 Created + qualification
+end
+deactivate C
+@enduml

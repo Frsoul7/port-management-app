@@ -1,0 +1,35 @@
+# .NET build output
+**/bin/
+**/obj/
+**/out/
+
+# VS/IDE junk
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+
+# NuGet
+*.nupkg
+*.snupkg
+**/packages/*
+*.NuGet.Config
+.fake
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Node (Frontend)
+node_modules/
+dist/
+.angular/
+
+# Backend specific
+backend/src/bin/
+backend/src/obj/
+backend/tests/bin/
+backend/tests/obj/
+nul

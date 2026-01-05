@@ -1,0 +1,49 @@
+@startuml
+title Sequence Diagram – US 2.2.8 Create & Submit VVN
+
+actor "Shipping Agent" as Agent
+participant "API\nVesselVisitNotificationsController" as Ctl
+participant "App Service\nVesselVisitService" as Svc
+database "EF Core\nPortDbContext" as Db
+collections "Domain\nVesselVisitNotification" as Vvn
+collections "Domain\nCargoManifest & Entries" as Manifests
+participant "Policy\nHazardousRequiresCrewPolicy" as Policy
+
+== Create draft ==
+Agent -> Ctl : POST /api/vvns (Create request)
+Ctl -> Svc : CreateVvnAsync(vesselImo, purpose, eta, etd,\n captainName, crewCount, orgId)
+Svc -> Db : INSERT VesselVisitNotification
+Db --> Svc : Vvn (state=IN_PROGRESS)
+Svc --> Ctl : Vvn dto
+Ctl --> Agent : 201 Created (vvnId)
+
+== Add manifest entry (typical) ==
+Agent -> Ctl : POST /api/vvns/{id}/entries (type, entry dto)
+Ctl -> Svc : AddManifestEntryAsync(vvnId, type, entry)
+Svc -> Db : Load VVN + manifest + entries
+Svc -> Manifests : ManifestEntry.Create(dto) -> validates ISO 6346
+Manifests --> Svc : entry
+Svc -> Manifests : CargoManifest.AddEntry(entry)
+Svc -> Db : INSERT/UPDATE manifests + entries
+Db --> Svc : OK
+Svc --> Ctl : entryId
+Ctl --> Agent : 200 OK
+
+== Submit ==
+Agent -> Ctl : POST /api/vvns/{id}/submit
+Ctl -> Svc : SubmitAsync(vvnId, submittedByUserGuid)
+Svc -> Db : Load VVN, manifests, crew
+Svc -> Vvn : SetLoadingManifest(...)\nSetUnloadingManifest(...)
+Svc -> Policy : EnsureSatisfied(vvn)
+alt Policy OK
+  Svc -> Vvn : Submit(submittedBy)
+  Svc -> Db : UPDATE VVN state = SUBMITTED
+  Db --> Svc : OK
+  Svc --> Ctl : Vvn dto (state=SUBMITTED)
+  Ctl --> Agent : 200 OK
+else Policy fails
+  Svc --> Ctl : throws (e.g., crew required)
+  Ctl --> Agent : 400 Bad Request (message)
+end
+
+@enduml

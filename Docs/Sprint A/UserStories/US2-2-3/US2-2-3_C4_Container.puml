@@ -1,0 +1,40 @@
+@startuml
+title C4 Container – US 2.2.3 Docks
+
+actor "Port Authority\nOfficer" as Officer
+
+node "Client Layer" {
+  [UI / API Client] as Client
+}
+
+node "Web API" {
+  [DocksController] as Ctl
+}
+
+node "Application Layer" {
+  [DockService] as Svc
+}
+
+database "Persistence" as Db
+node "Domain" as Dom {
+  [Dock] as D
+  [VesselType] as VT
+}
+
+Officer --> Client : register/update docks
+Client --> Ctl : POST/PUT/GET
+Ctl --> Svc : CRUD operations
+Svc --> Db : persist/retrieve
+Svc ..> D : create/update
+D --> VT : allowed vessel types
+
+note right of D
+  Dock attributes:
+  - Unique identifier
+  - Name/number
+  - Location (free text)
+  - Physical chars (L/D/draft)
+  - Allowed vessel types
+end note
+
+@enduml

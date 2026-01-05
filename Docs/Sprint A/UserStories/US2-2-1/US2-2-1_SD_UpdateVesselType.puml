@@ -1,0 +1,101 @@
+@startuml
+title Sequence Diagram – Update Vessel Type (US 2.2.1)
+
+actor "Port Authority Officer" as User
+participant "API Client" as Client
+participant "VesselTypesController" as C
+participant "PortDbContext" as Db
+participant "VesselType\n(Domain)" as VT
+database "EF Store" as Store
+
+User -> Client : PUT /api/vessel-types/{id}
+activate Client
+Client -> C : Update(id, UpdateVesselTypeDto)
+activate C
+
+' Authorization check
+C -> C : CallerContext.FromHeaders(Request)
+C -> C : ValidatePortAuthorityAccess()
+
+alt not Port Authority Officer
+  C --> Client : 403 Forbidden
+  Client --> User : Error: Access denied
+else vessel type not found
+  C -> Db : FindAsync<VesselType>(id)
+  activate Db
+  Db -> Store : SELECT * FROM VesselTypes WHERE VesselTypeId = ?
+  activate Store
+  Store --> Db : null
+  deactivate Store
+  deactivate Db
+  
+  C --> Client : 404 Not Found
+  Client --> User : Error: Vessel type does not exist
+else duplicate name
+  C -> Db : FindAsync<VesselType>(id)
+  activate Db
+  Db -> Store : SELECT * FROM VesselTypes WHERE VesselTypeId = ?
+  activate Store
+  Store --> Db : vesselType
+  deactivate Store
+  deactivate Db
+  
+  C -> Db : AnyAsync(VesselTypes.Where(vt => vt.Name == dto.Name && vt.VesselTypeId != id))
+  activate Db
+  Db -> Store : SELECT COUNT(*) FROM VesselTypes\nWHERE Name = ? AND VesselTypeId != ?
+  activate Store
+  Store --> Db : 1 (duplicate found)
+  deactivate Store
+  deactivate Db
+  
+  C --> Client : 409 Conflict\n"Another vessel type already has this name"
+  Client --> User : Error: Duplicate name
+else negative or zero values
+  C -> Db : FindAsync<VesselType>(id)
+  activate Db
+  Db -> Store : SELECT * FROM VesselTypes WHERE VesselTypeId = ?
+  activate Store
+  Store --> Db : vesselType
+  deactivate Store
+  deactivate Db
+  
+  C -> C : ValidatePositiveValues(dto)
+  
+  C --> Client : 400 Bad Request\n"All numeric values must be positive"
+  Client --> User : Error: Invalid input
+else all validations passed
+  C -> Db : FindAsync<VesselType>(id)
+  activate Db
+  Db -> Store : SELECT * FROM VesselTypes WHERE VesselTypeId = ?
+  activate Store
+  Store --> Db : vesselType
+  deactivate Store
+  deactivate Db
+  
+  C -> C : ValidatePositiveValues(dto)
+  
+  ' Update domain entity
+  C -> VT : Update(dto.Description, dto.MaxCapacityTEU,\ndto.MaxRows, dto.MaxBays, dto.MaxTiers,\ndto.MaxLength, dto.MaxBeam, dto.MaxDraft)
+  
+  alt dto.Name provided
+    C -> VT : UpdateName(dto.Name)
+  end
+  
+  ' Persist changes
+  C -> Db : SaveChangesAsync()
+  activate Db
+  Db -> Store : UPDATE VesselTypes SET ...
+  activate Store
+  Store --> Db : ok
+  deactivate Store
+  deactivate Db
+  
+  ' Build response
+  C -> C : ToResponse(vesselType)
+  C --> Client : 200 OK\nBody: VesselTypeResponseDto
+  Client --> User : Display updated vessel type
+end
+
+deactivate C
+deactivate Client
+@enduml

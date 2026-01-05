@@ -1,0 +1,41 @@
+@startuml
+title SSD – Update Shipping Agent Organization
+
+actor "Port Authority Officer" as Officer
+participant "API Client" as Client
+participant "OrganizationsController" as C
+participant "OrganizationRepository" as OR
+participant "PortDbContext" as Db
+participant "Organization (Domain)" as O
+database "EF (InMemory)" as Store
+
+Officer -> Client : PUT /api/organizations/{id}\n{ LegalName, AlternativeName, Address, TaxNumber, Type }
+Client -> C : Update(id, dto)
+activate C
+
+C -> OR : GetByIdAsync(id)
+activate OR
+OR -> Store : query
+Store --> OR : Organization | null
+deactivate OR
+
+alt not found
+  C --> Client : 404 Not Found\n"Organization with ID '...' not found."
+  deactivate C
+else found
+  C -> O : O.Update(dto.LegalName, dto.AlternativeName, dto.Address, dto.TaxNumber, dto.Type)
+  activate O
+  O -> O : validate business rules\n(required fields, identifier immutable)
+  deactivate O
+
+  C -> OR : Update(O)
+  activate OR
+  C -> Db : SaveChangesAsync()
+  Db -> Store : update Organization
+  Store --> Db : OK
+  deactivate OR
+
+  C --> Client : 200 OK + OrganizationResponseDto
+  deactivate C
+end
+@enduml

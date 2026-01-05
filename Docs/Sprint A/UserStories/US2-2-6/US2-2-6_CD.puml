@@ -1,0 +1,99 @@
+@startuml
+title Class Diagram – US 2.2.6 Manage Representatives
+
+' ===== Domain =====
+class Organization {
+  + OrganizationId OrganizationId
+  + string Identifier
+  + string LegalName
+  + string AlternativeName
+  + string AddressLine
+  + string TaxNumber
+  + OrganizationType Type
+  + IReadOnlyCollection<Representative> Representatives
+}
+
+class Representative {
+  + RepresentativeId RepresentativeId
+  + string Name
+  + string CitizenId
+  + string Nationality
+  + string Email
+  + string Phone
+  + bool IsActive
+  + DateTime CreatedAt
+  --
+  + Activate() : void
+  + Deactivate() : void
+  + Update(string name, string citizenId, string nationality, string email, string? phone) : void
+}
+
+' ===== Infrastructure =====
+class PortDbContext {
+  + DbSet<Organization> Organizations
+  + DbSet<Representative> Representatives
+}
+
+class RepresentativeRepository {
+  + GetByIdAsync(string id) : Task<Representative?>
+  + GetAllByOrganizationAsync(string orgId) : Task<List<Representative>>
+  + AddAsync(Representative rep) : Task
+  + Update(Representative rep) : void
+  + Deactivate(Representative rep) : void
+}
+
+' ===== Controllers =====
+class RepresentativesController {
+  - OrganizationRepository _orgRepo
+  - RepresentativeRepository _repRepo
+  - PortDbContext _ctx
+  --
+  + Create(string orgId, RepresentativeInputDto dto) : Task<IActionResult>
+  + Update(string orgId, string repId, UpdateRepresentativeDto dto) : Task<IActionResult>
+  + Deactivate(string orgId, string repId) : Task<IActionResult>
+  + GetAll(string orgId) : Task<IActionResult>
+}
+
+' ===== DTOs =====
+class RepresentativeInputDto {
+  + string Name
+  + string CitizenId
+  + string Nationality
+  + string Email
+  + string? Phone
+}
+
+class UpdateRepresentativeDto {
+  + string Name
+  + string CitizenId
+  + string Nationality
+  + string Email
+  + string? Phone
+}
+
+class RepresentativeResponseDto {
+  + string RepresentativeId
+  + string Name
+  + string CitizenId
+  + string Nationality
+  + string Email
+  + string Phone
+  + bool IsActive
+  + DateTime CreatedAt
+}
+
+' ===== Relationships =====
+Organization "1" o-- "0..*" Representative : has
+RepresentativeRepository --> PortDbContext
+RepresentativeRepository --> Representative
+
+RepresentativesController --> OrganizationRepository
+RepresentativesController --> RepresentativeRepository
+RepresentativesController --> PortDbContext
+RepresentativesController ..> RepresentativeInputDto
+RepresentativesController ..> UpdateRepresentativeDto
+RepresentativesController ..> RepresentativeResponseDto
+
+RepresentativeResponseDto --> RepresentativeInputDto
+
+@enduml

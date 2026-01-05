@@ -1,0 +1,44 @@
+@startuml
+title C4 Container – US 2.2.2 Vessels
+
+actor "Port Authority\nOfficer" as Officer
+
+node "Client Layer" {
+  [UI / API Client] as Client
+}
+
+node "Web API" {
+  [VesselsController] as Ctl
+}
+
+node "Application Layer" {
+  [VesselService] as Svc
+}
+
+database "Persistence" as Db
+node "Domain" as Dom {
+  [Vessel] as V
+  [VesselType] as VT
+  [Organization] as Org
+  [ImoValidator] as IMO
+}
+
+Officer --> Client : register/update vessels
+Client --> Ctl : POST/PUT/GET
+Ctl --> Svc : CRUD operations
+Svc --> Db : persist/retrieve
+Svc ..> V : create/update
+V --> VT : references type
+V --> Org : references operator
+V ..> IMO : validate IMO number
+
+note right of V
+  Vessel attributes:
+  - IMO number (7-digit + check)
+  - Name
+  - Vessel Type
+  - Operator/Owner Org
+  - Actual dimensions ≤ type max
+end note
+
+@enduml

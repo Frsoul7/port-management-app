@@ -1,0 +1,273 @@
+.table-container {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  overflow: hidden;
+}
+
+/* ===============================
+   DESKTOP TABLE VIEW
+=============================== */
+.vvns-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.vvns-table thead {
+  background: #f8f9fa;
+}
+
+.vvns-table th {
+  padding: 16px;
+  text-align: left;
+  font-weight: 600;
+  color: #495057;
+  border-bottom: 2px solid #dee2e6;
+  font-size: 14px;
+}
+
+.vvns-table td {
+  padding: 16px;
+  border-bottom: 1px solid #dee2e6;
+  font-size: 14px;
+  color: #495057;
+}
+
+.vvn-row:hover {
+  background: #f8f9fa;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+  text-align: center;
+}
+
+.btn-icon {
+  background: none;
+  border: 1px solid transparent;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 6px;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+}
+
+.btn-view:hover {
+  background: #e3f2fd;
+  border-color: #2196f3;
+  transform: scale(1.1);
+}
+
+.btn-edit:hover {
+  background: #fff3e0;
+  border-color: #ff9800;
+  transform: scale(1.1);
+}
+
+.btn-submit:hover {
+  background: #e8f5e9;
+  border-color: #4caf50;
+  transform: scale(1.1);
+}
+
+.btn-reopen:hover {
+  background: #fff8e1;
+  border-color: #ffc107;
+  transform: scale(1.1);
+}
+
+/* Status Badges */
+.status-badge {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.status-in-progress {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.status-submitted {
+  background: #cfe2ff;
+  color: #084298;
+}
+
+.status-approved {
+  background: #d1e7dd;
+  color: #0f5132;
+}
+
+.status-rejected {
+  background: #f8d7da;
+  color: #842029;
+}
+
+/* ===============================
+   MOBILE CARD VIEW
+=============================== */
+.vvns-cards {
+  display: none;
+}
+
+.vvn-card {
+  border-bottom: 1px solid #dee2e6;
+  padding: 16px;
+  transition: background 0.2s;
+}
+
+.vvn-card:last-child {
+  border-bottom: none;
+}
+
+.vvn-card:hover {
+  background: #f8f9fa;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #667eea;
+  gap: 12px;
+}
+
+.card-header h3 {
+  margin: 0 0 8px 0;
+  color: #667eea;
+  font-size: 18px;
+}
+
+.card-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.card-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+}
+
+.label {
+  font-weight: 600;
+  color: #6c757d;
+}
+
+.value {
+  text-align: right;
+  color: #495057;
+}
+
+/* ===============================
+   EMPTY & LOADING STATES
+=============================== */
+.empty-state, .loading-state {
+  padding: 60px 20px;
+  text-align: center;
+  color: #6c757d;
+}
+
+.empty-state p {
+  margin: 8px 0;
+  font-size: 16px;
+}
+
+.hint {
+  font-size: 14px;
+  color: #999;
+}
+
+.spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #667eea;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 16px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ===============================
+   RESPONSIVE: HIDE DESKTOP, SHOW MOBILE
+=============================== */
+@media (max-width: 768px) {
+  .desktop-table {
+    display: none;
+  }
+
+  .vvns-cards {
+    display: block;
+  }
+
+  .btn-icon {
+    font-size: 20px;
+    padding: 4px 8px;
+    min-width: 36px;
+  }
+
+  .status-badge {
+    font-size: 11px;
+    padding: 3px 10px;
+  }
+
+  .card-header h3 {
+    font-size: 16px;
+  }
+
+  .label, .value {
+    font-size: 13px;
+  }
+}
+
+/* ===============================
+   SMALL MOBILE
+=============================== */
+@media (max-width: 480px) {
+  .vvn-card {
+    padding: 12px;
+  }
+
+  .card-header h3 {
+    font-size: 14px;
+  }
+
+  .btn-icon {
+    font-size: 18px;
+    padding: 3px 6px;
+    min-width: 32px;
+  }
+
+  .status-badge {
+    font-size: 10px;
+    padding: 2px 8px;
+  }
+
+  .label, .value {
+    font-size: 12px;
+  }
+}

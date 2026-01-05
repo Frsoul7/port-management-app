@@ -1,0 +1,156 @@
+@startuml
+title Class Diagram – US 2.2.4 Register & Update Storage Areas
+
+' ===== Domain =====
+class StorageArea {
+  + string StorageAreaId
+  + string Name
+  + string Location
+  + int MaxCapacityTEU
+  + int CurrentOccupancyTEU
+  + bool ServesAllDocks
+  + StorageAreaType Type
+  + YardSpec? YardSpec
+  + WarehouseSpec? WarehouseSpec
+  + ICollection<Dock> Docks
+  --
+  + StorageArea(string name, string location, int maxCapacityTEU, StorageAreaType type, bool servesAllDocks = true)
+  + Update(string name, string location, int maxCapacityTEU, bool servesAllDocks) : void
+  + SetYardSpec(string? notes) : void
+  + SetWarehouseSpec(string? notes) : void
+  + SetServedDocks(IEnumerable<Dock> docks) : void
+  + UpdateOccupancy(int newOccupancy) : void
+}
+
+enum StorageAreaType {
+  ORDINARY
+  YARD
+  WAREHOUSE
+}
+
+class YardSpec {
+  + int YardSpecId
+  + string? Notes
+}
+
+class WarehouseSpec {
+  + int WarehouseSpecId
+  + string? Notes
+}
+
+class Dock {
+  + string Code
+  + string Name
+  + string Location
+  + double LengthM
+  + double DepthM
+  + double MaxDraftM
+  + ICollection<VesselType> AllowedVesselTypes
+  + ICollection<StorageArea> ServedStorageAreas
+  --
+  + Dock(string code, string name, string location, double lengthM, double depthM, double maxDraftM)
+  + Update(string name, string location, double lengthM, double depthM, double maxDraftM) : void
+}
+
+class DockStorageDistance {
+  + int DockStorageDistanceId
+  + int DistanceMeters
+  + string DockCode
+  + Dock? Dock
+  + string StorageAreaId
+  + StorageArea? StorageArea
+}
+
+' ===== Infrastructure =====
+class PortDbContext {
+  + DbSet<StorageArea> StorageAreas
+  + DbSet<Dock> Docks
+  + DbSet<DockStorageDistance> DockStorageDistances
+  --
+  + PortDbContext(DbContextOptions<PortDbContext> options)
+  # OnModelCreating(ModelBuilder modelBuilder) : void
+}
+
+class StorageAreaRepository {
+  - PortDbContext _ctx
+  - DbSet<StorageArea> _dbSet
+  --
+  + StorageAreaRepository(PortDbContext ctx)
+  + GetByIdAsync(string id, bool includeDocks = false) : Task<StorageArea?>
+  + GetAllAsync(bool includeDocks = false) : Task<List<StorageArea>>
+  + SearchAsync(string? name, string? location, StorageAreaType? type, bool? servesAllDocks) : Task<List<StorageArea>>
+  + ExistsAsync(string id) : Task<bool>
+  + AddAsync(StorageArea entity) : Task
+  + Update(StorageArea entity) : void
+}
+
+' ===== Controllers =====
+class StorageAreasController {
+  - PortDbContext _context
+  --
+  + Create(CreateStorageAreaDto dto) : Task<IActionResult>
+  + Update(string id, UpdateStorageAreaDto dto) : Task<IActionResult>
+  + GetById(string id) : Task<IActionResult>
+  + Search(string? name, string? location, StorageAreaType? type, bool? servesAllDocks) : Task<IActionResult>
+  - ToResponse(StorageArea sa) : StorageAreaResponseDto
+}
+
+' ===== DTOs =====
+class CreateStorageAreaDto {
+  + string Name
+  + string Location
+  + int MaxCapacityTEU
+  + StorageAreaType Type
+  + bool ServesAllDocks
+  + List<string>? ServedDockCodes
+  + string? YardNotes
+  + string? WarehouseNotes
+}
+
+class UpdateStorageAreaDto {
+  + string Name
+  + string Location
+  + int MaxCapacityTEU
+  + bool ServesAllDocks
+  + List<string>? ServedDockCodes
+  + string? YardNotes
+  + string? WarehouseNotes
+}
+
+class StorageAreaResponseDto {
+  + string StorageAreaId
+  + string Name
+  + string Location
+  + int MaxCapacityTEU
+  + int CurrentOccupancyTEU
+  + StorageAreaType Type
+  + bool ServesAllDocks
+  + List<string> ServedDockCodes
+  + string? YardNotes
+  + string? WarehouseNotes
+}
+
+' ===== Relationships =====
+StorageArea --> StorageAreaType : has
+StorageArea "1" *-- "0..1" YardSpec : owns
+StorageArea "1" *-- "0..1" WarehouseSpec : owns
+StorageArea "*" -- "*" Dock : many-to-many
+DockStorageDistance "*" -- "1" Dock
+DockStorageDistance "*" -- "1" StorageArea
+
+PortDbContext --> StorageArea
+PortDbContext --> Dock
+PortDbContext --> DockStorageDistance
+StorageAreaRepository --> PortDbContext
+StorageAreasController --> PortDbContext
+StorageAreasController --> StorageAreaRepository
+StorageAreasController ..> CreateStorageAreaDto
+StorageAreasController ..> UpdateStorageAreaDto
+StorageAreasController ..> StorageAreaResponseDto
+
+note right of StorageArea
+  Invariant: CurrentOccupancyTEU <= MaxCapacityTEU
+  XOR: YardSpec OR WarehouseSpec based on Type
+  ServesAllDocks = true means no specific dock restrictions
+end note
+@enduml

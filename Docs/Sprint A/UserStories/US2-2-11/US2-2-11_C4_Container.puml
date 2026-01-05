@@ -1,0 +1,41 @@
+@startuml
+title C4 Container – US 2.2.11 Register and Manage Staff Members
+
+actor "Logistics Operator" as Operator
+
+node "Client Layer" {
+  [UI / API Client] as Client
+}
+
+node "Web API" {
+  [StaffMembersController] as Ctl
+}
+
+node "Application Layer" {
+  [StaffMemberService] as Svc
+}
+
+database "Persistence" as Db {
+  [PortDbContext] as DbCtx
+  [StaffMemberRepository] as Repo
+}
+
+node "Domain" as Dom {
+  [StaffMember] as Staff
+  [StaffMemberQualification] as Qual
+  [HumanResourceStatus] as Status
+  [EntityActiveStatus] as ActiveStatus
+}
+
+Operator --> Client : register/manage staff
+Client --> Ctl : HTTP requests\n(POST, PUT, DELETE, GET)
+Ctl --> Svc : orchestrate operations
+Svc --> Repo : query/persist
+Repo --> DbCtx : EF Core operations
+DbCtx --> Db : SQL queries
+Svc ..> Staff : enforce business rules
+Staff *-- Qual : owns qualifications
+Staff --> Status : operational status
+Staff --> ActiveStatus : activity status
+
+@enduml

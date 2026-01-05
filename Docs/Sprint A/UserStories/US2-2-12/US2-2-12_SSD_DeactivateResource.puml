@@ -1,0 +1,43 @@
+@startuml
+title SSD – Deactivate / Reactivate Physical Resource
+
+actor "Logistics Operator" as Operator
+participant "API Client" as Client
+participant "PhysicalResourcesController" as C
+participant "PhysicalResourceRepository" as Repo
+participant "PortDbContext" as Db
+database "EF (InMemory)" as Store
+
+Operator -> Client : PATCH /api/resources/{code}/deactivate {reason?}
+Client -> C : Deactivate(code, dto)
+activate C
+
+C -> Repo : GetByCodeAsync(code, includeQualifications: true)
+activate Repo
+Repo -> Db : query resource
+Db -> Store : query
+Store --> Db : resource
+Db --> Repo : resource
+deactivate Repo
+
+alt not found
+  C --> Client : 404 Not Found
+else
+  C -> C : If already deactivated -> idempotent (return OK)
+  C -> Repo : Update(resource.Deactivate(reason))
+  activate Repo
+  Repo -> Db : Update(entity)
+  Db -> Store : UPDATE (set DeactivatedAt, DeactivationReason, Availability)
+  Store --> Db : ok
+  Db --> Repo : ok
+  deactivate Repo
+
+  C -> Db : SaveChangesAsync()
+  Db -> Store : commit
+  Store --> Db : ok
+  Db --> C : ok
+
+  C --> Client : 200 OK + resource
+end
+deactivate C
+@enduml

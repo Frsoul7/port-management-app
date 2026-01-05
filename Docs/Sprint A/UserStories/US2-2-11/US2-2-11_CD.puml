@@ -1,0 +1,103 @@
+@startuml
+title Class Diagram excerpt - US 2.2.11 Register and Manage Staff Members
+
+package "HumanResources" {
+  class StaffMember {
+    +MecanographicNumber : long
+    +ShortName : string
+    +Email : string
+    +Phone : string
+    +Status : HumanResourceStatus
+    +ActivityStatus : EntityActiveStatus
+    +StartHour : TimeSpan
+    +EndHour : TimeSpan
+    +Qualifications : ICollection<StaffMemberQualification>
+    ---
+    +StaffMember(mecanographicNumber, shortName,\n email, phone, status, startHour, endHour)
+    +AddQualification(qualification)
+    +RemoveQualification(qualification)
+    +UpdateContactInfo(email, phone)
+    +UpdateOperationalStatus(status)
+    +UpdateActiveStatus(activeStatus)
+    +UpdateWorkingHours(startHour, endHour)
+    +IsWithinWorkingHours(dateTime) : bool
+  }
+
+  enum HumanResourceStatus {
+    AVAILABLE
+    UNAVAILABLE
+    TEMPORARILY_REASSIGNED
+  }
+
+  class StaffMemberQualification {
+    +Id : Guid
+    +StaffMemberId : long
+    +QualificationId : Guid
+    +QualificationName : string
+    +AssignedAt : DateTime
+  }
+}
+
+package "Common" {
+  enum EntityActiveStatus {
+    ACTIVE
+    INACTIVE
+  }
+}
+
+package "DTOs" {
+  class CreateStaffMemberDto {
+    +MecanographicNumber : long
+    +ShortName : string
+    +Email : string
+    +Phone : string
+    +Status : HumanResourceStatus
+    +StartHour : string
+    +EndHour : string
+  }
+
+  class UpdateStaffMemberDto {
+    +Email : string?
+    +Phone : string?
+    +Status : HumanResourceStatus?
+    +StartHour : TimeSpan?
+    +EndHour : TimeSpan?
+  }
+
+  class StaffMemberResponseDto {
+    +MecanographicNumber : int
+    +ShortName : string
+    +Email : string
+    +Phone : string
+    +Status : string
+    +StartTime : TimeSpan
+    +EndTime : TimeSpan
+    +Qualifications : List<QualificationDto>
+    +CreatedAt : DateTime
+    +DeactivatedAt : DateTime?
+  }
+
+  class QualificationDto {
+    +Id : Guid
+    +Name : string
+  }
+}
+
+package "Infrastructure" {
+  class StaffMemberRepository {
+    +GetByMecanographicNumberAsync(number) : Task<StaffMember?>
+    +GetByStatusAsync(status) : Task<List<StaffMember>>
+    +ExistsAsync(number) : Task<bool>
+  }
+}
+
+StaffMember --> HumanResourceStatus
+StaffMember --> EntityActiveStatus
+StaffMember *-- StaffMemberQualification
+StaffMemberRepository ..> StaffMember : manages
+CreateStaffMemberDto ..> StaffMember : creates
+UpdateStaffMemberDto ..> StaffMember : updates
+StaffMemberResponseDto ..> StaffMember : represents
+StaffMemberResponseDto *-- QualificationDto
+
+@enduml

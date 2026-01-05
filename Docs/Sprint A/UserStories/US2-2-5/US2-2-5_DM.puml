@@ -1,0 +1,64 @@
+@startuml
+title Domain Model – US 2.2.5 (Register Shipping Agent Organizations)
+
+class Organization {
+  + OrganizationId : Guid
+  + Identifier : string
+  + LegalName : string
+  + AlternativeName : string
+  + AddressLine : string
+  + TaxNumber : string
+  + Type : OrganizationType
+  --
+  + Organization(id:Guid, identifier:string, legalName:string, alternativeName:string, addressLine:string, taxNumber:string, type:OrganizationType, representatives:IEnumerable<Representative>)
+  + SetIdentifier(identifier:string) : void
+  + SetLegalName(legalName:string) : void
+  + SetAlternativeName(alternativeName:string) : void
+  + SetAddressLine(addressLine:string) : void
+  + SetTaxNumber(taxNumber:string) : void
+  + AddRepresentatives(representatives:IEnumerable<Representative>) : void
+}
+
+class Representative {
+  + RepresentativeId : Guid
+  + Name : string
+  + CitizenId : string
+  + Nationality : string
+  + Email : string
+  + Phone : string
+  + IsActive : bool
+  + CreatedAt : DateTime
+  --
+  + Representative(name:string, citizenId:string, nationality:string, email:string, phone:string)
+  + Activate() : void
+  + Deactivate() : void
+}
+
+class OrganizationType {
+  <<enumeration>>
+  + SHIPPING_AGENT
+  + PORT_AUTHORITY
+  + TERMINAL_OPERATOR
+}
+
+' Relationships
+Organization "1" --> "1..*" Representative : has
+Organization "1" --> "1" OrganizationType : type
+
+note right of Organization
+**Primary Key:** OrganizationId (immutable)
+**Business Rules:**
+- Must have identifier, legal & alternative names, address, tax number
+- Must include at least one representative
+- Representatives have name, citizen ID, nationality, email, phone
+- Email & phone used for notifications
+- Only SHIPPING_AGENT type requires representatives at creation
+end note
+
+note bottom of Representative
+**Business Rules:**
+- Belongs to exactly one organization
+- Can be activated/deactivated
+end note
+
+@enduml

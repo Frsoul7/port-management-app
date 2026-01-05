@@ -1,0 +1,61 @@
+@startuml
+title SSD – Create Physical Resource
+
+actor "Logistics Operator" as Operator
+participant "API Client" as Client
+participant "PhysicalResourcesController" as C
+participant "PhysicalResourceRepository" as Repo
+participant "QualificationRepository" as QRepo
+participant "DockRepository / StorageAreaRepo" as AreaRepo
+participant "PortDbContext" as Db
+database "EF (InMemory)" as Store
+
+Operator -> Client : POST /api/resources/sts-cranes\nor /mobile-equipment {payload}
+Client -> C : Create(dto)
+activate C
+
+C -> Repo : ExistsAsync(dto.Code)
+activate Repo
+Repo -> Db : AnyAsync(Code == dto.Code)
+Db -> Store : query
+Store --> Db : bool
+Db --> Repo : exists
+deactivate Repo
+
+alt exists
+  C --> Client : 409 Conflict ("Code already exists")
+else proceed
+  C -> QRepo : SearchAsync(qualificationIds)
+  activate QRepo
+  QRepo -> Db : query qualifications
+  Db -> Store : query
+  Store --> Db : quals[]
+  Db --> QRepo : quals[]
+  deactivate QRepo
+
+  C -> AreaRepo : ValidateDockOrStorage(dto.InstalledAtDockCode / StorageAreaId)
+  activate AreaRepo
+  AreaRepo -> Db : Find dock/storage
+  Db -> Store : query
+  Store --> Db : area?
+  Db --> AreaRepo : area?
+  deactivate AreaRepo
+
+  C -> C : Validate type-specific capacity fields
+  C -> Repo : AddAsync(new ResourceEntity)
+  activate Repo
+  Repo -> Db : Add(entity)
+  Db -> Store : INSERT
+  Store --> Db : ok
+  Db --> Repo : ok
+  deactivate Repo
+
+  C -> Db : SaveChangesAsync()
+  Db -> Store : commit
+  Store --> Db : ok
+  Db --> C : ok
+
+  C --> Client : 201 Created + resource
+end
+deactivate C
+@enduml

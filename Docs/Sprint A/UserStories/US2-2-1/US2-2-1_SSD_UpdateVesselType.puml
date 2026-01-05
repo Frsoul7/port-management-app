@@ -1,0 +1,83 @@
+@startuml
+title SSD – Update Vessel Type
+
+actor "Port Authority Officer" as User
+participant "Scalar / API Client" as Client
+participant "VesselTypesController" as C
+participant "PortDbContext" as Db
+database "EF (InMemory)" as Store
+
+User -> Client : PUT /api/vessel-types/{id}\n{ Description?, MaxCapacityTEU?,\nMaxRows?, MaxBays?, MaxTiers?,\nMaxLength?, MaxBeam?, MaxDraft?,\nName? }
+activate Client
+Client -> C : Update(id, dto)
+activate C
+
+alt invalid authentication (not Port Authority Officer)
+  C --> Client : 403 Forbidden\n"Only Port Authority Officers can update vessel types"
+  Client --> User : Error: Access denied
+else vessel type not found
+  C -> Db : FindAsync<VesselType>(id)
+  activate Db
+  Db -> Store : query
+  activate Store
+  Store --> Db : null
+  deactivate Store
+  deactivate Db
+  
+  C --> Client : 404 Not Found\n"Vessel type not found"
+  Client --> User : Error: Vessel type does not exist
+else name change and duplicate name
+  C -> Db : FindAsync<VesselType>(id)
+  activate Db
+  Db -> Store : query
+  activate Store
+  Store --> Db : vesselType
+  deactivate Store
+  deactivate Db
+  
+  C -> Db : AnyAsync(VesselTypes where Name == dto.Name && Id != id)
+  activate Db
+  Db -> Store : query
+  activate Store
+  Store --> Db : true (duplicate)
+  deactivate Store
+  deactivate Db
+  
+  C --> Client : 409 Conflict\n"Another vessel type with this name already exists"
+  Client --> User : Error: Duplicate name
+else negative values provided
+  C -> Db : FindAsync<VesselType>(id)
+  activate Db
+  Db -> Store : query
+  activate Store
+  Store --> Db : vesselType
+  deactivate Store
+  deactivate Db
+  
+  C --> Client : 400 Bad Request\n"All numeric values must be positive"
+  Client --> User : Error: Invalid input
+else valid update
+  C -> Db : FindAsync<VesselType>(id)
+  activate Db
+  Db -> Store : query
+  activate Store
+  Store --> Db : vesselType
+  deactivate Store
+  deactivate Db
+  
+  C -> C : Apply changes to vesselType\n(update only provided fields)
+  C -> Db : SaveChangesAsync()
+  activate Db
+  Db -> Store : update
+  activate Store
+  Store --> Db : ok
+  deactivate Store
+  deactivate Db
+  
+  C --> Client : 200 OK + VesselTypeResponseDto\n{ VesselTypeId, Name, Description,\nMaxCapacityTEU, MaxRows, MaxBays,\nMaxTiers, MaxLength, MaxBeam, MaxDraft }
+  Client --> User : Display updated vessel type details
+end
+
+deactivate C
+deactivate Client
+@enduml

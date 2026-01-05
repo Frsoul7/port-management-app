@@ -1,0 +1,40 @@
+@startuml
+title Domain Model – US 2.2.2 (Register & Update Vessel Records)
+
+class Vessel {
+  + ImoNumber : string
+  + Name : string
+  + CapacityTEU : int
+  + VesselTypeId : string
+  + OrganizationId : OrganizationId
+  --
+  + UpdateBasics(name:string, vesselTypeId:string, organizationId:OrganizationId, capacityTeu:int) : void
+  + IsValidImo(imo:string) : bool
+  + NormalizeImo(imo:string) : string
+}
+
+class VesselType {
+  + VesselTypeId : string
+  + Name : string
+  + Description : string
+  + CapacityTEU : int
+  + MaxRows : int
+  + MaxBays : int
+  + MaxTiers : int
+  + OperationalConstraints : string
+}
+
+class Organization {
+  + OrganizationId : OrganizationId
+  + Name : string
+}
+
+class OrganizationId {
+  + Value : Guid
+}
+
+' Relationships
+Vessel --> VesselType : references
+Vessel --> Organization : owned by
+Organization --> OrganizationId : has
+@enduml

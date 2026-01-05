@@ -1,0 +1,285 @@
+<div class="page-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1>{{ 'COMPLEMENTARY_TASKS.TITLE' | translate }}</h1>
+      <button class="back-btn" (click)="goBack()">{{ 'NAV.BACK_TO_DASHBOARD' | translate }}</button>
+    </div>
+  </div>
+
+  <!-- Action Button -->
+  <div class="action-bar">
+    <button class="btn-primary create-button" (click)="createTask()">
+      <span>➕</span> {{ 'COMPLEMENTARY_TASKS.CREATE_TASK' | translate }}
+    </button>
+  </div>
+
+  <!-- Success Message -->
+  @if (successMessage()) {
+    <div class="alert alert-success">
+      {{ successMessage() }}
+    </div>
+  }
+
+  <!-- Error Message -->
+  @if (errorMessage()) {
+    <div class="alert alert-error">
+      {{ errorMessage() }}
+    </div>
+  }
+
+  <!-- Filters -->
+  <div class="filters-container">
+    <div class="filter-row">
+      <div class="filter-group">
+        <label>{{ 'COMPLEMENTARY_TASKS.FILTERS.SEARCH' | translate }}</label>
+        <input
+          type="text"
+          [(ngModel)]="filters.search"
+          (input)="applyFilters()"
+          [placeholder]="'COMPLEMENTARY_TASKS.FILTERS.SEARCH_PLACEHOLDER' | translate"
+          class="filter-input"
+        />
+      </div>
+
+      <div class="filter-group">
+        <label>{{ 'COMPLEMENTARY_TASKS.FILTERS.STATUS' | translate }}</label>
+        <select
+          [(ngModel)]="filters.status"
+          (change)="loadTasks()"
+          class="filter-select"
+        >
+          <option value="">{{ 'COMPLEMENTARY_TASKS.FILTERS.ALL_STATUSES' | translate }}</option>
+          <option [value]="TaskStatus.PLANNED">{{ 'COMPLEMENTARY_TASKS.STATUS.PLANNED' | translate }}</option>
+          <option [value]="TaskStatus.IN_PROGRESS">{{ 'COMPLEMENTARY_TASKS.STATUS.IN_PROGRESS' | translate }}</option>
+          <option [value]="TaskStatus.COMPLETED">{{ 'COMPLEMENTARY_TASKS.STATUS.COMPLETED' | translate }}</option>
+          <option [value]="TaskStatus.CANCELLED">{{ 'COMPLEMENTARY_TASKS.STATUS.CANCELLED' | translate }}</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>{{ 'COMPLEMENTARY_TASKS.FILTERS.VVE_ID' | translate }}</label>
+        <input
+          type="text"
+          [(ngModel)]="filters.vveId"
+          (change)="loadTasks()"
+          [placeholder]="'COMPLEMENTARY_TASKS.FILTERS.VVE_PLACEHOLDER' | translate"
+          class="filter-input"
+        />
+      </div>
+
+      <div class="filter-group">
+        <label>{{ 'COMPLEMENTARY_TASKS.FILTERS.CATEGORY' | translate }}</label>
+        <select
+          [(ngModel)]="filters.categoryId"
+          (change)="loadTasks()"
+          class="filter-select"
+        >
+          <option value="">{{ 'COMPLEMENTARY_TASKS.FILTERS.ALL_CATEGORIES' | translate }}</option>
+          @for (category of categories(); track category.taskCategoryId) {
+            <option [value]="category.taskCategoryId">
+              {{ category.categoryCode }} - {{ category.categoryName }}
+            </option>
+          }
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>{{ 'COMPLEMENTARY_TASKS.FILTERS.ASSIGNED_TO' | translate }}</label>
+        <input
+          type="text"
+          [(ngModel)]="filters.assignedTo"
+          (change)="loadTasks()"
+          [placeholder]="'COMPLEMENTARY_TASKS.FILTERS.ASSIGNED_PLACEHOLDER' | translate"
+          class="filter-input"
+        />
+      </div>
+
+      <div class="filter-group">
+        <label>{{ 'COMPLEMENTARY_TASKS.FILTERS.FROM_DATE' | translate }}</label>
+        <input
+          type="date"
+          [(ngModel)]="filters.fromDate"
+          (change)="loadTasks()"
+          class="filter-input"
+        />
+      </div>
+
+      <div class="filter-group">
+        <label>{{ 'COMPLEMENTARY_TASKS.FILTERS.TO_DATE' | translate }}</label>
+        <input
+          type="date"
+          [(ngModel)]="filters.toDate"
+          (change)="loadTasks()"
+          class="filter-input"
+        />
+      </div>
+
+      <div class="filter-actions">
+        <button class="btn-secondary" (click)="clearFilters()">
+          {{ 'COMPLEMENTARY_TASKS.FILTERS.CLEAR' | translate }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  @if (loading()) {
+    <div class="loading-container">
+      <div class="spinner"></div>
+      <p>{{ 'COMPLEMENTARY_TASKS.LOADING' | translate }}</p>
+    </div>
+  }
+
+  <!-- Tasks Table -->
+  @if (!loading()) {
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>{{ 'COMPLEMENTARY_TASKS.TABLE.TITLE' | translate }}</th>
+            <th>{{ 'COMPLEMENTARY_TASKS.TABLE.CATEGORY' | translate }}</th>
+            <th>{{ 'COMPLEMENTARY_TASKS.TABLE.VVE' | translate }}</th>
+            <th>{{ 'COMPLEMENTARY_TASKS.TABLE.STATUS' | translate }}</th>
+            <th>{{ 'COMPLEMENTARY_TASKS.TABLE.DUE_DATE' | translate }}</th>
+            <th>{{ 'COMPLEMENTARY_TASKS.TABLE.ASSIGNED_TO' | translate }}</th>
+            <th class="actions-column">{{ 'COMPLEMENTARY_TASKS.TABLE.ACTIONS' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (filteredTasks().length === 0) {
+            <tr>
+              <td colspan="7" class="no-data">
+                {{ 'COMPLEMENTARY_TASKS.NO_TASKS' | translate }}
+              </td>
+            </tr>
+          }
+          @for (task of filteredTasks(); track task.taskId) {
+            <tr [class.impacting-operations]="isImpactingOperations(task)" [class.overdue]="isOverdue(task)">
+              <td>
+                <div class="task-title">
+                  {{ task.title }}
+                  @if (isOverdue(task)) {
+                    <span class="overdue-badge">⚠️ {{ 'COMPLEMENTARY_TASKS.OVERDUE' | translate }}</span>
+                  }
+                </div>
+                <div class="task-description">{{ task.description }}</div>
+              </td>
+              <td>
+                @if (task.categoryCode) {
+                  <div class="category-info">
+                    <strong>{{ task.categoryCode }}</strong>
+                    <div class="category-name">{{ task.categoryName }}</div>
+                  </div>
+                } @else {
+                  <span>-</span>
+                }
+              </td>
+              <td>
+                <a [routerLink]="['/vessel-visits', task.vveId]" class="vve-link">
+                  {{ task.vveId }}
+                </a>
+              </td>
+              <td>
+                <span class="status-badge" [ngClass]="getStatusClass(task.status)">
+                  {{ 'COMPLEMENTARY_TASKS.STATUS.' + task.status | translate }}
+                </span>
+              </td>
+              <td>
+                @if (task.dueDate) {
+                  {{ formatDate(task.dueDate) }}
+                } @else {
+                  <span>-</span>
+                }
+              </td>
+              <td>
+                @if (task.assignedTo) {
+                  {{ task.assignedTo }}
+                } @else {
+                  <span class="unassigned">{{ 'COMPLEMENTARY_TASKS.UNASSIGNED' | translate }}</span>
+                }
+              </td>
+              <td class="actions-column">
+                <div class="action-buttons">
+                  <!-- Edit Button -->
+                  <button
+                    class="btn-icon edit-btn"
+                    (click)="editTask(task)"
+                    [title]="'COMPLEMENTARY_TASKS.ACTIONS.EDIT' | translate"
+                  >
+                    ✏️
+                  </button>
+
+                  <!-- Start Button (only for PLANNED tasks) -->
+                  @if (task.status === TaskStatus.PLANNED) {
+                    <button
+                      class="btn-icon start-btn"
+                      (click)="startTask(task)"
+                      [title]="'COMPLEMENTARY_TASKS.ACTIONS.START' | translate"
+                    >
+                      ▶️
+                    </button>
+                  }
+
+                  <!-- Complete Button (only for IN_PROGRESS tasks) -->
+                  @if (task.status === TaskStatus.IN_PROGRESS) {
+                    <button
+                      class="btn-icon complete-btn"
+                      (click)="completeTask(task)"
+                      [title]="'COMPLEMENTARY_TASKS.ACTIONS.COMPLETE' | translate"
+                    >
+                      ✅
+                    </button>
+                  }
+
+                  <!-- Cancel Button (only for PLANNED or IN_PROGRESS tasks) -->
+                  @if (task.status === TaskStatus.PLANNED || task.status === TaskStatus.IN_PROGRESS) {
+                    <button
+                      class="btn-icon cancel-btn"
+                      (click)="cancelTask(task)"
+                      [title]="'COMPLEMENTARY_TASKS.ACTIONS.CANCEL' | translate"
+                    >
+                      🚫
+                    </button>
+                  }
+
+                  <!-- Delete Button -->
+                  <button
+                    class="btn-icon delete-btn"
+                    (click)="deleteTask(task)"
+                    [title]="'COMPLEMENTARY_TASKS.ACTIONS.DELETE' | translate"
+                  >
+                    🗑️
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    @if (totalPages > 1) {
+      <div class="pagination">
+        <button
+          class="btn-secondary"
+          (click)="previousPage()"
+          [disabled]="currentPage === 1"
+        >
+          ← {{ 'COMPLEMENTARY_TASKS.PAGINATION.PREVIOUS' | translate }}
+        </button>
+        <span class="page-info">
+          {{ 'COMPLEMENTARY_TASKS.PAGINATION.PAGE' | translate }} {{ currentPage }} {{ 'COMPLEMENTARY_TASKS.PAGINATION.OF' | translate }} {{ totalPages }}
+        </span>
+        <button
+          class="btn-secondary"
+          (click)="nextPage()"
+          [disabled]="currentPage === totalPages"
+        >
+          {{ 'COMPLEMENTARY_TASKS.PAGINATION.NEXT' | translate }} →
+        </button>
+      </div>
+    }
+  }
+</div>

@@ -1,0 +1,58 @@
+@startuml
+title US 4.1.1 - Nível 2 (Fluxo Funcional / SSD)
+
+skinparam shadowing false
+
+actor "Developer/Operator" as User
+boundary "SPA" as SPA
+system "OEM Backend" as OEM
+system "Swagger UI" as Swagger
+
+== Module Setup and Verification ==
+User -> OEM : GET /health
+OEM --> User : 200 OK\n{ success: true, message: "OEM Backend is running" }
+
+User -> Swagger : Access /api-docs
+Swagger --> User : Display API documentation\n(endpoints, schemas, authentication)
+
+== API Usage with Authentication ==
+User -> SPA : Configure API endpoint
+SPA -> OEM : POST /operation-plans/generate\nAuthorization: Bearer <JWT>\n{ targetDate, algorithm }
+
+alt Invalid or missing JWT token
+  OEM --> SPA : 401 Unauthorized\n{ error: "Invalid token" }
+  SPA --> User : Show authentication error
+else Token expired
+  OEM --> SPA : 401 Unauthorized\n{ error: "Token expired" }
+  SPA --> User : Redirect to login
+else Validation error
+  OEM --> SPA : 400 Bad Request\n{ errors: [field-level errors] }
+  SPA --> User : Show validation errors
+else Business rule violation
+  OEM --> SPA : 422 Unprocessable Entity\n{ error: "Business rule violation" }
+  SPA --> User : Show business error
+else Success
+  OEM --> SPA : 201 Created\n{ success: true, data: {...} }
+  SPA --> User : Display result
+end
+
+== Inter-Module Communication ==
+note over OEM
+OEM calls Core Backend via REST API
+(No direct database access)
+end note
+
+OEM -> OEM : Fetch data from Core Backend\n(REST API call)
+OEM -> OEM : Call Planning Service\n(REST API call)
+
+note right of OEM
+**US 4.1.1 Architectural Principles:**
+✓ Modular, decentralized architecture
+✓ REST-based inter-module communication
+✓ JWT authentication integration
+✓ Proper error handling
+✓ API documentation
+✓ Framework independence (Clean Architecture)
+end note
+
+@enduml

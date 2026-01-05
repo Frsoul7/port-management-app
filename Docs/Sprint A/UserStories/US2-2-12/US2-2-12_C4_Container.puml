@@ -1,0 +1,37 @@
+@startuml
+title C4 Container – US 2.2.12 Physical Resources
+
+actor "Logistics Operator" as Operator
+
+node "Client Layer" {
+  [UI / API Client] as Client
+}
+
+node "Web API" {
+  [PhysicalResourcesController] as Ctl
+}
+
+node "Application / Repositories" {
+  [PhysicalResourceRepository] as Repo
+  [QualificationRepository] as QRepo
+  [DockRepository / StorageAreaRepository] as AreaRepo
+}
+
+database "Persistence" as Db {
+  [PortDbContext] as DbCtx
+  [PhysicalResources] as PR
+  [Qualifications] as Q
+  [Docks / StorageAreas] as Areas
+}
+
+Operator --> Client : manage resources
+Client --> Ctl : HTTP (POST/PUT/PATCH/GET)
+Ctl --> Repo : CRUD operations
+Ctl --> QRepo : validate qualifications
+Ctl --> AreaRepo : validate dock/storage
+Repo --> DbCtx : EF Core operations
+DbCtx --> PR : persist resources
+DbCtx --> Q : persist/validate qualifications
+DbCtx --> Areas : persist/validate areas
+
+@enduml

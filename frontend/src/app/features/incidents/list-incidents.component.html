@@ -1,0 +1,114 @@
+<div class="incidents-container">
+  <div class="header">
+    <h2>Incident Records</h2>
+    <button class="btn-primary" (click)="router.navigate(['/incidents-records/create'])">
+      + Create New Incident
+    </button>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters">
+    <div class="filter-row">
+      <div class="filter-group">
+        <label>Status</label>
+        <select [(ngModel)]="filters.status" (change)="loadIncidents()">
+          <option value="">All</option>
+          @for (status of ['REPORTED', 'UNDER_INVESTIGATION', 'RESOLVED', 'CLOSED']; track status) {
+            <option [value]="status">{{ status }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Severity</label>
+        <select [(ngModel)]="filters.severity" (change)="loadIncidents()">
+          <option value="">All</option>
+          @for (severity of ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']; track severity) {
+            <option [value]="severity">{{ severity }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Incident Type</label>
+        <select [(ngModel)]="filters.incidentTypeId" (change)="loadIncidents()">
+          <option value="">All</option>
+          @for (type of incidentTypes(); track type.incidentTypeId) {
+            <option [value]="type.incidentTypeId">{{ type.code }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Search</label>
+        <input 
+          type="text" 
+          [(ngModel)]="filters.search"
+          (input)="applyFilters()"
+          placeholder="Search by title or description..." />
+      </div>
+
+      <div class="filter-checkbox">
+        <label>
+          <input type="checkbox" [(ngModel)]="filters.showActiveOnly" (change)="applyFilters()" />
+          Show Active Only
+        </label>
+      </div>
+
+      <button class="btn-secondary" (click)="clearFilters()">Clear Filters</button>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="loading">Loading incidents...</div>
+  }
+
+  @if (!loading() && errorMessage()) {
+    <div class="alert-error">
+      {{ errorMessage() }}
+    </div>
+  }
+
+  @if (!loading() && !errorMessage()) {
+    <div class="incidents-list">
+      @for (incident of filteredIncidents(); track incident.incidentId) {
+        <div class="incident-card" [class.active]="isActive(incident)">
+          <div class="incident-header">
+            <div class="incident-title">
+              <h3>{{ incident.title }}</h3>
+              <span class="incident-id">ID: {{ incident.incidentId }}</span>
+            </div>
+            <div class="badges">
+              <span [class]="'badge status-' + getStatusClass(incident.status)">{{ incident.status }}</span>
+              <span [class]="'badge severity-' + getSeverityClass(incident.severity)">{{ incident.severity }}</span>
+            </div>
+          </div>
+
+          <div class="incident-body">
+            <p class="description">{{ incident.description }}</p>
+            <div class="incident-meta">
+              <span><strong>Reported At:</strong> {{ incident.reportedAt | date: 'short' }}</span>
+              <span><strong>Reported By:</strong> {{ incident.reportedBy }}</span>
+              @if (incident.durationMinutes) {
+                <span><strong>Duration:</strong> {{ formatDuration(incident.durationMinutes) }}</span>
+              }
+              @if (incident.vveId) {
+                <span><strong>VVE:</strong> {{ incident.vveId }}</span>
+              }
+            </div>
+          </div>
+
+          <div class="incident-actions">
+            <button class="btn-view" (click)="viewIncident(incident.incidentId)">👁️ View</button>
+            <button class="btn-edit" (click)="editIncident(incident.incidentId)">✏️ Edit</button>
+            <button class="btn-delete" (click)="deleteIncident(incident)">Delete</button>
+          </div>
+        </div>
+      } @empty {
+        <div class="empty-state">
+          <p>No incidents found. Try adjusting your filters or create a new incident.</p>
+        </div>
+      }
+    </div>
+  }
+</div>

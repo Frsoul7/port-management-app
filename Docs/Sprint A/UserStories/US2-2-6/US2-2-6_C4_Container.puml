@@ -1,0 +1,42 @@
+@startuml
+title C4 Container – US 2.2.6 Representatives
+
+actor "Port Authority\nOfficer" as Officer
+
+node "Client Layer" {
+  [UI / API Client] as Client
+}
+
+node "Web API" {
+  [OrganizationsController] as Ctl
+}
+
+node "Application Layer" {
+  [OrganizationService] as Svc
+}
+
+database "Persistence" as Db
+node "Domain" as Dom {
+  [Organization] as Org
+  [Representative] as Rep
+}
+
+Officer --> Client : manage representatives
+Client --> Ctl : POST/PUT/PATCH
+Ctl --> Svc : add/update/deactivate
+Svc --> Db : persist/retrieve
+Svc ..> Rep : create/update/deactivate
+Rep --> Org : belongs to 1 org
+
+note right of Rep
+  Representative:
+  - Linked to 1 organization
+  - Name (required)
+  - Citizen ID (unique)
+  - Nationality (ISO 3166-1)
+  - Email (unique globally)
+  - Phone (optional)
+  - Active status
+end note
+
+@enduml

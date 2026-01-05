@@ -1,0 +1,109 @@
+@startuml
+title Sequence Diagram – Approve VVN (US 2.2.7)
+
+actor "Port Authority Officer" as Officer
+participant ":VesselVisitNotificationsController" as Controller
+participant ":CallerContextFactory" as AuthFactory
+participant ":CallerContext" as Caller
+participant ":PortDbContext" as DbContext
+participant "vvn:VesselVisitNotification" as VVN
+participant ":DockAssignment" as DA
+participant ":DecisionLog" as DL
+database ":EFCore InMemory" as DB
+
+Officer -> Controller : POST /vvns/{id}/approve\nApproveVvnRequest(DockCode, BerthFrom, BerthTo, Notes)
+activate Controller
+
+Controller -> AuthFactory : FromHeaders(Request.Headers, requireUserId: false)
+activate AuthFactory
+AuthFactory -> Caller ** : create
+AuthFactory --> Controller : caller
+deactivate AuthFactory
+
+note right: Validation Phase
+Controller -> Controller : ValidatePortAuthorityAccessAsync(caller)
+
+Controller -> DbContext : FindAsync(Organizations, caller.OrgId)
+activate DbContext
+DbContext -> DB : SELECT * FROM Organizations WHERE Id = ?
+DB --> DbContext : org
+DbContext --> Controller : org
+deactivate DbContext
+
+Controller -> DbContext : VesselVisitNotifications\n.Include(DockAssignment)\n.SingleOrDefaultAsync(v => v.VvnGuid == id)
+activate DbContext
+DbContext -> DB : SELECT * FROM VVNs WHERE VvnGuid = ?
+DB --> DbContext : vvn
+DbContext --> Controller : vvn
+deactivate DbContext
+
+Controller -> DbContext : Docks.SingleOrDefaultAsync(d => d.Code == request.DockCode)
+activate DbContext
+DbContext -> DB : SELECT * FROM Docks WHERE Code = ?
+DB --> DbContext : dock
+DbContext --> Controller : dock
+deactivate DbContext
+
+Controller -> DbContext : DockAssignments.AnyAsync(\na => a.DockCode == dock.Code &&\na.Status != CANCELLED &&\na.BerthTo > request.BerthFrom &&\na.BerthFrom < request.BerthTo)
+activate DbContext
+DbContext -> DB : SELECT COUNT(*) FROM DockAssignments WHERE ...
+DB --> DbContext : overlaps (bool)
+DbContext --> Controller : overlaps
+deactivate DbContext
+
+note right: Business Logic Execution
+Controller -> Controller : approverUserId = caller.UserId != Empty\n? caller.UserId\n: SystemPlaceholder
+Controller -> Controller : approvalTimestamp = DateTime.UtcNow
+
+Controller -> DA : Create(vvn.VvnGuid, dock.Code,\nrequest.BerthFrom, request.BerthTo,\napproverUserId, approvalTimestamp)
+activate DA
+create ":DockAssignment" as NewDA
+DA -> NewDA : <<create>>
+DA --> Controller : assignment
+deactivate DA
+
+Controller -> DbContext : DockAssignments.Add(assignment)
+
+Controller -> VVN : Approve(new UserId(approverUserId), assignment.DockAssignmentId)
+activate VVN
+VVN -> VVN : ApprovedById = approver
+VVN -> VVN : ApprovedAt = DateTime.UtcNow
+VVN -> VVN : State = APPROVED
+VVN --> Controller
+deactivate VVN
+
+Controller -> DL : Approved(vvn.VvnGuid, new UserId(approverUserId),\nassignment.DockAssignmentId, approvalTimestamp, request.Notes)
+activate DL
+create ":DecisionLog" as NewDL
+DL -> NewDL : <<create>>\nOutcome = Approved
+DL --> Controller : decisionLog
+deactivate DL
+
+Controller -> DbContext : DecisionLogs.Add(decisionLog)
+Controller -> DbContext : SaveChangesAsync()
+activate DbContext
+DbContext -> DB : INSERT DockAssignment, UPDATE VVN, INSERT DecisionLog
+DB --> DbContext : ok
+DbContext --> Controller
+deactivate DbContext
+
+Controller -> DbContext : Organizations.FindAsync(caller.OrgId)
+activate DbContext
+DbContext -> DB : SELECT * FROM Organizations WHERE Id = ?
+DB --> DbContext : approverOrg
+DbContext --> Controller : approverOrg
+deactivate DbContext
+
+Controller -> DbContext : Organizations.FindAsync(vvn.OrganizationId)
+activate DbContext
+DbContext -> DB : SELECT * FROM Organizations WHERE Id = ?
+DB --> DbContext : submitterOrg
+DbContext --> Controller : submitterOrg
+deactivate DbContext
+
+Controller -> Controller : Build ApproveVvnResponse\n{ VvnId, Status: APPROVED,\n  AssignedDock, BerthFrom, BerthTo,\n  ApproverInfo, SubmitterInfo }
+
+Controller --> Officer : 200 OK\nApproveVvnResponse
+deactivate Controller
+
+@enduml

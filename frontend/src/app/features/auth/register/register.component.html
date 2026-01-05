@@ -1,0 +1,53 @@
+<div class="register-container">
+    <div class="register-card">
+        <h2>Complete Your Registration</h2>
+
+        <div *ngIf="userInfo" class="user-info-section">
+            <div class="profile-section">
+                <img *ngIf="userInfo.picture" [src]="userInfo.picture" alt="Profile" class="profile-picture"
+                    referrerpolicy="no-referrer" crossorigin="anonymous">
+                <div>
+                    <p><strong>Email:</strong> {{ userInfo.email }}</p>
+                    <p><strong>Name:</strong> {{ userInfo.name }}</p>
+                </div>
+            </div>
+        </div>
+
+        <form (ngSubmit)="onSubmit()" #registerForm="ngForm" class="register-form">
+            <div class="form-group">
+                <label for="name">Full Name</label>
+                <input type="text" id="name" name="name" [(ngModel)]="name" required class="form-control">
+            </div>
+
+            <div class="form-group">
+                <label for="organization">Select Your Organization *</label>
+                <select id="organization" name="organization" [(ngModel)]="selectedOrganizationId" required
+                    class="form-control">
+                    <option value="">-- Choose an organization --</option>
+                    <option *ngFor="let org of organizations" [value]="org.id">
+                        {{ org.legalName }}
+                    </option>
+                </select>
+                <small class="form-text">Select the organization you are associated with</small>
+            </div>
+
+            <div class="info-message">
+                <strong>Note:</strong> After registration, you will receive an email to verify your address.
+                An administrator will then review your account, assign your role, and activate your access.
+            </div>
+
+            <div *ngIf="errorMessage" class="error-message">
+                {{ errorMessage }}
+            </div>
+
+            <div class="button-group">
+                <button type="submit" [disabled]="!registerForm.valid || isSubmitting" class="btn btn-primary">
+                    {{ isSubmitting ? 'Registering...' : 'Complete Registration' }}
+                </button>
+                <button type="button" (click)="cancel()" class="btn btn-secondary">
+                    Cancel
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

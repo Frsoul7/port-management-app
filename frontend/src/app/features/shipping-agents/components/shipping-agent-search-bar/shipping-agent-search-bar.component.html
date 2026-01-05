@@ -1,0 +1,27 @@
+<div class="toolbar">
+  <div class="search-section">
+    <input 
+      type="text" 
+      [placeholder]="'SHIPPING_AGENTS.SEARCH_IDENTIFIER' | translate" 
+      [(ngModel)]="searchParams.identifier"
+      (keyup.enter)="handleEnter()"
+      class="search-input">
+    <input 
+      type="text" 
+      [placeholder]="'SHIPPING_AGENTS.SEARCH_LEGAL_NAME' | translate" 
+      [(ngModel)]="searchParams.legalName"
+      (keyup.enter)="handleEnter()"
+      class="search-input">
+    <input 
+      type="text" 
+      [placeholder]="'SHIPPING_AGENTS.SEARCH_TAX_NUMBER' | translate" 
+      [(ngModel)]="searchParams.taxNumber"
+      (keyup.enter)="handleEnter()"
+      class="search-input">
+    <button class="btn btn-primary" (click)="search()">{{ 'COMMON.SEARCH' | translate }}</button>
+  </div>
+  <div class="action-buttons">
+    <button class="btn btn-secondary" (click)="clear()">{{ 'COMMON.CLEAR' | translate }}</button>
+    <button class="btn btn-success" (click)="addOrganization()">{{ 'SHIPPING_AGENTS.REGISTER' | translate }}</button>
+  </div>
+</div>

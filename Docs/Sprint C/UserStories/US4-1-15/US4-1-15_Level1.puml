@@ -1,0 +1,46 @@
+@startuml
+title US 4.1.15 - Nível 1 (Layered Architecture View)
+
+skinparam componentStyle rectangle
+skinparam shadowing false
+
+actor "Logistics Operator" as Op
+
+package "Presentation Layer" {
+  [ComplementaryTaskController]
+}
+
+package "Application Layer" {
+  [ComplementaryTaskService]
+}
+
+package "Domain Layer" {
+  [VesselVisitExecution]
+  [ComplementaryTask]
+  [ComplementaryTaskCategory]
+}
+
+package "Infrastructure Layer" {
+  [ComplementaryTaskRepository]
+  [VVERepository]
+  database "MongoDB"
+}
+
+Op --> [ComplementaryTaskController]
+[ComplementaryTaskController] --> [ComplementaryTaskService]
+[ComplementaryTaskService] --> [VesselVisitExecution]
+[ComplementaryTaskService] --> [ComplementaryTask]
+[ComplementaryTaskService] --> [ComplementaryTaskCategory]
+
+[ComplementaryTaskRepository] --> MongoDB
+[VVERepository] --> MongoDB
+
+[ComplementaryTaskService] ..> [ComplementaryTaskRepository]
+[ComplementaryTaskService] ..> [VVERepository]
+
+note right of [ComplementaryTaskService]
+Dependencies point inward.
+Infrastructure depends on Domain contracts.
+end note
+
+@enduml

@@ -1,0 +1,132 @@
+@startuml
+title CD - US 4.1.7 Create VVE (Domain Model)
+
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+
+enum VesselVisitExecutionStatus {
+  PLANNED
+  IN_PROGRESS
+  COMPLETED
+  DISRUPTED
+}
+
+enum ExecutedOperationStatus {
+  STARTED
+  IN_PROGRESS
+  COMPLETED
+  DELAYED
+}
+
+class VesselVisitExecution {
+  +vveId: string
+  +vvnId: string
+  +operationPlanId: string
+  +status: VesselVisitExecutionStatus
+  +actualPortArrivalTime: Date
+  +actualBerthTime: Date
+  +actualUnberthTime: Date
+  +actualPortDepartureTime: Date
+  +assignedDock: string
+  +operations: ExecutedOperation[]
+  +incidents: string[]
+  +completedAt: Date
+  +completedBy: string
+  
+  +constructor(props)
+  +recordPortArrival(time: Date)
+  +recordBerthing(time: Date, dockId: string)
+  +recordUnberthing(time: Date)
+  +markAsCompleted(departureTime: Date, userId: string)
+  
+  -validateVvnId()
+  -validateTimestampSequence()
+}
+
+class ExecutedOperation {
+  +operationType: OperationType
+  +startTime: Date
+  +endTime: Date
+  +containersProcessed: number
+  +cranesUsed: string[]
+  +staffAssigned: string[]
+  +status: ExecutedOperationStatus
+  +plannedOperationId: string
+  
+  +constructor(props)
+  +isFinished(): boolean
+}
+
+class VveIdGenerator {
+  +{static} generate(sequentialNumber: number): string
+}
+
+interface IVesselVisitExecutionRepository {
+  +save(vve: VesselVisitExecution): VesselVisitExecution
+  +findById(id: string): VesselVisitExecution
+  +findByVvnId(vvnId: string): VesselVisitExecution
+  +getNextSequentialNumber(): number
+  +update(vve: VesselVisitExecution): VesselVisitExecution
+}
+
+class MongoVesselVisitExecutionRepository {
+  +save(vve: VesselVisitExecution): VesselVisitExecution
+  +findByVvnId(vvnId: string): VesselVisitExecution
+  +getNextSequentialNumber(): number
+}
+
+interface IOperationPlanRepository {
+  +findById(id: string): OperationPlan
+  +update(plan: OperationPlan): OperationPlan
+}
+
+class VesselVisitExecutionService {
+  -vveRepository: IVesselVisitExecutionRepository
+  -operationPlanRepository: IOperationPlanRepository
+  
+  +initializeVveFromPlan(dto: InitializeVveFromPlanDto): VesselVisitExecutionDto
+  +recordPortArrival(id, dto): VesselVisitExecutionDto
+  +recordBerthing(id, dto): VesselVisitExecutionDto
+  +recordUnberthing(id, dto): VesselVisitExecutionDto
+  +completeVve(id, dto): VesselVisitExecutionDto
+}
+
+VesselVisitExecution "1" o-- "*" ExecutedOperation : contains
+VesselVisitExecution ..> VesselVisitExecutionStatus
+ExecutedOperation ..> ExecutedOperationStatus
+
+VesselVisitExecutionService --> IVesselVisitExecutionRepository : depends on (DIP)
+VesselVisitExecutionService --> IOperationPlanRepository : depends on (DIP)
+VesselVisitExecutionService ..> VveIdGenerator : uses
+
+IVesselVisitExecutionRepository <|.. MongoVesselVisitExecutionRepository : implements
+
+note right of VesselVisitExecution
+  US 4.1.7 Initialization:
+  • vveId generated sequentially (VVE-000001, ...)
+  • status set to IN_PROGRESS
+  • operations derived from PlannedOperations
+  • actualPortArrivalTime recorded
+  • vvnId links to Core Backend VVN
+end note
+
+note bottom of VesselVisitExecutionService
+  US 4.1.7 Orchestration:
+  1. Fetch operation plan (must be APPROVED)
+  2. Check for duplicate VVE (by vvnId)
+  3. Generate sequential VVE ID
+  4. Map PlannedOperations → ExecutedOperations
+  5. Create VVE entity (status=IN_PROGRESS)
+  6. Save VVE to repository
+  7. Update plan status to IN_EXECUTION
+end note
+
+note left of VveIdGenerator
+  Sequential ID pattern:
+  VVE-000001
+  VVE-000002
+  VVE-000003
+  ...
+end note
+
+@enduml

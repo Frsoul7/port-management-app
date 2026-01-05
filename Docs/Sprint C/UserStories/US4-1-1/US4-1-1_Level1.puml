@@ -1,0 +1,100 @@
+@startuml
+title US 4.1.1 - Nível 1 (Visão Arquitetural / Camadas)
+
+skinparam componentStyle rectangle
+skinparam shadowing false
+
+actor "Project Manager" as PM
+actor "Logistics Operator" as Op
+rectangle "SPA (UI)" as SPA
+
+package "OEM Backend Service" {
+  rectangle "REST API\n(Express.js)" as API
+
+  package "Presentation Layer" {
+    [OperationPlanController] as OPC
+    [VesselVisitExecutionController] as VVEC
+    [Auth Middleware] as Auth
+    [Error Middleware] as Error
+    [Validation Middleware] as Valid
+  }
+
+  package "Application Layer" {
+    [OperationPlanService] as OPS
+    [VesselVisitExecutionService] as VVES
+    [DTOs] as DTO
+  }
+
+  package "Domain Layer" {
+    [OperationPlan] as OP
+    [VesselVisitExecution] as VVE
+    [PlannedOperation] as PO
+    [ExecutedOperation] as EO
+    [IOperationPlanRepository] as IOpRepo
+    [IVesselVisitExecutionRepository] as IVveRepo
+  }
+
+  package "Infrastructure Layer" {
+    [OperationPlanRepository] as OpRepo
+    [VesselVisitExecutionRepository] as VveRepo
+    [CoreBackendClient] as CoreClient
+    [PlanningClient] as PlanClient
+    database "MongoDB" as DB
+  }
+}
+
+system "Core Backend\n(.NET)" as Core
+system "Planning Service\n(Prolog)" as Planning
+
+PM --> SPA : Reviews architecture
+Op --> SPA : Uses operations features
+SPA --> API : REST calls (HTTPS/JSON + JWT)
+
+API --> Auth : JWT validation
+Auth --> Valid
+Valid --> OPC
+Valid --> VVEC
+
+OPC --> OPS : use cases
+VVEC --> VVES : use cases
+
+OPS --> IOpRepo : depends on (DIP)
+VVES --> IVveRepo : depends on (DIP)
+
+IOpRepo <|.. OpRepo : implements
+IVveRepo <|.. VveRepo : implements
+
+OPS --> OP : creates/uses
+VVES --> VVE : creates/uses
+OP --> PO : contains
+VVE --> EO : contains
+
+OpRepo --> DB
+VveRepo --> DB
+
+OPS --> CoreClient : fetches VVNs
+OPS --> PlanClient : generates plans
+
+CoreClient --> Core : REST API
+PlanClient --> Planning : REST API
+
+note right of API
+**US 4.1.1 Requirements:**
+✓ Independent backend service
+✓ REST API with CRUD operations
+✓ Swagger/OpenAPI documentation
+✓ JWT authentication
+✓ No direct database access
+✓ RBAC/ABAC support
+✓ Inter-module REST calls only
+end note
+
+note bottom of "Domain Layer"
+**Clean Architecture:**
+• Zero framework dependencies
+• Business rules enforcement
+• Repository interfaces (DIP)
+• Framework-independent entities
+end note
+
+@enduml

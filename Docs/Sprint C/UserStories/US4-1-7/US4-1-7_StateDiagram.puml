@@ -1,0 +1,40 @@
+@startuml
+title US 4.1.7 - VVE Lifecycle State Diagram
+
+skinparam shadowing false
+
+[*] --> PLANNED : Operation plan approved\n(Plan created, not yet executed)
+
+PLANNED --> IN_PROGRESS : US 4.1.7: createVVE()\n• Vessel arrives at port\n• Actual arrival time recorded\n• Operations derived from plan\n• Status set to IN_PROGRESS
+
+state IN_PROGRESS {
+  [*] --> PortArrivalRecorded
+  PortArrivalRecorded --> Berthed : US 4.1.8: recordBerthing()\n• Dock assigned\n• Berth time recorded
+  Berthed --> OperationsInProgress : US 4.1.9: executeOperations()\n• Operations tracked\n• Resources allocated
+  OperationsInProgress --> Unberthed : US 4.1.11: recordUnberthing()\n• Unberth time recorded\n• Preparing for departure
+}
+
+IN_PROGRESS --> COMPLETED : US 4.1.11: markAsCompleted()\n• All operations finished\n• Departure time recorded\n• VVE marked as COMPLETED
+
+IN_PROGRESS --> DISRUPTED : Incident occurs\n• Major delay or failure\n• VVE marked as disrupted
+
+COMPLETED --> [*]
+
+note right of IN_PROGRESS
+  US 4.1.7 creates VVE in IN_PROGRESS state
+  • vveId: VVE-000001 (sequential)
+  • vvnId: Reference to VVN
+  • actualPortArrivalTime: Recorded
+  • operations[]: Initialized with STARTED status
+  • operationPlanId: Linked to approved plan
+end note
+
+note bottom of COMPLETED
+  US 4.1.11 transitions to COMPLETED
+  • All cargo operations finished
+  • Departure time recorded
+  • VVE becomes read-only
+  • Metrics can be calculated
+end note
+
+@enduml

@@ -1,0 +1,38 @@
+@startuml US2-2-9_SSD_ReopenVVN
+autonumber
+title US 2.2.9 - System Sequence Diagram: Reopen Rejected VVN
+
+actor "Shipping Agent\nRepresentative" as Rep
+participant ":System" as System
+
+activate Rep
+
+Rep -> System : POST /api/vessel-visit-notifications/{id}:reopen\n(Headers: X-Role, X-Org-Id, X-User-Id)
+activate System
+
+alt VVN exists, is REJECTED, and belongs to representative's organization
+    System --> Rep : 200 OK\n(vvnId, state=IN_PROGRESS, message)
+else VVN not found
+    System --> Rep : 404 Not Found
+else Not a Shipping Agent Representative
+    System --> Rep : 403 Forbidden\n("Only Shipping Agent Representatives can reopen VVNs")
+else VVN belongs to different organization
+    System --> Rep : 403 Forbidden\n("You can only reopen VVNs from your organization")
+else VVN not in REJECTED state
+    System --> Rep : 422 Unprocessable Entity\n("Only rejected VVNs can be reopened")
+end
+
+deactivate System
+
+note right of Rep
+  After successful reopen:
+  - VVN state: REJECTED → IN_PROGRESS
+  - Rejection metadata preserved
+  - VVN is now editable
+  - Can update manifests, crew, ETA/ETD
+  - Can resubmit for approval
+end note
+
+deactivate Rep
+
+@enduml

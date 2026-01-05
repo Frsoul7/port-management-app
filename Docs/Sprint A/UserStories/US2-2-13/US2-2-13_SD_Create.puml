@@ -1,0 +1,46 @@
+@startuml
+title Sequence Diagram – Create Qualification (US 2.2.13)
+
+actor "Logistics Operator" as Operator
+participant ":QualificationsController" as Controller
+participant ":PortDbContext" as DbContext
+participant "qualification:StaffMemberQualification" as Qualification
+database ":EFCore InMemory" as DB
+
+Operator -> Controller : POST /api/qualifications\nCreateQualificationDto(QualificationId, Name, Description)
+activate Controller
+
+Controller -> Controller : Validate QualificationId not empty
+Controller -> Controller : Validate Name not empty
+
+alt validation fails
+  Controller --> Operator : 400 Bad Request
+else proceed
+  Controller -> Controller : Normalize QualificationId.ToUpperInvariant()
+  
+  Controller -> DbContext : Qualifications.AnyAsync(q => q.QualificationId == normalized)
+  activate DbContext
+  DbContext -> DB : SELECT COUNT(*) FROM Qualifications WHERE QualificationId = ?
+  DB --> DbContext : count
+  DbContext --> Controller : exists (bool)
+  deactivate DbContext
+  
+  alt exists
+    Controller --> Operator : 409 Conflict\n"A qualification with this code already exists."
+  else valid
+    Controller -> Qualification ** : new StaffMemberQualification(dto.QualificationId, dto.Name, dto.Description)
+    
+    Controller -> DbContext : Qualifications.Add(qualification)
+    Controller -> DbContext : SaveChangesAsync()
+    activate DbContext
+    DbContext -> DB : INSERT INTO Qualifications
+    DB --> DbContext : ok
+    DbContext --> Controller
+    deactivate DbContext
+    
+    Controller --> Operator : 201 Created\nQualificationDto
+  end
+end
+deactivate Controller
+
+@enduml

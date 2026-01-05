@@ -1,0 +1,49 @@
+@startuml
+title US 4.1.1 - OEM Module Architecture (C4 Level 2 - Container)
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+LAYOUT_WITH_LEGEND()
+
+Person(operator, "Logistics Operator")
+
+System_Ext(spa, "SPA", "Angular")
+System_Ext(core, "Core Backend", ".NET")
+System_Ext(planning, "Planning Service", "Prolog")
+
+Container_Boundary(oem, "OEM Backend Service") {
+    Container(api, "REST API", "Express.js", "Exposes REST endpoints\nwith Swagger docs")
+    Container(app, "Application Layer", "TypeScript", "Use cases and services")
+    Container(domain, "Domain Layer", "TypeScript", "Business logic\n(framework-independent)")
+    ContainerDb(db, "MongoDB", "NoSQL Database", "Stores operation plans,\nVVEs, incidents, tasks")
+}
+
+Rel(operator, spa, "Uses")
+Rel(spa, api, "REST calls", "HTTPS/JSON + JWT")
+
+Rel(api, app, "Delegates to")
+Rel(app, domain, "Uses")
+Rel(app, db, "Reads/writes", "Mongoose")
+
+Rel(app, core, "Fetches VVN data", "REST API")
+Rel(app, planning, "Requests plans", "REST API")
+
+note right of api
+  **Authentication:**
+  • JWT token validation
+  • Bearer token in header
+  • Shared secret with Core
+  
+  **Documentation:**
+  • Swagger UI at /api-docs
+  • OpenAPI 3.0 spec
+end note
+
+note right of domain
+  **Clean Architecture:**
+  • Zero framework dependencies
+  • Business rules enforcement
+  • Repository interfaces (DIP)
+end note
+
+@enduml

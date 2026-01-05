@@ -1,0 +1,38 @@
+@startuml
+title SSD - US 4.1.11 Complete VVE (Black-box)
+
+skinparam shadowing false
+skinparam responseMessageBelowArrow true
+
+actor "Logistics Operator" as Op
+boundary "SPA" as SPA
+system "OEM System" as OEM
+
+== Record Unberth ==
+Op -> SPA : Provide unberthTime
+SPA -> OEM : POST /vessel-visit-executions/{id}/unberth\n{ unberthTime }
+
+alt Unauthorized / Invalid request
+  OEM --> SPA : 401/403/400\n{ error }
+  SPA --> Op : Show error
+else Unberth recorded
+  OEM --> SPA : 200 OK\n{ vve, status=IN_PROGRESS, actualUnberthTime }
+  SPA --> Op : Confirm saved
+end
+
+== Mark as Completed ==
+Op -> SPA : Provide departureTime\nClick "Complete"
+SPA -> OEM : POST /vessel-visit-executions/{id}/complete\n{ departureTime }
+
+alt Unauthorized
+  OEM --> SPA : 401/403\n{ error }
+  SPA --> Op : Show error
+else Business rule violated
+  OEM --> SPA : 409/422\n{ reason: missing unberth OR\n  departure<=unberth OR\n  not all ops finished OR\n  invalid state }
+  SPA --> Op : Show validation message
+else Completed
+  OEM --> SPA : 200 OK\n{ vve, status=COMPLETED,\n  completedAt, completedBy }
+  SPA --> Op : Show read-only completed view
+end
+
+@enduml

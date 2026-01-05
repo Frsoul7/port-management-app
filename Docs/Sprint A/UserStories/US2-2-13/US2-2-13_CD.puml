@@ -1,0 +1,58 @@
+@startuml
+title Class Diagram – US 2.2.13 (Qualifications)
+
+class QualificationsController {
+  - _ctx : PortDbContext
+  --
+  + Create(dto: CreateQualificationDto) : Task<IActionResult>
+  + Get(id?: string, name?: string) : Task<IActionResult>
+  + Update(id: string, dto: UpdateQualificationDto) : Task<IActionResult>
+  + Delete(id: string) : Task<IActionResult>
+}
+
+class StaffMemberQualification <<Entity>> {
+  + QualificationId : string
+  + Name : string
+  + Description : string?
+  --
+  + StaffMemberQualification(id, name, description?)
+  + Update(name, description?): void
+}
+
+class CreateQualificationDto {
+  + QualificationId : string
+  + Name : string
+  + Description : string?
+}
+
+class UpdateQualificationDto {
+  + Name : string?
+  + Description : string?
+}
+
+class QualificationDto {
+  + QualificationId : string
+  + Name : string
+  + Description : string?
+}
+
+class PortDbContext {
+  + Qualifications : DbSet<StaffMemberQualification>
+  --
+  + SaveChangesAsync() : Task<int>
+}
+
+QualificationsController ..> PortDbContext : uses
+QualificationsController ..> CreateQualificationDto : consumes
+QualificationsController ..> UpdateQualificationDto : consumes
+QualificationsController ..> QualificationDto : produces
+PortDbContext --> StaffMemberQualification : manages
+
+note right of StaffMemberQualification
+  Validation Rules:
+  - QualificationId: alphanumeric, max 15, unique
+  - Name: min 2 words, max 150, required
+  - Description: optional, max 500
+end note
+
+@enduml

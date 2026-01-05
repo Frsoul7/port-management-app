@@ -1,0 +1,110 @@
+@startuml US_2_2_1_Create_or_Update_VesselType
+' https://plantuml.com/sequence-diagram
+' US 2.2.1 – Create & Update Vessel Types
+' As a Port Authority Officer, I want to create and update vessel types so that vessels can be classified consistently and their operational constraints are properly defined.
+
+autonumber
+
+actor "Port Authority Officer" as Actor
+participant VesselTypeUI as UI <<presentation>>
+control VesselTypeController as Controller <<application>>
+participant VesselTypeAppService as Service <<service>>
+database VesselTypeRepository as Repository <<repository>>
+database PortDbContext as Persistence <<persistence>>
+participant VesselTypeBuilder as Builder <<builder>>
+participant "vesselType:VesselType" as Domain <<domain>>
+
+== Start ==
+Actor -> UI: Open "Vessel Types" screen
+UI -> Controller: createOrUpdateVesselType()
+activate Controller
+Controller -> Service: startVesselTypeFlow()
+activate Service
+
+alt Create new vessel type
+    UI --> Actor: Ask for name, description,\ncapacity, constraints (rows,bays,tiers)
+    Actor -> UI: Provide attributes
+    UI -> Controller: submitVesselType(formData)
+    Controller -> Service: validate(formData)
+    Service -> Service: ensure required fields\nand numeric ranges are valid
+    Service -> Repository: existsByName(formData.name)?
+    activate Repository
+    Repository --> Service: false
+    deactivate Repository
+
+    Service -> Builder: with(name, description,\ncapacity, constraints)
+    activate Builder
+    Builder --> Service: VesselType draft
+    deactivate Builder
+
+    Service -> Persistence: beginTransaction()
+    activate Persistence
+    Service -> Repository: save(vesselType)
+    Repository --> Service: id
+    Service -> Persistence: commit()
+    deactivate Persistence
+
+    Service --> Controller: created(vesselType)
+    Controller --> UI: showSuccess(createdId)
+    UI --> Actor: Display vessel type details
+else Update existing vessel type
+    UI --> Actor: Ask for edits to attributes
+    Actor -> UI: Provide changes
+    UI -> Controller: submitVesselTypeUpdate(id, changes)
+    Controller -> Service: validateUpdate(id, changes)
+    Service -> Repository: findById(id)
+    activate Repository
+    Repository --> Service: vesselType
+    deactivate Repository
+
+    Service -> Service: applyChanges(vesselType, changes)
+    Service -> Service: ensure name uniqueness (if changed)
+    Service -> Repository: existsByName(newName)?
+    activate Repository
+    Repository --> Service: false
+    deactivate Repository
+
+    Service -> Persistence: beginTransaction()
+    activate Persistence
+    Service -> Repository: update(vesselType)
+    Repository --> Service: ok
+    Service -> Persistence: commit()
+    deactivate Persistence
+
+    Service --> Controller: updated(vesselType)
+    Controller --> UI: showSuccess(updatedId)
+    UI --> Actor: Display updated details
+end
+
+deactivate Service
+deactivate Controller
+deactivate UI
+@enduml
+
+@startuml US_2_2_1_Search_Filter_VesselTypes
+' Acceptance: Vessel types must be searchable and filterable by name and description.
+
+autonumber
+
+actor "Port Authority Officer" as Actor
+participant VesselTypeUI as UI <<presentation>>
+control VesselTypeController as Controller <<application>>
+participant VesselTypeAppService as Service <<service>>
+database VesselTypeRepository as Repository <<repository>>
+
+Actor -> UI: Open "Vessel Types" list
+UI -> Controller: searchVesselTypes(qName?, qDescription?)
+activate Controller
+Controller -> Service: search(qName, qDescription, page, size, sort)
+activate Service
+Service -> Repository: findByNameOrDescriptionContaining(qName, qDescription)
+activate Repository
+Repository --> Service: list<VesselTypeDTO>
+deactivate Repository
+Service --> Controller: result page
+Controller --> UI: render(list + filters + pagination)
+UI --> Actor: Show filtered/search results
+deactivate Service
+deactivate Controller
+deactivate UI
+@enduml

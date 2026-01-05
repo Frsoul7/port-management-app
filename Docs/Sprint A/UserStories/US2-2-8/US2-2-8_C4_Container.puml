@@ -1,0 +1,39 @@
+@startuml
+title C4 Container – US 2.2.8 VVN
+
+actor "Shipping Agent\nRepresentative" as Agent
+
+node "Client Layer" {
+  [UI / API Client] as Client
+}
+
+node "Web API" {
+  [VesselVisitNotificationsController] as Ctl
+}
+
+node "Application Layer" {
+  [VesselVisitService] as Svc
+  [HazardousRequiresCrewPolicy] as Policy
+}
+
+database "Persistence" as Db
+node "Domain" as Dom {
+  [VesselVisitNotification] as Vvn
+  [CargoManifest\n(Load/Unload)] as Manifest
+  [ManifestEntry] as Entry
+  [CrewMember] as Crew
+  [Iso6346] as ISO
+}
+
+Agent --> Client
+Client --> Ctl
+Ctl --> Svc
+Svc --> Db
+Svc ..> Policy
+Svc ..> Vvn
+Vvn *-- Manifest
+Manifest o-- Entry
+Vvn o-- Crew
+Entry ..> ISO : validate
+
+@enduml

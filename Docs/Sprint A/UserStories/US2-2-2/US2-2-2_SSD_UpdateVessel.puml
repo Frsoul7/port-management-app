@@ -1,0 +1,38 @@
+@startuml
+title SSD – Update Vessel
+
+actor "Port Authority Officer" as User
+participant "Scalar / API Client" as Client
+participant "VesselsController" as C
+participant "PortDbContext" as Db
+database "EF (InMemory)" as Store
+
+User -> Client : PUT /api/vessels/{imo}\n{ Name, VesselTypeId, OrganizationId, CapacityTEU }
+Client -> C : Update(imo, dto)
+activate C
+
+C -> Db : FirstOrDefaultAsync(Vessels where ImoNumber == NormalizeImo(imo))
+Db -> Store : query
+Store --> Db : Vessel | null
+
+alt not found
+  C --> Client : 404 Not Found
+  deactivate C
+else found
+  C -> Db : AnyAsync(VesselTypes where VesselTypeId == dto.VesselTypeId)
+  Db -> Store : query
+  Store --> Db : true
+
+  C -> Db : AnyAsync(Organizations where OrganizationId.Value == Guid.Parse(dto.OrganizationId))
+  Db -> Store : query
+  Store --> Db : true
+
+  C -> C : vessel.UpdateBasics(dto.Name, dto.VesselTypeId, new OrganizationId(guid), dto.CapacityTEU)
+  C -> Db : SaveChangesAsync()
+  Db -> Store : update
+  Store --> Db : ok
+
+  C --> Client : 200 OK + VesselResponseDto
+  deactivate C
+end
+@enduml

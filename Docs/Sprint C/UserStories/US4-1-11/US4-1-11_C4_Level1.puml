@@ -1,0 +1,23 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+title C4 L1 - System Context (US 4.1.11 - Complete VVE)
+
+Person(operator, "Logistics Operator", "Closes vessel visit execution by recording unberth and port departure times")
+System(spa, "Port Management SPA", "Web application used by port operators")
+
+System_Boundary(oemBoundary, "OEM Service") {
+  System(oem, "Operations & Execution Management (OEM)", "Stores Operation Plans and VVEs; supports execution lifecycle and analytics")
+}
+
+System_Ext(iam, "IAM Provider", "Authentication and authorization tokens")
+System_Ext(core, "Core Backend", "Master data and VVNs (vessel visit notifications)")
+System_Ext(planning, "Planning & Scheduling Service", "Produces operation plans (used in other OEM US)")
+
+Rel(operator, spa, "Uses", "HTTPS")
+Rel(spa, iam, "Authenticates", "OIDC/OAuth2")
+Rel(spa, oem, "Completes VVE (unberth + port departure)", "HTTPS/JSON")
+Rel(oem, iam, "Validates tokens and roles", "JWT/OIDC")
+Rel(oem, core, "Optional data queries (context)", "REST/JSON")
+Rel(oem, planning, "Used for plan generation (other US)", "REST/JSON")
+
+@enduml

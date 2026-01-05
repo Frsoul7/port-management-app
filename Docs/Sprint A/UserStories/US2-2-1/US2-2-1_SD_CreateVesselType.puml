@@ -1,0 +1,81 @@
+@startuml
+title Sequence Diagram – Create Vessel Type (US 2.2.1)
+
+actor "Port Authority Officer" as User
+participant "API Client" as Client
+participant "VesselTypesController" as C
+participant "PortDbContext" as Db
+participant "VesselType\n(Domain)" as VT
+database "EF Store" as Store
+
+User -> Client : POST /api/vessel-types
+activate Client
+Client -> C : Create(CreateVesselTypeDto)
+activate C
+
+' Authorization check
+C -> C : CallerContext.FromHeaders(Request)
+C -> C : ValidatePortAuthorityAccess()
+
+alt not Port Authority Officer
+  C --> Client : 403 Forbidden
+  Client --> User : Error: Access denied
+else name already exists
+  C -> Db : AnyAsync(VesselTypes.Where(vt => vt.Name == dto.Name))
+  activate Db
+  Db -> Store : SELECT COUNT(*) FROM VesselTypes WHERE Name = ?
+  activate Store
+  Store --> Db : 1 (duplicate found)
+  deactivate Store
+  deactivate Db
+  
+  C --> Client : 409 Conflict\n"Vessel type with this name already exists"
+  Client --> User : Error: Duplicate name
+else negative or zero values
+  C -> Db : AnyAsync(VesselTypes.Where(vt => vt.Name == dto.Name))
+  activate Db
+  Db -> Store : SELECT COUNT(*) FROM VesselTypes WHERE Name = ?
+  activate Store
+  Store --> Db : 0 (no duplicates)
+  deactivate Store
+  deactivate Db
+  
+  C -> C : ValidatePositiveValues(dto)
+  
+  C --> Client : 400 Bad Request\n"All numeric values must be positive"
+  Client --> User : Error: Invalid input
+else all validations passed
+  C -> Db : AnyAsync(VesselTypes.Where(vt => vt.Name == dto.Name))
+  activate Db
+  Db -> Store : SELECT COUNT(*) FROM VesselTypes WHERE Name = ?
+  activate Store
+  Store --> Db : 0 (no duplicates)
+  deactivate Store
+  deactivate Db
+  
+  C -> C : ValidatePositiveValues(dto)
+  
+  ' Create domain entity
+  create VT
+  C -> VT : new VesselType(dto.Name, dto.Description,\ndto.MaxCapacityTEU, dto.MaxRows, dto.MaxBays,\ndto.MaxTiers, dto.MaxLength, dto.MaxBeam, dto.MaxDraft)
+  VT --> C : vesselType
+  
+  ' Persist
+  C -> Db : VesselTypes.Add(vesselType)
+  activate Db
+  C -> Db : SaveChangesAsync()
+  Db -> Store : INSERT INTO VesselTypes
+  activate Store
+  Store --> Db : ok
+  deactivate Store
+  deactivate Db
+  
+  ' Build response
+  C -> C : ToResponse(vesselType)
+  C --> Client : 201 Created\nLocation: /api/vessel-types/{id}\nBody: VesselTypeResponseDto
+  Client --> User : Display created vessel type
+end
+
+deactivate C
+deactivate Client
+@enduml

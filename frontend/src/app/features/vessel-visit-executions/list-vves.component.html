@@ -1,0 +1,307 @@
+<div class="vve-list-container">
+  <!-- Header -->
+  <div class="header">
+    <div class="header-content">
+      <h1>{{ 'VVE.TITLE' | translate }}</h1>
+      <button class="back-btn" (click)="goBack()">{{ 'NAV.BACK_TO_DASHBOARD' | translate }}</button>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="content">
+    <!-- Filters -->
+    <div class="filters-section">
+      <h2>{{ 'VVE.FILTERS' | translate }}</h2>
+    <div class="filters-grid">
+      <div class="filter-group">
+        <label for="vvnId">{{ 'VVE.VVN_ID' | translate }}</label>
+        <input
+          type="text"
+          id="vvnId"
+          [(ngModel)]="filters.vvnId"
+          [placeholder]="'VVE.VVN_ID' | translate"
+          class="input-field"
+        />
+      </div>
+
+      <div class="filter-group">
+        <label for="vesselImo">{{ 'VVE.VESSEL_IMO' | translate }}</label>
+        <input
+          type="text"
+          id="vesselImo"
+          [(ngModel)]="filters.vesselImo"
+          [placeholder]="'VVE.VESSEL_IMO' | translate"
+          class="input-field"
+        />
+      </div>
+
+      <div class="filter-group">
+        <label for="status">{{ 'VVE.STATUS' | translate }}</label>
+        <select id="status" [(ngModel)]="filters.status" class="input-field">
+          <option value="">{{ 'VVE.ALL_STATUSES' | translate }}</option>
+          <option [value]="VesselVisitExecutionStatus.PLANNED">{{ 'VVE.PLANNED' | translate }}</option>
+          <option [value]="VesselVisitExecutionStatus.IN_PROGRESS">{{ 'VVE.IN_PROGRESS' | translate }}</option>
+          <option [value]="VesselVisitExecutionStatus.COMPLETED">{{ 'VVE.COMPLETED' | translate }}</option>
+          <option [value]="VesselVisitExecutionStatus.DISRUPTED">{{ 'VVE.DISRUPTED' | translate }}</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label for="fromDate">{{ 'VVE.FROM_DATE' | translate }}</label>
+        <input
+          type="date"
+          id="fromDate"
+          [(ngModel)]="filters.fromDate"
+          class="input-field"
+        />
+      </div>
+
+      <div class="filter-group">
+        <label for="toDate">{{ 'VVE.TO_DATE' | translate }}</label>
+        <input
+          type="date"
+          id="toDate"
+          [(ngModel)]="filters.toDate"
+          class="input-field"
+        />
+      </div>
+    </div>
+
+    <div class="filter-actions">
+      <button type="button" class="btn-secondary" (click)="clearFilters()">
+        {{ 'VVE.CLEAR_FILTERS' | translate }}
+      </button>
+      <button type="button" class="btn-primary" (click)="applyFilters()">
+        {{ 'VVE.APPLY_FILTERS' | translate }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading()" class="loading-container">
+    <div class="spinner"></div>
+    <p>{{ 'VVE.LOADING' | translate }}</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error() && !loading()" class="error-container">
+    <p class="error-message">{{ error() }}</p>
+    <button class="btn-primary" (click)="loadVVEs()">{{ 'VVE.RETRY' | translate }}</button>
+  </div>
+
+  <!-- VVE List -->
+  <div *ngIf="!loading() && !error()" class="vve-list">
+    <p class="result-count">
+      Showing {{ getPaginatedVVEs().length }} of {{ filteredVves().length }} vessel visit executions
+    </p>
+
+    <div *ngIf="filteredVves().length === 0" class="no-results">
+      <p>{{ 'VVE.NO_RESULTS' | translate }}</p>
+    </div>
+
+    <table *ngIf="filteredVves().length > 0" class="vve-table">
+      <thead>
+        <tr>
+          <th>{{ 'VVE.VVE_ID' | translate }}</th>
+          <th>{{ 'VVE.VVN_ID' | translate }}</th>
+          <th>{{ 'VVE.STATUS' | translate }}</th>
+          <th>{{ 'VVE.ARRIVAL_TIME' | translate }}</th>
+          <th>{{ 'VVE.BERTH_TIME' | translate }}</th>
+          <th>{{ 'VVE.ASSIGNED_DOCK' | translate }}</th>
+          <th>{{ 'VVE.OPERATIONS' | translate }}</th>
+          <th>{{ 'VVE.TURNAROUND' | translate }}</th>
+          <th>{{ 'VVE.BERTH_OCCUPANCY' | translate }}</th>
+          <th>{{ 'VVE.WAITING_TIME' | translate }}</th>
+          <th>{{ 'VVE.ACTIONS' | translate }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let vve of getPaginatedVVEs()" class="vve-row">
+          <td>{{ vve.vveId }}</td>
+          <td>{{ vve.vvnId }}</td>
+          <td>
+            <span class="status-badge" [ngClass]="getStatusClass(vve.status)">
+              {{ vve.status }}
+            </span>
+          </td>
+          <td>{{ formatDate(vve.actualPortArrivalTime) }}</td>
+          <td>{{ formatDate(vve.actualBerthTime) }}</td>
+          <td>{{ vve.assignedDock || 'N/A' }}</td>
+          <td>{{ vve.operations.length }} operations</td>
+          <td class="metric-cell">{{ formatMetric(vve.turnaroundTimeHours) }}</td>
+          <td class="metric-cell">{{ formatMetric(vve.berthOccupancyHours) }}</td>
+          <td class="metric-cell">{{ formatMetric(vve.waitingTimeHours) }}</td>
+          <td>
+            <div class="action-buttons">
+              <button
+                *ngIf="shouldShowBerthingButton(vve)"
+                class="btn-action btn-update-berth"
+                (click)="openBerthingModal(vve)"
+              >
+                {{ 'VVE.UPDATE_BERTHING' | translate }}
+              </button>
+              <button
+                *ngIf="vve.status === VesselVisitExecutionStatus.IN_PROGRESS"
+                class="btn-action btn-manage-ops"
+                (click)="navigateToOperations(vve.vveId)"
+                [title]="'VVE.MANAGE_OPERATIONS_TITLE' | translate"
+              >
+                {{ 'VVE.MANAGE_OPERATIONS' | translate }} ({{ vve.operations.length }})
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Pagination -->
+    <div *ngIf="totalPages() > 1" class="pagination">
+      <button
+        class="pagination-btn"
+        [disabled]="currentPage() === 1"
+        (click)="goToPage(currentPage() - 1)"
+      >
+        ← {{ 'VVE.PREVIOUS' | translate }}
+      </button>
+
+      <button
+        *ngFor="let page of getPageNumbers()"
+        class="pagination-btn"
+        [class.active]="page === currentPage()"
+        [class.ellipsis]="page === -1"
+        [disabled]="page === -1"
+        (click)="page !== -1 && goToPage(page)"
+      >
+        {{ page === -1 ? '...' : page }}
+      </button>
+
+      <button
+        class="pagination-btn"
+        [disabled]="currentPage() === totalPages()"
+        (click)="goToPage(currentPage() + 1)"
+      >
+        {{ 'VVE.NEXT' | translate }} →
+      </button>
+
+      <span class="page-info">
+        {{ 'VVE.PAGE' | translate }} {{ currentPage() }} {{ 'VVE.OF' | translate }} {{ totalPages() }}
+      </span>
+    </div>
+  </div>
+  </div>
+
+  <!-- Berthing Update Modal -->
+  <div
+    *ngIf="showBerthingModal()"
+    class="modal-overlay"
+    (click)="closeBerthingModal()"
+  >
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>{{ 'VVE.MODAL.TITLE' | translate }}</h3>
+        <button class="btn-close" (click)="closeBerthingModal()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <!-- VVE Details -->
+        <div class="info-section">
+          <h4>{{ 'VVE.MODAL.VVE_DETAILS' | translate }}</h4>
+          <div class="info-grid" *ngIf="selectedVVE()">
+            <div class="info-item">
+              <label>{{ 'VVE.VVE_ID' | translate }}:</label>
+              <span>{{ selectedVVE()!.vveId }}</span>
+            </div>
+            <div class="info-item">
+              <label>{{ 'VVE.VVN_ID' | translate }}:</label>
+              <span>{{ selectedVVE()!.vvnId }}</span>
+            </div>
+            <div class="info-item">
+              <label>{{ 'VVE.ARRIVAL_TIME' | translate }}:</label>
+              <span>{{ formatDate(selectedVVE()!.actualPortArrivalTime) }}</span>
+            </div>
+            <div class="info-item">
+              <label>{{ 'VVE.STATUS' | translate }}:</label>
+              <span class="status-badge" [ngClass]="getStatusClass(selectedVVE()!.status)">
+                {{ selectedVVE()!.status }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Berthing Form -->
+        <div class="form-section">
+          <h4>{{ 'VVE.MODAL.BERTHING_INFO' | translate }}</h4>
+
+          <div class="form-group">
+            <label for="berthTime">{{ 'VVE.MODAL.BERTH_TIME' | translate }} *</label>
+            <input
+              type="datetime-local"
+              id="berthTime"
+              [(ngModel)]="berthTime"
+              class="input-field"
+              [disabled]="updatingBerthing()"
+            />
+            <small class="help-text">
+              {{ 'VVE.MODAL.BERTH_TIME_HELP' | translate }}
+            </small>
+          </div>
+
+          <div class="form-group">
+            <label for="dockId">{{ 'VVE.MODAL.ASSIGNED_DOCK' | translate }} *</label>
+            <select
+              id="dockId"
+              [(ngModel)]="dockId"
+              class="input-field"
+              [disabled]="updatingBerthing()"
+            >
+              <option value="">{{ 'VVE.MODAL.SELECT_DOCK' | translate }}</option>
+              <option *ngFor="let dock of availableDocks()" [value]="dock.code">
+                {{ dock.code }} - {{ dock.name }} ({{ dock.location }})
+              </option>
+            </select>
+            <small class="help-text">
+              {{ 'VVE.MODAL.ASSIGNED_DOCK_HELP' | translate }}
+            </small>
+          </div>
+        </div>
+
+        <!-- Warnings -->
+        <div *ngIf="berthingWarnings().length > 0" class="warning-banner">
+          <strong>⚠️ {{ 'VVE.MODAL.WARNINGS' | translate }}:</strong>
+          <ul>
+            <li *ngFor="let warning of berthingWarnings()">{{ warning }}</li>
+          </ul>
+        </div>
+
+        <!-- Success Message -->
+        <div *ngIf="berthingSuccess()" class="success-banner">
+          ✓ {{ berthingSuccess() }}
+        </div>
+
+        <!-- Error Message -->
+        <div *ngIf="berthingError()" class="error-banner">
+          ✗ {{ berthingError() }}
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn-secondary"
+          (click)="closeBerthingModal()"
+          [disabled]="updatingBerthing()"
+        >
+          {{ 'VVE.MODAL.CANCEL' | translate }}
+        </button>
+        <button
+          type="button"
+          class="btn-primary"
+          (click)="submitBerthing()"
+          [disabled]="!isBerthingFormValid() || updatingBerthing()"
+        >
+          {{ updatingBerthing() ? ('VVE.MODAL.UPDATING' | translate) : ('VVE.MODAL.UPDATE_BUTTON' | translate) }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

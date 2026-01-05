@@ -1,0 +1,52 @@
+@startuml
+title US 4.1.7 - Create VVE (C4 Level 2 - Container)
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+LAYOUT_WITH_LEGEND()
+
+Person(operator, "Logistics Operator")
+
+System_Ext(spa, "SPA", "Angular")
+
+Container_Boundary(oem, "OEM Backend") {
+    Container(api, "REST API", "Express.js", "/vessel-visit-executions/initialize")
+    Container(service, "VVEService", "TypeScript", "Orchestrates VVE creation")
+    Container(domain, "Domain Layer", "TypeScript", "VVE entity\nExecutedOperation VO\nVveIdGenerator")
+    ContainerDb(db, "MongoDB", "NoSQL", "Stores VVEs and Plans")
+}
+
+Rel(operator, spa, "Records vessel arrival")
+Rel(spa, api, "POST /initialize", "HTTPS/JSON + JWT")
+
+Rel(api, service, "initializeVveFromPlan()")
+Rel(service, db, "Fetch operation plan", "Mongoose")
+Rel(service, db, "Check for duplicate VVE", "Mongoose")
+Rel(service, domain, "Generate VVE ID\nCreate VVE entity")
+Rel(service, db, "Save VVE\nUpdate plan status", "Mongoose")
+
+Rel(service, api, "Returns VVEDto")
+Rel(api, spa, "201 Created + VVE data")
+Rel(spa, operator, "Displays VVE\n(VVE-000001, operations)")
+
+note right of service
+  US 4.1.7 Orchestration:
+  1. Fetch & validate operation plan
+  2. Extract operations for VVN
+  3. Check duplicate VVE
+  4. Generate sequential VVE ID
+  5. Map PlannedOps → ExecutedOps
+  6. Create VVE (status=IN_PROGRESS)
+  7. Save VVE
+  8. Update plan to IN_EXECUTION
+end note
+
+note left of domain
+  Sequential ID Pattern:
+  VVE-000001
+  VVE-000002
+  VVE-000003
+  ...
+end note
+
+@enduml

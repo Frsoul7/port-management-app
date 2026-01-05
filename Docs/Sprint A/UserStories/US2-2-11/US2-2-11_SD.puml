@@ -1,0 +1,78 @@
+@startuml
+title Sequence Diagram – US 2.2.11 Register and Manage Staff Members
+
+actor "Logistics Operator" as Operator
+participant "API\nStaffMembersController" as Ctl
+participant "App Service\nStaffMemberService" as Svc
+database "EF Core\nPortDbContext" as Db
+participant "Repository\nStaffMemberRepository" as Repo
+collections "Domain\nStaffMember" as Staff
+collections "Domain\nStaffMemberQualification" as Qual
+
+== Create Staff Member ==
+Operator -> Ctl : POST /api/staff (CreateStaffMemberDto)
+Ctl -> Svc : CreateStaffMemberAsync(dto)
+Svc -> Repo : ExistsAsync(mecanographicNumber)
+Repo -> Db : Query StaffMembers
+Db --> Repo : false (not exists)
+Repo --> Svc : false
+Svc -> Staff : new StaffMember(\n mecanographicNumber, shortName,\n email, phone, status,\n startHour, endHour)
+Staff --> Svc : staffMember
+Svc -> Db : INSERT StaffMember
+Db --> Svc : saved
+Svc --> Ctl : StaffMemberResponseDto
+Ctl --> Operator : 201 Created
+
+== Add Qualification ==
+Operator -> Ctl : POST /api/staff/{id}/qualifications\n(qualificationId)
+Ctl -> Svc : AddQualificationAsync(staffId, qualificationId)
+Svc -> Db : Load StaffMember + Qualifications
+Svc -> Qual : new StaffMemberQualification(...)
+Qual --> Svc : qualification
+Svc -> Staff : AddQualification(qualification)
+Staff --> Svc : added
+Svc -> Db : UPDATE StaffMember (qualifications)
+Db --> Svc : saved
+Svc --> Ctl : OK
+Ctl --> Operator : 200 OK
+
+== Update Staff Member ==
+Operator -> Ctl : PUT /api/staff/{id} (UpdateStaffMemberDto)
+Ctl -> Svc : UpdateStaffMemberAsync(staffId, dto)
+Svc -> Db : Load StaffMember
+alt Update contact info
+  Svc -> Staff : UpdateContactInfo(email, phone)
+end
+alt Update status
+  Svc -> Staff : UpdateOperationalStatus(status)
+end
+alt Update working hours
+  Svc -> Staff : UpdateWorkingHours(startHour, endHour)
+end
+Svc -> Db : UPDATE StaffMember
+Db --> Svc : saved
+Svc --> Ctl : StaffMemberResponseDto
+Ctl --> Operator : 200 OK
+
+== Deactivate Staff Member ==
+Operator -> Ctl : DELETE /api/staff/{id}
+Ctl -> Svc : DeactivateStaffMemberAsync(staffId)
+Svc -> Db : Load StaffMember
+Svc -> Staff : UpdateActiveStatus(INACTIVE)
+Staff --> Svc : updated
+Svc -> Db : UPDATE StaffMember (ActivityStatus)
+Db --> Svc : saved
+Svc --> Ctl : OK
+Ctl --> Operator : 204 No Content
+
+== Search Staff Members ==
+Operator -> Ctl : GET /api/staff?name=X&status=AVAILABLE
+Ctl -> Svc : SearchStaffMembersAsync(filters)
+Svc -> Repo : GetByStatusAsync(AVAILABLE)
+Repo -> Db : Query StaffMembers WHERE Status=AVAILABLE
+Db --> Repo : List<StaffMember>
+Repo --> Svc : List<StaffMember>
+Svc --> Ctl : List<StaffMemberResponseDto>
+Ctl --> Operator : 200 OK (list)
+
+@enduml

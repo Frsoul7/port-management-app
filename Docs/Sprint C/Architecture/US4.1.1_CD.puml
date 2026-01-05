@@ -1,0 +1,179 @@
+@startuml
+title CD - US 4.1.1 OEM Module Architecture (Class Diagram)
+
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+
+package "Presentation Layer" {
+  class OperationPlanController {
+    -service: OperationPlanService
+    +generatePlan(req, res, next)
+    +listPlans(req, res, next)
+    +getPlanById(req, res, next)
+    +updateDockAssignment(req, res, next)
+  }
+  
+  class VesselVisitExecutionController {
+    -service: VesselVisitExecutionService
+    +initializeFromPlan(req, res, next)
+    +recordBerthing(req, res, next)
+    +recordUnberthing(req, res, next)
+    +completeVve(req, res, next)
+  }
+  
+  class AuthMiddleware {
+    +{static} authMiddleware(req, res, next)
+    -verifyToken(token): JwtPayload
+  }
+  
+  class ErrorMiddleware {
+    +{static} errorMiddleware(err, req, res, next)
+    +{static} notFoundMiddleware(req, res, next)
+  }
+}
+
+package "Application Layer" {
+  class OperationPlanService {
+    -repo: IOperationPlanRepository
+    -coreClient: ICoreBackendClient
+    -planningClient: IPlanningClient
+    +generatePlanSimple(targetDate, algorithm, userId, vvnIds?)
+    +getPlanById(id): OperationPlanDto
+    +updateOperation(id, dto, userId, userName)
+  }
+  
+  class VesselVisitExecutionService {
+    -vveRepo: IVesselVisitExecutionRepository
+    -planRepo: IOperationPlanRepository
+    +initializeVveFromPlan(dto): VesselVisitExecutionDto
+    +recordBerthing(id, dto): VesselVisitExecutionDto
+    +completeVve(id, dto): VesselVisitExecutionDto
+  }
+  
+  interface ICoreBackendClient {
+    +getApprovedVvnsForDate(date): VvnDto[]
+  }
+  
+  interface IPlanningClient {
+    +generatePlan(date, algorithm, vvns): PlanningResult
+  }
+}
+
+package "Domain Layer" {
+  class OperationPlan {
+    +operationPlanId: string
+    +targetDate: Date
+    +algorithm: PlanningAlgorithm
+    +status: OperationPlanStatus
+    +operations: PlannedOperation[]
+    +auditLog: AuditEntry[]
+    +constructor(props)
+    +startExecution()
+    +approve()
+  }
+  
+  class VesselVisitExecution {
+    +vveId: string
+    +vvnId: string
+    +operationPlanId: string
+    +status: VesselVisitExecutionStatus
+    +operations: ExecutedOperation[]
+    +constructor(props)
+    +recordBerthing(time, dockId)
+    +markAsCompleted(departureTime, userId)
+  }
+  
+  class PlannedOperation <<Value Object>> {
+    +vvnId: string
+    +operationType: OperationType
+    +assignedDock: string
+    +assignedCranes: string[]
+    +plannedStart: Date
+    +plannedEnd: Date
+  }
+  
+  class ExecutedOperation <<Value Object>> {
+    +operationType: OperationType
+    +startTime: Date
+    +endTime: Date
+    +status: ExecutedOperationStatus
+    +plannedOperationId: string
+  }
+  
+  interface IOperationPlanRepository {
+    +save(plan): OperationPlan
+    +findById(id): OperationPlan
+    +findByTargetDate(date): OperationPlan
+    +update(plan): OperationPlan
+  }
+  
+  interface IVesselVisitExecutionRepository {
+    +save(vve): VesselVisitExecution
+    +findById(id): VesselVisitExecution
+    +findByVvnId(vvnId): VesselVisitExecution
+    +update(vve): VesselVisitExecution
+  }
+}
+
+package "Infrastructure Layer" {
+  class OperationPlanRepository {
+    -model: MongooseModel
+    +save(plan): OperationPlan
+    +findByTargetDate(date): OperationPlan
+  }
+  
+  class VesselVisitExecutionRepository {
+    -model: MongooseModel
+    +save(vve): VesselVisitExecution
+    +findByVvnId(vvnId): VesselVisitExecution
+    +getNextSequentialNumber(): number
+  }
+  
+  class CoreBackendClient {
+    -baseUrl: string
+    -httpClient: AxiosInstance
+    +getApprovedVvnsForDate(date): VvnDto[]
+  }
+  
+  class PlanningClient {
+    -baseUrl: string
+    -httpClient: AxiosInstance
+    +generatePlan(date, algorithm, vvns): PlanningResult
+  }
+}
+
+' Relationships
+OperationPlanController --> OperationPlanService : uses
+VesselVisitExecutionController --> VesselVisitExecutionService : uses
+
+OperationPlanService --> IOperationPlanRepository : depends on (DIP)
+OperationPlanService --> ICoreBackendClient : depends on (DIP)
+OperationPlanService --> IPlanningClient : depends on (DIP)
+VesselVisitExecutionService --> IVesselVisitExecutionRepository : depends on (DIP)
+VesselVisitExecutionService --> IOperationPlanRepository : depends on (DIP)
+
+OperationPlanService ..> OperationPlan : creates
+VesselVisitExecutionService ..> VesselVisitExecution : creates
+
+OperationPlan "1" o-- "*" PlannedOperation : contains
+VesselVisitExecution "1" o-- "*" ExecutedOperation : contains
+
+IOperationPlanRepository <|.. OperationPlanRepository : implements
+IVesselVisitExecutionRepository <|.. VesselVisitExecutionRepository : implements
+ICoreBackendClient <|.. CoreBackendClient : implements
+IPlanningClient <|.. PlanningClient : implements
+
+note right of OperationPlanService
+  **Dependency Inversion Principle**
+  Application layer depends on
+  interfaces, not concrete implementations
+end note
+
+note bottom of OperationPlan
+  **Domain Entity (Aggregate Root)**
+  • Encapsulates business rules
+  • Validates invariants
+  • Framework-independent
+end note
+
+@enduml

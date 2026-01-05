@@ -1,0 +1,50 @@
+@startuml
+title SSD – Update Storage Area
+
+actor "Port Authority Officer" as User
+participant "Scalar / API Client" as Client
+participant "StorageAreasController" as C
+participant "PortDbContext" as Db
+database "EF (InMemory)" as Store
+
+User -> Client : PUT /api/storageareas/{id}\n{ Name, Location, MaxCapacityTEU, ServesAllDocks, ServedDockCodes, YardNotes, WarehouseNotes }
+Client -> C : Update(id, dto)
+activate C
+
+C -> Db : Include(sa => sa.Docks).FirstOrDefaultAsync(sa => sa.StorageAreaId == id)
+Db -> Store : query
+Store --> Db : StorageArea | null
+
+alt not found
+  C --> Client : 404 Not Found
+  deactivate C
+else found
+  C -> C : validate dto.MaxCapacityTEU >= storageArea.CurrentOccupancyTEU
+  alt capacity too low
+    C --> Client : 400 Bad Request\n"Cannot reduce capacity below current occupancy"
+    deactivate C
+  else valid update
+    C -> Db : storageArea.Update(dto.Name, dto.Location, dto.MaxCapacityTEU, dto.ServesAllDocks)
+    
+    alt Type is YARD and dto.YardNotes provided
+      C -> Db : storageArea.SetYardSpec(dto.YardNotes)
+    else Type is WAREHOUSE and dto.WarehouseNotes provided
+      C -> Db : storageArea.SetWarehouseSpec(dto.WarehouseNotes)
+    end
+
+    alt not ServesAllDocks and ServedDockCodes provided
+      C -> Db : Where(d => dto.ServedDockCodes.Contains(d.Code)).ToListAsync()
+      Db -> Store : query
+      Store --> Db : List<Dock>
+      C -> Db : storageArea.SetServedDocks(docks)
+    end
+
+    C -> Db : SaveChangesAsync()
+    Db -> Store : update
+    Store --> Db : ok
+
+    C --> Client : 200 OK + StorageAreaResponseDto
+    deactivate C
+  end
+end
+@enduml

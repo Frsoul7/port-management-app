@@ -1,0 +1,104 @@
+@startuml
+title Class Diagram – US 2.2.2 Register & Update Vessel Records
+
+' ===== Domain =====
+class Vessel {
+  + string ImoNumber
+  + string Name
+  + int? CapacityTEU
+  + string VesselTypeId
+  + VesselType? VesselType
+  + OrganizationId OrganizationId
+  + Organization? Organization
+  + ICollection<VesselVisitNotification> VesselVisitNotifications
+  --
+  + Vessel(string imoNumber, string name, string vesselTypeId, OrganizationId organizationId, int? capacityTeu = null)
+  + UpdateBasics(string name, string vesselTypeId, OrganizationId organizationId, int? capacityTeu) : void
+  + static IsValidImo(string imo) : bool
+  + static NormalizeImo(string imo) : string
+}
+
+class VesselType {
+  + string VesselTypeId
+  + string Name
+  + string? Description
+  + int? CapacityTEU
+  + int? MaxRows
+  + int? MaxBays
+  + int? MaxTiers
+  + string? OperationalConstraints
+  + ICollection<Vessel> Vessels
+  + ICollection<Dock> AllowedDocks
+  --
+  + VesselType(string id, string name)
+  + Update(string name, string? description, int? capacityTeu, int? maxRows, int? maxBays, int? maxTiers, string? operationalConstraints) : void
+}
+
+class Organization {
+  + OrganizationId OrganizationId
+  + string Name
+  + ICollection<User> Users
+  + ICollection<Vessel> Vessels
+}
+
+class OrganizationId {
+  + Guid Value
+  --
+  + OrganizationId(Guid value)
+}
+
+' ===== Infrastructure =====
+class PortDbContext {
+  + DbSet<Organization> Organizations
+  + DbSet<User> Users
+  + DbSet<Vessel> Vessels
+  + DbSet<VesselType> VesselTypes
+  --
+  + PortDbContext(DbContextOptions<PortDbContext> options)
+  # OnModelCreating(ModelBuilder modelBuilder) : void
+}
+
+' ===== Controllers =====
+class VesselsController {
+  + Create(CreateVesselDto dto) : Task<IActionResult>
+  + Update(string imo, UpdateVesselDto dto) : Task<IActionResult>
+  + GetByImo(string imo) : Task<IActionResult>
+  + Search(string? imo, string? name, string? @operator, string? typeId, string? organizationId) : Task<IActionResult>
+  -- ToResponse(Vessel v) : Task<VesselResponseDto>
+}
+
+' ===== DTOs =====
+class CreateVesselDto {
+  + string ImoNumber
+  + string Name
+  + string VesselTypeId
+  + string OrganizationId
+  + int? CapacityTEU
+}
+class UpdateVesselDto {
+  + string Name
+  + string VesselTypeId
+  + string OrganizationId
+  + int? CapacityTEU
+}
+class VesselResponseDto {
+  + string ImoNumber
+  + string Name
+  + string VesselTypeId
+  + string? VesselTypeName
+  + string OrganizationId
+  + string? OrganizationName
+  + int? CapacityTEU
+}
+
+' ===== Relationships =====
+VesselType "1" o-- "0..*" Vessel : Vessels
+Organization "1" o-- "0..*" Vessel : Vessels
+Organization --> OrganizationId : has
+PortDbContext --> Vessel
+PortDbContext --> VesselType
+VesselsController --> PortDbContext
+VesselsController ..> CreateVesselDto
+VesselsController ..> UpdateVesselDto
+VesselsController ..> VesselResponseDto
+@enduml

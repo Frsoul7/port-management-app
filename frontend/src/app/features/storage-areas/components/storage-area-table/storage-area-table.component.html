@@ -1,0 +1,125 @@
+<div class="table-container">
+  <!-- Desktop Table View -->
+  <table class="storage-areas-table desktop-table" *ngIf="storageAreas.length > 0; else noStorageAreas">
+    <thead>
+      <tr>
+        <th>{{ 'STORAGE.NAME' | translate }}</th>
+        <th>{{ 'STORAGE.LOCATION' | translate }}</th>
+        <th>{{ 'STORAGE.TYPE' | translate }}</th>
+        <th>{{ 'STORAGE.CAPACITY' | translate }}</th>
+        <th>Occupancy</th>
+        <th>Serves All Docks</th>
+        <th>{{ 'COMMON.ACTIONS' | translate }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let sa of storageAreas" class="storage-area-row">
+        <td data-label="Name"><strong>{{ sa.name }}</strong></td>
+        <td data-label="Location">{{ sa.location }}</td>
+        <td data-label="Type">
+          <span class="type-badge" [class]="'type-' + sa.type.toLowerCase()">
+            {{ formatType(sa.type) }}
+          </span>
+        </td>
+        <td data-label="Capacity">{{ sa.maxCapacityTEU }} TEU</td>
+        <td data-label="Occupancy">
+          <div class="occupancy-wrapper">
+            <span class="occupancy-text">{{ sa.currentOccupancyTEU }} / {{ sa.maxCapacityTEU }} TEU</span>
+            <div class="occupancy-bar">
+              <div class="occupancy-fill" 
+                   [class]="getOccupancyClass(getOccupancyPercentage(sa))"
+                   [style.width.%]="getOccupancyPercentage(sa)">
+              </div>
+            </div>
+            <span class="occupancy-percentage">{{ getOccupancyPercentage(sa) | number:'1.0-0' }}%</span>
+          </div>
+        </td>
+        <td data-label="Serves All Docks">
+          <span class="badge" [class]="sa.servesAllDocks ? 'badge-yes' : 'badge-no'">
+            {{ sa.servesAllDocks ? 'Yes' : 'No' }}
+          </span>
+        </td>
+        <td class="actions" [attr.data-label]="'COMMON.ACTIONS' | translate">
+          <button class="btn-icon btn-view" (click)="viewStorageArea(sa)" [title]="'STORAGE.VIEW_DETAILS' | translate">
+            👁️
+          </button>
+          <button class="btn-icon btn-edit" (click)="editStorageArea(sa)" [title]="'STORAGE.EDIT' | translate">
+            ✏️
+          </button>
+          <button class="btn-icon btn-delete" (click)="deleteStorageArea(sa)" [title]="'COMMON.DELETE' | translate">
+            🗑️
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Mobile Card View -->
+  <div class="storage-areas-cards mobile-cards" *ngIf="storageAreas.length > 0">
+    <div *ngFor="let sa of storageAreas" class="storage-area-card">
+      <div class="card-header">
+        <h3>{{ sa.name }}</h3>
+        <div class="card-actions">
+          <button class="btn-icon btn-view" (click)="viewStorageArea(sa)" [title]="'STORAGE.VIEW_DETAILS' | translate">
+            👁️
+          </button>
+          <button class="btn-icon btn-edit" (click)="editStorageArea(sa)" [title]="'STORAGE.EDIT' | translate">
+            ✏️
+          </button>
+          <button class="btn-icon btn-delete" (click)="deleteStorageArea(sa)" [title]="'COMMON.DELETE' | translate">
+            🗑️
+          </button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="card-row">
+          <span class="label">Location:</span>
+          <span class="value">{{ sa.location }}</span>
+        </div>
+        <div class="card-row">
+          <span class="label">Type:</span>
+          <span class="value">
+            <span class="type-badge" [class]="'type-' + sa.type.toLowerCase()">
+              {{ formatType(sa.type) }}
+            </span>
+          </span>
+        </div>
+        <div class="card-row">
+          <span class="label">Capacity:</span>
+          <span class="value">{{ sa.maxCapacityTEU }} TEU</span>
+        </div>
+        <div class="card-row card-row-full">
+          <span class="label">Occupancy:</span>
+          <div class="occupancy-wrapper">
+            <span class="occupancy-text">{{ sa.currentOccupancyTEU }} / {{ sa.maxCapacityTEU }} TEU</span>
+            <div class="occupancy-bar">
+              <div class="occupancy-fill" 
+                   [class]="getOccupancyClass(getOccupancyPercentage(sa))"
+                   [style.width.%]="getOccupancyPercentage(sa)">
+              </div>
+            </div>
+            <span class="occupancy-percentage">{{ getOccupancyPercentage(sa) | number:'1.0-0' }}%</span>
+          </div>
+        </div>
+        <div class="card-row">
+          <span class="label">Serves All Docks:</span>
+          <span class="value">
+            <span class="badge" [class]="sa.servesAllDocks ? 'badge-yes' : 'badge-no'">
+              {{ sa.servesAllDocks ? 'Yes' : 'No' }}
+            </span>
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ng-template #noStorageAreas>
+    <div class="no-data">
+      <div class="no-data-icon">📦</div>
+      <p>{{ 'STORAGE.NO_STORAGE' | translate }}</p>
+    </div>
+  </ng-template>
+</div>
+
+<!-- Loading Indicator -->
+<app-loading *ngIf="loading" [message]="'STORAGE.LOADING'"></app-loading>

@@ -1,0 +1,27 @@
+<div class="toolbar">
+  <div class="search-section">
+    <input 
+      type="text" 
+      [placeholder]="'DOCKS.SEARCH_NAME' | translate" 
+      [(ngModel)]="searchParams.name"
+      (keyup.enter)="handleEnter()"
+      class="search-input">
+    <input 
+      type="text" 
+      [placeholder]="'DOCKS.LOCATION' | translate" 
+      [(ngModel)]="searchParams.location"
+      (keyup.enter)="handleEnter()"
+      class="search-input">
+    <input 
+      type="text" 
+      [placeholder]="'VESSELS.TYPE' | translate" 
+      [(ngModel)]="searchParams.vesselTypeId"
+      (keyup.enter)="handleEnter()"
+      class="search-input">
+    <button class="btn btn-primary" (click)="search()">{{ 'COMMON.SEARCH' | translate }}</button>
+  </div>
+  <div class="action-buttons">
+    <button class="btn btn-secondary" (click)="clear()">{{ 'COMMON.CLEAR' | translate }}</button>
+    <button class="btn btn-success" (click)="addDock()">{{ 'DOCKS.CREATE' | translate }}</button>
+  </div>
+</div>

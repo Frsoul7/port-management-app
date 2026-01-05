@@ -1,0 +1,85 @@
+@startuml
+title CD - US 4.1.15 Complementary Tasks (Domain + DIP)
+
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+
+enum VveStatus {
+  IN_PROGRESS
+  COMPLETED
+}
+
+class VesselVisitExecution {
+  +id: string
+  +status: VveStatus
+  +isCompleted(): boolean
+}
+
+class ComplementaryTask {
+  +id: string
+  +vveId: string
+  +categoryId: string
+  +startTime: DateTime
+  +endTime: DateTime
+  +blocksOperations: boolean
+  +notes: string
+  +validateTimeWindow()
+}
+
+class ComplementaryTaskCategory {
+  +id: string
+  +name: string
+  +description: string
+}
+
+interface IVVERepository {
+  +findById(id: string): VesselVisitExecution
+}
+
+interface ITaskCategoryRepository {
+  +findById(id: string): ComplementaryTaskCategory
+}
+
+interface IComplementaryTaskRepository {
+  +create(task: ComplementaryTask): ComplementaryTask
+  +findByVveId(vveId: string): List<ComplementaryTask>
+  +update(task: ComplementaryTask): ComplementaryTask
+}
+
+class ComplementaryTaskService {
+  -vveRepo: IVVERepository
+  -catRepo: ITaskCategoryRepository
+  -taskRepo: IComplementaryTaskRepository
+  +createForVve(vveId: string, dto, userId: string): ComplementaryTask
+  +listForVve(vveId: string): List<ComplementaryTask>
+}
+
+class MongoVVERepository
+class MongoTaskCategoryRepository
+class MongoComplementaryTaskRepository
+
+ComplementaryTaskService --> IVVERepository : DIP
+ComplementaryTaskService --> ITaskCategoryRepository : DIP
+ComplementaryTaskService --> IComplementaryTaskRepository : DIP
+
+IVVERepository <|.. MongoVVERepository
+ITaskCategoryRepository <|.. MongoTaskCategoryRepository
+IComplementaryTaskRepository <|.. MongoComplementaryTaskRepository
+
+VesselVisitExecution ..> VveStatus
+ComplementaryTask --> ComplementaryTaskCategory : categorized by
+
+note right of ComplementaryTask
+Invariants:
+- startTime < endTime
+- categoryId required
+end note
+
+note right of ComplementaryTaskService
+Policies:
+- VVE must exist
+- category must exist
+- if VVE COMPLETED, restrict changes
+end note
+
+@enduml

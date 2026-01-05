@@ -1,0 +1,154 @@
+@startuml
+title Domain Model – US 2.2.7 (Review and Approve/Reject VVNs)
+
+class VesselVisitNotification <<Aggregate Root>> {
+  + VvnGuid : Guid
+  + VvnBusinessId : string
+  + State : VVNState
+  + VesselImo : string
+  + VisitPurpose : VisitPurpose
+  + Eta : DateTime
+  + Etd : DateTime
+  + OrganizationId : OrganizationId
+  + SubmittedById : UserId?
+  + SubmittedAt : DateTime?
+  + ApprovedById : UserId?
+  + ApprovedAt : DateTime?
+  + RejectedById : UserId?
+  + RejectedAt : DateTime?
+  + RejectionReason : string?
+  + DockAssignment : DockAssignment?
+  --
+  + Approve(approver:UserId, dockAssignmentId:Guid) : void
+  + Reject(rejector:UserId, reason:string) : void
+}
+
+enum VVNState {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+class DecisionLog <<Entity>> {
+  + DecisionLogId : Guid
+  + VvnGuid : Guid
+  + Outcome : DecisionOutcome
+  + OfficerUserId : UserId
+  + AtUtc : DateTime
+  + DockAssignmentId : Guid?
+  + Reason : string?
+  + Notes : string?
+  --
+  + {static} Approved(vvnId:Guid, officer:UserId, dockAssignmentId:Guid, atUtc:DateTime, notes:string?) : DecisionLog
+  + {static} Rejected(vvnId:Guid, officer:UserId, reason:string, atUtc:DateTime, notes:string?) : DecisionLog
+}
+
+enum DecisionOutcome {
+  Approved = 1
+  Rejected = 2
+}
+
+class DockAssignment <<Entity>> {
+  + DockAssignmentId : Guid
+  + VvnId : Guid
+  + DockCode : string
+  + BerthFrom : DateTime
+  + BerthTo : DateTime
+  + AssignedByUserId : string
+  + AssignedAt : DateTime
+  + Status : DockAssignmentStatus
+  --
+  + {static} Create(vvnId:Guid, dockCode:string, berthFromUtc:DateTime, berthToUtc:DateTime, assignedByUserId:string, assignedAtUtc:DateTime) : DockAssignment
+}
+
+enum DockAssignmentStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+class Dock <<Entity>> {
+  + Code : string
+  + Length : decimal
+  + Depth : decimal
+  + Type : DockType
+}
+
+class Organization <<Entity>> {
+  + OrganizationId : OrganizationId
+  + LegalName : string
+  + Type : OrganizationType
+}
+
+enum OrganizationType {
+  PORT_AUTHORITY
+  SHIPPING_AGENT
+  PORT_OPERATOR
+}
+
+class OrganizationId <<Value Object>> {
+  + Value : Guid
+}
+
+class UserId <<Value Object>> {
+  + Value : Guid
+}
+
+class User <<Entity>> {
+  + UserId : UserId
+  + Name : string
+  + Email : string
+  + Role : AppRole
+  + OrganizationId : OrganizationId?
+}
+
+enum AppRole {
+  Admin
+  PortAuthorityOfficer
+  ShippingAgentRep
+  PortOperator
+}
+
+' Relationships
+VesselVisitNotification --> VVNState : has
+VesselVisitNotification --> OrganizationId : submitted by
+VesselVisitNotification --> UserId : submitted/approved/rejected by
+VesselVisitNotification "1" o-- "0..1" DockAssignment : has
+
+DecisionLog --> DecisionOutcome : has
+DecisionLog --> UserId : made by
+DecisionLog ..> VesselVisitNotification : logs decision for
+
+DockAssignment --> Dock : assigned to
+DockAssignment --> DockAssignmentStatus : has
+
+Organization --> OrganizationId : identified by
+Organization --> OrganizationType : has
+
+User --> UserId : identified by
+User --> AppRole : has
+User --> OrganizationId : belongs to
+
+note right of VesselVisitNotification
+  State transitions:
+  DRAFT → SUBMITTED → APPROVED/REJECTED
+  
+  Only SUBMITTED VVNs can be
+  approved or rejected
+end note
+
+note right of DecisionLog
+  Immutable audit record
+  created for every
+  approve/reject decision
+end note
+
+note right of DockAssignment
+  Created only upon approval
+  Prevents overlapping assignments
+  on the same dock
+end note
+
+@enduml

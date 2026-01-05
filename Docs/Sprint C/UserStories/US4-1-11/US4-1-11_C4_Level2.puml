@@ -1,0 +1,25 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+title C4 L2 - Containers (US 4.1.11 - Complete VVE)
+
+Person(operator, "Logistics Operator")
+
+System_Boundary(portSystem, "Port System") {
+  Container(spa, "SPA", "Angular", "User interface for port roles")
+  Container(oemApi, "OEM API", "Node.js + TypeScript + Express", "Executes OEM use cases (VVEs, incidents, tasks, plans)")
+  ContainerDb(oemDb, "OEM Database", "MongoDB", "Persists Operation Plans, VVEs, incidents, complementary tasks")
+}
+
+System_Ext(iam, "IAM Provider", "OIDC/JWT tokens")
+System_Ext(core, "Core Backend", ".NET", "VVNs and master data")
+System_Ext(planning, "Planning & Scheduling", "REST API", "Scheduling algorithms and planning results")
+
+Rel(operator, spa, "Uses", "HTTPS")
+Rel(spa, iam, "Authenticates", "OIDC")
+Rel(spa, oemApi, "POST /vessel-visit-executions/{id}/unberth\nPOST /vessel-visit-executions/{id}/complete", "HTTPS/JSON")
+Rel(oemApi, oemDb, "Reads/Writes VVEs", "MongoDB driver")
+Rel(oemApi, iam, "Validates token + roles", "JWT/OIDC")
+Rel(oemApi, core, "Optional data fetch", "REST/JSON")
+Rel(oemApi, planning, "Used for other OEM features", "REST/JSON")
+
+@enduml

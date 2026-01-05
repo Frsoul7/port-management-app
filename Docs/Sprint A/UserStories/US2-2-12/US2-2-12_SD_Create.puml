@@ -1,0 +1,57 @@
+@startuml
+title Sequence Diagram – Create Physical Resource
+
+actor "Logistics Operator" as Operator
+participant "API Client" as Client
+participant "PhysicalResourcesController" as C
+participant "PhysicalResourceRepository" as Repo
+participant "QualificationRepository" as QRepo
+participant "DockRepository" as DockRepo
+participant "PortDbContext" as Db
+database "EF (InMemory)" as Store
+
+Operator -> Client : POST /api/resources/sts-cranes {body}
+Client -> C : CreateSTSCrane(dto)
+activate C
+
+C -> Repo : ExistsAsync(dto.Code)
+activate Repo
+Repo -> Db : AnyAsync(Code)
+Db -> Store : query
+Store --> Db : false
+Db --> Repo : false
+deactivate Repo
+
+C -> QRepo : SearchAsync(dto.RequiredQualificationIds)
+activate QRepo
+QRepo -> Db : query quals
+Db -> Store : query
+Store --> Db : quals[]
+Db --> QRepo : quals[]
+deactivate QRepo
+
+C -> DockRepo : GetByCodeAsync(dto.InstalledAtDockCode)
+activate DockRepo
+DockRepo -> Db : Find dock
+Db -> Store : query
+Store --> Db : dock or null
+Db --> DockRepo : dock?
+deactivate DockRepo
+
+C -> C : Validate required fields (AvgContainersPerHour etc.)
+C -> Repo : AddAsync(new STSCrane(...))
+activate Repo
+Repo -> Db : Add(entity)
+Db -> Store : INSERT
+Store --> Db : ok
+Db --> Repo : ok
+deactivate Repo
+
+C -> Db : SaveChangesAsync()
+Db -> Store : commit
+Store --> Db : ok
+Db --> C : ok
+
+C --> Client : 201 Created + resource
+deactivate C
+@enduml

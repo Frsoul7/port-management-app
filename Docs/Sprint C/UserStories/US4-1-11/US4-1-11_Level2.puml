@@ -1,0 +1,35 @@
+@startuml
+title US 4.1.11 - Nível 2 (Fluxo Funcional / SSD)
+
+skinparam shadowing false
+
+actor "Logistics Operator" as Op
+boundary "SPA" as SPA
+system "OEM System" as OEM
+
+Op -> SPA : Submit unberthTime
+SPA -> OEM : POST /vessel-visit-executions/{id}/unberth\n{unberthTime}
+
+alt Invalid/unauthorized
+  OEM --> SPA : 4xx error
+  SPA --> Op : Show error
+else Unberth recorded
+  OEM --> SPA : 200 OK\n(updated VVE)
+  SPA --> Op : Unberth saved
+end
+
+Op -> SPA : Submit departureTime and complete
+SPA -> OEM : POST /vessel-visit-executions/{id}/complete\n{departureTime}
+
+alt Not authorized
+  OEM --> SPA : 403 Forbidden
+  SPA --> Op : Access denied
+else Validation fails (business rules)
+  OEM --> SPA : 409/422\n(reason: missing unberth OR\ndeparture<=unberth OR\noperations not finished OR\nwrong state)
+  SPA --> Op : Show validation message
+else Completed
+  OEM --> SPA : 200 OK\n(status=COMPLETED, completedAt, completedBy)
+  SPA --> Op : Show completed state (read-only)
+end
+
+@enduml

@@ -1,0 +1,53 @@
+@startuml
+title SSD – Update Dock
+
+actor "Port Authority Officer" as User
+participant "Scalar / API Client" as Client
+participant "DocksController" as C
+participant "DockRepository" as DR
+participant "VesselTypeRepository" as VTR
+participant "PortDbContext" as Db
+database "EF (InMemory)" as Store
+
+User -> Client : PUT /api/docks/{code}\n{ Name, Location, LengthM, DepthM, MaxDraftM, AllowedVesselTypeIds }
+Client -> C : Update(code, dto)
+activate C
+
+C -> DR : GetByCodeAsync(codeUpper, includeVesselTypes: true)
+activate DR
+DR -> Store : query
+Store --> DR : Dock | null
+deactivate DR
+
+alt not found
+  C --> Client : 404 Not Found\n"Dock with code '...' not found."
+  deactivate C
+else found
+  C -> C : dock.Update(dto.Name, dto.Location,\ndto.LengthM, dto.DepthM, dto.MaxDraftM)
+  
+  alt vessel types updated
+    C -> VTR : GetByIdsAsync(dto.AllowedVesselTypeIds)
+    activate VTR
+    VTR -> Store : query
+    Store --> VTR : List<VesselType>
+    deactivate VTR
+    
+    alt some vessel types not found
+      C --> Client : 400 Bad Request\n"Vessel type(s) not found: ..."
+      deactivate C
+    end
+    
+    C -> C : dock.SetAllowedVesselTypes(vesselTypes)
+  end
+  
+  C -> DR : Update(dock)
+  activate DR
+  C -> Db : SaveChangesAsync()
+  Db -> Store : update
+  Store --> Db : ok
+  deactivate DR
+  
+  C --> Client : 200 OK + DockResponseDto
+  deactivate C
+end
+@enduml

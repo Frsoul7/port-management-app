@@ -1,0 +1,102 @@
+@startuml
+title Sequence Diagram – Reject VVN (US 2.2.7)
+
+actor "Port Authority Officer" as Officer
+participant ":VesselVisitNotificationsController" as Controller
+participant ":CallerContextFactory" as AuthFactory
+participant ":CallerContext" as Caller
+participant ":PortDbContext" as DbContext
+participant "vvn:VesselVisitNotification" as VVN
+participant ":DecisionLog" as DL
+database ":EFCore InMemory" as DB
+
+Officer -> Controller : POST /vvns/{id}/reject\nRejectVvnRequest(Reason, Notes)
+activate Controller
+
+Controller -> AuthFactory : FromHeaders(Request.Headers, requireUserId: false)
+activate AuthFactory
+AuthFactory -> Caller ** : create
+AuthFactory --> Controller : caller
+deactivate AuthFactory
+
+Controller -> Controller : ValidatePortAuthorityAccessAsync(caller)
+
+alt caller.Role != PortAuthorityOfficer && caller.Role != Admin
+  Controller --> Officer : 403 Forbidden
+else request.Reason is null or empty
+  Controller --> Officer : 422 Unprocessable Entity\n"A rejection reason is required"
+else caller.OrgId.HasValue
+  Controller -> DbContext : FindAsync(Organizations, caller.OrgId)
+  activate DbContext
+  DbContext -> DB : SELECT * FROM Organizations WHERE Id = ?
+  DB --> DbContext : org
+  DbContext --> Controller : org
+  deactivate DbContext
+  
+  alt org.Type != PORT_AUTHORITY
+    Controller --> Officer : 403 Forbidden\n"Not a Port Authority"
+  else valid
+    Controller -> DbContext : VesselVisitNotifications\n.SingleOrDefaultAsync(v => v.VvnGuid == id)
+    activate DbContext
+    DbContext -> DB : SELECT * FROM VVNs WHERE VvnGuid = ?
+    DB --> DbContext : vvn
+    DbContext --> Controller : vvn
+    deactivate DbContext
+    
+    alt vvn == null
+      Controller --> Officer : 404 Not Found
+    else vvn.State != SUBMITTED
+      Controller --> Officer : 409 Conflict\n"Only pending (SUBMITTED) VVNs can be rejected"
+    else valid
+
+    else valid
+      Controller -> Controller : rejectorUserId = caller.UserId != Empty\n? caller.UserId\n: SystemPlaceholder
+      Controller -> Controller : rejectionTimestamp = DateTime.UtcNow
+
+      Controller -> VVN : Reject(new UserId(rejectorUserId), request.Reason)
+      activate VVN
+      VVN -> VVN : RejectedById = rejector
+      VVN -> VVN : RejectedAt = DateTime.UtcNow
+      VVN -> VVN : RejectionReason = reason
+      VVN -> VVN : State = REJECTED
+      VVN --> Controller
+      deactivate VVN
+
+      Controller -> DL : Rejected(vvn.VvnGuid, new UserId(rejectorUserId),\nrequest.Reason, rejectionTimestamp, request.Notes)
+      activate DL
+      create ":DecisionLog" as NewDL
+      DL -> NewDL : <<create>>\nOutcome = Rejected
+      DL --> Controller : decisionLog
+      deactivate DL
+
+      Controller -> DbContext : DecisionLogs.Add(decisionLog)
+      Controller -> DbContext : SaveChangesAsync()
+      activate DbContext
+      DbContext -> DB : UPDATE VVN, INSERT DecisionLog
+      DB --> DbContext : ok
+      DbContext --> Controller
+      deactivate DbContext
+
+      Controller -> DbContext : Organizations.FindAsync(caller.OrgId)
+      activate DbContext
+      DbContext -> DB : SELECT * FROM Organizations WHERE Id = ?
+      DB --> DbContext : rejectorOrg
+      DbContext --> Controller : rejectorOrg
+      deactivate DbContext
+
+      Controller -> DbContext : Organizations.FindAsync(vvn.OrganizationId)
+      activate DbContext
+      DbContext -> DB : SELECT * FROM Organizations WHERE Id = ?
+      DB --> DbContext : submitterOrg
+      DbContext --> Controller : submitterOrg
+      deactivate DbContext
+
+      Controller -> Controller : Build RejectVvnResponse\n{ VvnId, Status: REJECTED,\n  RejectionReason, RejectorInfo,\n  SubmitterInfo }
+
+      Controller --> Officer : 200 OK\nRejectVvnResponse
+    end
+  end
+end
+deactivate Controller
+
+@enduml

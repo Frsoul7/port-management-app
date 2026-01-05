@@ -1,0 +1,10 @@
+<div class="navbar-menu" [class.mobile-open]="isMobileOpen">
+  <a *ngFor="let item of navItems"
+     [routerLink]="item.path"
+     routerLinkActive="active"
+     class="nav-link"
+     [class.nav-link-special]="item.special"
+     (click)="onLinkClick()">
+    <span class="nav-label">{{ item.label | translate }}</span>
+  </a>
+</div>

@@ -1,0 +1,70 @@
+<div class="vvns-container">
+  <!-- Header -->
+  <div class="header">
+    <div class="header-content">
+      <h1>{{ 'VVN.TITLE' | translate }}</h1>
+      <button class="back-btn" (click)="goBack()">{{ 'NAV.BACK_TO_DASHBOARD' | translate }}</button>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="content">
+    <!-- Search Bar Component -->
+    <app-vvn-search-bar
+      [isShippingAgent]="isShippingAgent"
+      (onSearch)="handleSearch($event)"
+      (onClear)="handleClear()"
+      (onAdd)="handleAdd()">
+    </app-vvn-search-bar>
+
+    <!-- VVN Table Component -->
+    <app-vvn-table
+      [vvns]="vvns"
+      [loading]="loading"
+      [isShippingAgent]="isShippingAgent"
+      [isPortAuthority]="isPortAuthority"
+      (onView)="handleView($event)"
+      (onEdit)="handleEdit($event)"
+      (onSubmit)="handleSubmit($event)"
+      (onReopen)="handleReopen($event)">
+    </app-vvn-table>
+
+    <!-- Alert Banners -->
+    <app-alert-banner
+      [message]="errorMessage"
+      [type]="'error'"
+      (onClose)="errorMessage = ''">
+    </app-alert-banner>
+
+    <app-alert-banner
+      [message]="successMessage"
+      [type]="'success'"
+      (onClose)="successMessage = ''">
+    </app-alert-banner>
+  </div>
+
+  <!-- Form Modal Component -->
+  <app-vvn-form-modal
+    [show]="showFormModal"
+    [isEditMode]="isEditMode"
+    [vvn]="selectedVvnForEdit"
+    [vessels]="vessels"
+    [saving]="saving"
+    (onClose)="handleModalClose()"
+    (onCreate)="handleCreate($event)"
+    (onUpdate)="handleUpdate($event)">
+  </app-vvn-form-modal>
+
+  <!-- View Modal Component -->
+  <app-vvn-view-modal
+    [show]="showViewModal"
+    [vvn]="selectedVvn"
+    [isShippingAgent]="isShippingAgent"
+    [isPortAuthority]="isPortAuthority"
+    [saving]="saving"
+    (onClose)="handleViewModalClose()"
+    (onEdit)="handleEditFromView($event)"
+    (onApprove)="handleApprove($event)"
+    (onReject)="handleReject($event)">
+  </app-vvn-view-modal>
+</div>

@@ -1,0 +1,24 @@
+@startuml
+title SSD – List / Search Qualifications
+
+actor "Logistics Operator" as Operator
+participant "API Client" as Client
+participant "QualificationsController" as C
+participant "PortDbContext" as Db
+database "EF (InMemory)" as Store
+
+Operator -> Client : GET /api/qualifications?id=&name=
+Client -> C : Get(id?, name?)
+activate C
+
+C -> Db : Qualifications.Where(...).AsNoTracking().ToListAsync()
+activate Db
+Db -> Store : SELECT * FROM Qualifications WHERE ...
+Store --> Db : qualifications[]
+deactivate Db
+
+C --> Client : 200 OK + qualifications[]
+deactivate C
+
+Client --> Operator : Display qualifications (filter/sort)
+@enduml

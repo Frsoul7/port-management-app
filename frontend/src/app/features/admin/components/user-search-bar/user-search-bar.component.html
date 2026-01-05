@@ -1,0 +1,26 @@
+<div class="toolbar">
+  <div class="search-section">
+    <input 
+      type="text" 
+      placeholder="Search by name..." 
+      [(ngModel)]="searchParams.name"
+      (keyup.enter)="handleEnter()"
+      class="search-input">
+    <input 
+      type="text" 
+      placeholder="Search by email..." 
+      [(ngModel)]="searchParams.email"
+      (keyup.enter)="handleEnter()"
+      class="search-input">
+    <input 
+      type="text" 
+      placeholder="Search by organization..." 
+      [(ngModel)]="searchParams.organizationName"
+      (keyup.enter)="handleEnter()"
+      class="search-input">
+    <button class="btn btn-primary" (click)="search()">Search</button>
+  </div>
+  <div class="action-buttons">
+    <button class="btn btn-secondary" (click)="clear()">Clear</button>
+  </div>
+</div>

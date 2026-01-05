@@ -1,0 +1,86 @@
+@startuml C4_Level4_Code_GenerateOperationPlan
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Sequence.puml
+
+skinparam shadowing false
+skinparam DefaultFontName Arial
+skinparam DefaultFontSize 11
+skinparam linetype ortho
+
+title Sequence Diagram (C4 Level 4)\nGenerate Operation Plan\n[POST /api/v1/operation-plans/generate]
+
+Person(portOfficer, "Port Officer", "Creates daily operation plan")
+Container(frontend, "Angular Frontend", "Web UI")
+Component(controller, "OperationPlanController", "Express Router")
+Component(authMiddleware, "AuthMiddleware", "JWT Validator")
+Component(service, "OperationPlanService", "Application Service")
+Component(coreClient, "CoreBackendClient", "HTTP Client")
+Component(planningClient, "PlanningClient", "HTTP Client")
+Component(aggregate, "OperationPlan", "Aggregate Root")
+Component(plannedOpVO, "PlannedOperation", "Value Object")
+Component(repository, "OperationPlanRepository", "Mongoose Repository")
+ContainerDb(mongodb, "MongoDB", "Database")
+System_Ext(coreBackend, "Core Backend", ".NET API")
+System_Ext(planningService, "Planning Service", "Prolog")
+
+Rel(portOfficer, frontend, "1. Clicks 'Generate Plan'", "HTTPS")
+Rel(frontend, controller, "2. POST /operation-plans\n{targetDate, algorithm, vvnIds?}", "REST + JWT")
+Rel(controller, authMiddleware, "3. Validate JWT", "Middleware chain")
+Rel(authMiddleware, controller, "4. Returns user context", "")
+
+Rel(controller, service, "5. generatePlan(dto, token, userId)", "")
+
+Rel(service, repository, "6. findByTargetDate(targetDate)", "Check existing")
+Rel(repository, mongodb, "6.1 Query", "Mongoose")
+Rel(mongodb, repository, "6.2 null (no existing plan)", "")
+Rel(repository, service, "6.3 Return null", "")
+
+Rel(service, coreClient, "7. getVvnsByDateRange(startOfDay, endOfDay, token)", "Fetch approved VVNs")
+Rel(coreClient, coreBackend, "7.1 GET /api/vvns?from=...&to=...", "HTTPS + JWT")
+Rel(coreBackend, coreClient, "7.2 Returns VVN array", "JSON")
+Rel(coreClient, service, "7.3 Returns VvnReference[]", "")
+
+note right of service
+  **Processing Time Calculation**
+  unloadTime = containers / 20
+  loadTime = containers / 15
+
+  **Time Transformation**
+  hours = (ETA - midnight) / 3600000
+end note
+
+Rel(service, service, "8. transformVvnsToPrologInput(vvns)", "Convert to Prolog format")
+
+Rel(service, planningClient, "9. generatePlan(prologInput, algorithm, targetDate)", "Request schedule")
+Rel(planningClient, planningService, "9.1 POST /plan\n{vessels, algorithm}", "HTTP")
+Rel(planningService, planningClient, "9.2 Returns schedule", "JSON: {sequence, total_delay}")
+Rel(planningClient, service, "9.3 Returns PrologResponse", "")
+
+Rel(service, service, "10. convertPrologResponseToOperations()", "Transform schedule")
+
+loop For each operation in sequence
+    Rel(service, plannedOpVO, "11. new PlannedOperation({...})", "Create value object")
+    Rel(plannedOpVO, service, "11.1 Returns immutable VO", "Validated")
+end
+
+Rel(service, aggregate, "12. new OperationPlan({\n  targetDate,\n  algorithm,\n  createdBy,\n  totalDelay,\n  operations\n})", "Create aggregate")
+
+note right of aggregate
+  **Business Rules Enforced**
+  - Status starts as PENDING
+  - Operations validated
+  - Invariants checked
+end note
+
+Rel(aggregate, service, "12.1 Returns OperationPlan entity", "")
+
+Rel(service, repository, "13. save(operationPlan)", "Persist")
+Rel(repository, mongodb, "13.1 Insert document", "Mongoose")
+Rel(mongodb, repository, "13.2 Returns saved doc", "")
+Rel(repository, service, "13.3 Returns OperationPlan", "")
+
+Rel(service, service, "14. toDto(savedPlan)", "Convert to DTO")
+Rel(service, controller, "15. Returns OperationPlanDto", "")
+Rel(controller, frontend, "16. HTTP 201 Created\n{operationPlanId, operations, ...}", "JSON")
+Rel(frontend, portOfficer, "17. Displays generated plan", "UI update")
+
+@enduml

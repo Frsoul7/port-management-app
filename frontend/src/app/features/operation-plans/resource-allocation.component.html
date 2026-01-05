@@ -1,0 +1,204 @@
+<div class="resource-allocation-container">
+  <div class="page-header">
+    <div class="header-content">
+      <h1>📊 Resource Allocation Query</h1>
+      <p class="subtitle">Query resource utilization and workload distribution</p>
+    </div>
+    <button type="button" class="btn-back" (click)="goBack()">
+      ← Back to Operation Plans
+    </button>
+  </div>
+
+  <!-- Query Form -->
+  <div class="query-form card">
+    <h2>Query Parameters</h2>
+
+    <div class="form-grid">
+      <!-- Resource Type -->
+      <div class="form-group">
+        <label for="resourceType">Resource Type *</label>
+        <select
+          id="resourceType"
+          [(ngModel)]="resourceType"
+          class="form-control"
+        >
+          @for (type of resourceTypes; track type.value) {
+            <option [value]="type.value">{{ type.label }}</option>
+          }
+        </select>
+      </div>
+
+      <!-- Resource ID -->
+      <div class="form-group">
+        <label for="resourceId">Resource ID *</label>
+        <input
+          type="text"
+          id="resourceId"
+          [(ngModel)]="resourceId"
+          class="form-control"
+          placeholder="e.g., CRANE-001, DOCK-A, STAFF-12345"
+        />
+      </div>
+
+      <!-- Start Date -->
+      <div class="form-group">
+        <label for="startDate">Start Date *</label>
+        <input
+          type="date"
+          id="startDate"
+          [(ngModel)]="startDate"
+          class="form-control"
+        />
+      </div>
+
+      <!-- End Date -->
+      <div class="form-group">
+        <label for="endDate">End Date *</label>
+        <input
+          type="date"
+          id="endDate"
+          [(ngModel)]="endDate"
+          class="form-control"
+        />
+      </div>
+    </div>
+
+    <!-- Quick Date Range Buttons -->
+    <div class="quick-actions">
+      <button type="button" class="btn-secondary" (click)="setCurrentWeek()">
+        Current Week
+      </button>
+      <button type="button" class="btn-secondary" (click)="setCurrentMonth()">
+        Current Month
+      </button>
+    </div>
+
+    <!-- Error Message -->
+    @if (error()) {
+      <div class="alert alert-error">
+        <span class="icon">⚠️</span>
+        <span>{{ error() }}</span>
+      </div>
+    }
+
+    <!-- Action Buttons -->
+    <div class="form-actions">
+      <button
+        type="button"
+        class="btn-primary"
+        (click)="queryAllocation()"
+        [disabled]="loading()"
+      >
+        {{ loading() ? 'Querying...' : '🔍 Query Allocation' }}
+      </button>
+      <button
+        type="button"
+        class="btn-secondary"
+        (click)="reset()"
+        [disabled]="loading()"
+      >
+        Reset
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading Indicator -->
+  @if (loading()) {
+    <div class="loading-container">
+      <div class="spinner"></div>
+      <p>Querying resource allocation...</p>
+    </div>
+  }
+
+  <!-- Results -->
+  @if (results() && !loading()) {
+    <div class="results-container">
+      <!-- Summary Cards -->
+      <div class="summary-cards">
+        <div class="summary-card">
+          <div class="card-icon">⏱️</div>
+          <div class="card-content">
+            <h3>Total Allocated Time</h3>
+            <p class="value">{{ formatDuration(results()!.totalAllocatedTime) }}</p>
+          </div>
+        </div>
+
+        <div class="summary-card">
+          <div class="card-icon">📦</div>
+          <div class="card-content">
+            <h3>Number of Operations</h3>
+            <p class="value">{{ results()!.operationCount }}</p>
+          </div>
+        </div>
+
+        <div class="summary-card">
+          <div class="card-icon">📈</div>
+          <div class="card-content">
+            <h3>Utilization Rate</h3>
+            <p class="value">{{ calculateUtilization() }}%</p>
+          </div>
+        </div>
+
+        <div class="summary-card">
+          <div class="card-icon">🏷️</div>
+          <div class="card-content">
+            <h3>Resource</h3>
+            <p class="value">{{ results()!.resourceId }}</p>
+            <p class="subvalue">{{ results()!.resourceType }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Operations Table -->
+      @if (results()!.operations && results()!.operations.length > 0) {
+        <div class="operations-section card">
+          <h2>📋 Allocated Operations</h2>
+
+          <div class="table-responsive">
+            <table class="operations-table">
+              <thead>
+                <tr>
+                  <th>Operation Plan ID</th>
+                  <th>VVN ID</th>
+                  <th>Vessel IMO</th>
+                  <th>Planned Start</th>
+                  <th>Planned End</th>
+                  <th>Allocated Time</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (op of results()!.operations; track op.vvnId) {
+                  <tr>
+                    <td>{{ op.operationPlanId }}</td>
+                    <td>{{ op.vvnId }}</td>
+                    <td>{{ op.vesselImo }}</td>
+                    <td>{{ formatDate(op.plannedStart) }}</td>
+                    <td>{{ formatDate(op.plannedEnd) }}</td>
+                    <td>{{ formatDuration(op.allocatedTime) }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- No Results Message -->
+  @if (hasSearched() && !loading() && !results()) {
+    <div class="no-results card">
+      <div class="icon">📭</div>
+      <h3>No Data Found</h3>
+      <p>No resource allocation data found for the specified parameters.</p>
+    </div>
+  }
+
+  @if (hasSearched() && !loading() && results() && results()!.operationCount === 0) {
+    <div class="no-results card">
+      <div class="icon">📭</div>
+      <h3>No Operations Found</h3>
+      <p>The resource "{{ results()!.resourceId }}" has no allocated operations in the specified period.</p>
+    </div>
+  }
+</div>

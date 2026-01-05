@@ -1,0 +1,50 @@
+@startuml
+title US 4.1.6 - Nível 1 (Visão Arquitetural / Camadas)
+
+skinparam componentStyle rectangle
+skinparam shadowing false
+
+package "OEM Service" {
+  [SPA (UI)] as SPA
+  [REST API] as API
+
+  package "Presentation" {
+    [ResourceAllocationController] as C
+  }
+
+  package "Application" {
+    [ResourceAllocationService] as S
+  }
+
+  package "Domain" {
+    [OperationPlan] as OP
+    [PlannedOperation] as PO
+    [ResourceRef] as RR
+    [AllocationSummary] as AS
+    [IOperationPlanRepository] as IRepo
+  }
+
+  package "Infrastructure" {
+    [MongoOperationPlanRepository] as MongoRepo
+    database "MongoDB" as MongoDB
+  }
+}
+
+SPA --> API : GET /resource-allocations\n(resourceId, type, from, to)
+API --> C
+C --> S
+S --> IRepo : queryByResourceAndPeriod(...)
+IRepo <|.. MongoRepo
+MongoRepo --> MongoDB
+
+S --> AS : totalAllocatedTime,\noperationCount
+S ..> OP
+S ..> PO
+S ..> RR
+
+note right of S
+Dependency Rule:
+Dependências apontam\npara dentro (Domain).
+end note
+
+@enduml

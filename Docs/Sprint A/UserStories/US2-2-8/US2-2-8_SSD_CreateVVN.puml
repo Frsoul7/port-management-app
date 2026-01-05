@@ -1,0 +1,30 @@
+@startuml
+title SSD – Create / Update VVN (US 2.2.8)
+
+actor "Shipping Agent Representative" as Agent
+participant "System" as System
+
+Agent -> System : Create VVN draft\n(vesselIMO, purpose, ETA, ETD,\n captainName, crewCount, orgId)
+System --> Agent : VVN created (id, state=IN_PROGRESS)
+
+== Add cargo entries (optional load/unload) ==
+loop For each container
+  Agent -> System : Add Manifest Entry\n(vvnId, type: Load|Unload,\n containerCode, hazardous?, bay,row,tier, goods?)
+  alt ISO 6346 invalid
+    System --> Agent : Error: invalid container code
+  else OK
+    System --> Agent : Entry added
+  end
+end
+
+== Add crew on demand ==
+opt Hazardous cargo exists
+  Agent -> System : Add Crew Member(s)\n(name, citizenId, nationality)
+  System --> Agent : Crew added
+end
+
+== Keep as draft or proceed ==
+Agent -> System : Save as draft (state remains IN_PROGRESS)
+System --> Agent : Draft saved
+
+@enduml

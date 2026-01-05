@@ -1,0 +1,124 @@
+@startuml C4_Level3_Component_Backend
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+skinparam componentStyle uml2
+skinparam shadowing false
+skinparam DefaultFontName Arial
+skinparam DefaultFontSize 11
+skinparam linetype ortho
+skinparam nodesep 120
+skinparam ranksep 150
+skinparam padding 20
+
+title Component Diagram (C4 Level 3)\nBackend Container - Internal Structure\n[Sprint B]
+
+' ============================================
+' UI - OUTSIDE BOUNDARY (TOP)
+' ============================================
+
+rectangle "<<component>>\n<<C4 Container>>\n**Frontend SPA**" as FrontendSPA
+
+' ============================================
+' CONTAINER BOUNDARY - BACKEND CONTAINER
+' ============================================
+
+rectangle "<<component>>\n<<C4 Container>>\n**Backend Container**" as BackendContainer {
+
+    ' API Layer Components
+    rectangle "<<component>>\n**Vessels API**" as VesselsAPI
+    rectangle "<<component>>\n**Vessel Types API**" as VesselTypesAPI
+    rectangle "<<component>>\n**VVN API**" as VvnAPI
+    rectangle "<<component>>\n**Organizations API**" as OrgAPI
+    rectangle "<<component>>\n**Docks API**" as DocksAPI
+    rectangle "<<component>>\n**Storage Areas API**" as StorageAPI
+    rectangle "<<component>>\n**Physical Resources API**" as PhysicalResourcesAPI
+    rectangle "<<component>>\n**Human Resources API**" as HumanResourcesAPI
+    rectangle "<<component>>\n**Authentication API**" as AuthAPI
+    rectangle "<<component>>\n**Users API**" as UsersAPI
+    
+    ' Business Logic Components
+    rectangle "<<component>>\n**Vessel Service**" as VesselService
+    rectangle "<<component>>\n**Vessel Type Service**" as VesselTypeService
+    rectangle "<<component>>\n**VVN Service**" as VvnService
+    rectangle "<<component>>\n**Organization Service**" as OrgService
+    rectangle "<<component>>\n**User Service**" as UserService
+    rectangle "<<component>>\n**Authentication Service**" as AuthService
+    rectangle "<<component>>\n**Email Service**" as EmailService
+    
+    ' Data Access Components
+    rectangle "<<component>>\n**Repositories**" as Repositories
+    rectangle "<<component>>\n**PortDbContext**" as DbContext
+    rectangle "<<component>>\n**UnitOfWork**" as UnitOfWork
+}
+
+' ============================================
+' EXTERNAL SYSTEMS (SIDES)
+' ============================================
+
+rectangle "<<component>>\n<<External System>>\nGoogle OAuth Provider" as GoogleOAuth
+rectangle "<<component>>\n<<External System>>\nEmail Service (SMTP)" as EmailSMTP
+rectangle "<<component>>\n<<External System>>\nPlanning Container" as PlanningService
+
+' ============================================
+' DATABASE (BOTTOM)
+' ============================================
+
+database "Port Database" as Database
+
+' ============================================
+' RELATIONSHIPS
+' ============================================
+
+' Frontend to APIs
+FrontendSPA --> VesselsAPI : Makes API calls
+FrontendSPA --> VesselTypesAPI : Makes API calls
+FrontendSPA --> VvnAPI : Makes API calls
+FrontendSPA --> OrgAPI : Makes API calls
+FrontendSPA --> DocksAPI : Makes API calls
+FrontendSPA --> StorageAPI : Makes API calls
+FrontendSPA --> PhysicalResourcesAPI : Makes API calls
+FrontendSPA --> HumanResourcesAPI : Makes API calls
+FrontendSPA --> AuthAPI : Makes API calls
+FrontendSPA --> UsersAPI : Makes API calls
+
+' APIs to Services
+VesselsAPI --> VesselService : Uses
+VesselTypesAPI --> VesselTypeService : Uses
+VvnAPI --> VvnService : Uses
+OrgAPI --> OrgService : Uses
+DocksAPI --> VesselService : Uses
+StorageAPI --> VesselService : Uses
+PhysicalResourcesAPI --> VesselService : Uses
+HumanResourcesAPI --> VesselService : Uses
+AuthAPI --> AuthService : Uses
+UsersAPI --> UserService : Uses
+
+' Services to Repositories
+VesselService --> Repositories : Accesses data
+VvnService --> Repositories : Accesses data
+OrgService --> Repositories : Accesses data
+AuthService --> Repositories : Accesses data
+
+' Services to External Systems
+AuthService --> GoogleOAuth : Authenticates
+AuthService --> EmailSMTP : Sends emails
+
+' Services to Planning Container (provides scheduling data)
+VesselService --> PlanningService : Provides vessel data
+VvnService --> PlanningService : Provides VVN data
+PlanningService --> VesselService : Requests vessel info
+PlanningService --> VvnService : Requests VVN info
+PlanningService --> Repositories : Requests dock data
+PlanningService --> Repositories : Requests storage data
+PlanningService --> Repositories : Requests human resources
+PlanningService --> Repositories : Requests physical resources
+
+' Repositories to UnitOfWork and DbContext
+Repositories --> UnitOfWork : Coordinated by
+Repositories --> DbContext : Uses
+UnitOfWork --> DbContext : Manages
+
+' DbContext to Database
+DbContext --> Database : Reads/writes via EF Core
+
+@enduml

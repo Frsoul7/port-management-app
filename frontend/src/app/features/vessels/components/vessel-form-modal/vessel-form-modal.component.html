@@ -1,0 +1,87 @@
+<div class="modal-overlay" *ngIf="show" (click)="close()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ isEditMode ? ('VESSELS.EDIT' | translate) : ('VESSELS.ADD_NEW' | translate) }}</h2>
+      <button class="close-btn" (click)="close()">×</button>
+    </div>
+
+    <form (ngSubmit)="save()" #vesselForm="ngForm">
+      <div class="modal-body">
+        <!-- IMO Number (readonly in edit mode) -->
+        <div class="form-group">
+          <label for="imoNumber">{{ 'VESSELS.IMO' | translate }} *</label>
+          <input type="text" id="imoNumber" name="imoNumber" [(ngModel)]="currentVessel.imoNumber"
+            (ngModelChange)="onImoNumberChange()" [readonly]="isEditMode" [class.readonly]="isEditMode" required
+            pattern="^\d{7}$" placeholder="9319466" maxlength="7" class="form-control">
+          <small class="form-hint">7 digits with valid check digit (e.g., 9319466). <a href="javascript:void(0)"
+              (click)="showImoHelp()">What's this?</a></small>
+
+          <!-- Real-time validation feedback -->
+          <div class="validation-info" *ngIf="imoValidationMessage && !isEditMode"
+            [class.valid]="imoValidationMessage.startsWith('Valid')"
+            [class.invalid]="!imoValidationMessage.startsWith('Valid')">
+            {{ imoValidationMessage }}
+          </div>
+
+          <!-- Form validation errors -->
+          <div class="validation-error" *ngIf="vesselForm.submitted && vesselForm.controls['imoNumber']?.errors">
+            <span *ngIf="vesselForm.controls['imoNumber']?.errors?.['required']">{{ 'VESSELS.IMO' | translate }} is
+              required</span>
+            <span *ngIf="vesselForm.controls['imoNumber']?.errors?.['pattern']">{{ 'VESSELS.IMO' | translate }} must be
+              exactly 7 digits</span>
+          </div>
+        </div>
+
+        <!-- Vessel Name -->
+        <div class="form-group">
+          <label for="name">{{ 'VESSELS.NAME' | translate }} *</label>
+          <input type="text" id="name" name="name" [(ngModel)]="currentVessel.name" required minlength="3"
+            maxlength="200" [placeholder]="'VESSELS.NAME' | translate" class="form-control">
+        </div>
+
+        <!-- Vessel Type -->
+        <div class="form-group">
+          <label for="vesselTypeId">{{ 'VESSELS.TYPE' | translate }} *</label>
+          <select id="vesselTypeId" name="vesselTypeId" [(ngModel)]="currentVessel.vesselTypeId" required
+            class="form-control">
+            <option value="">-- {{ 'VESSELS.TYPE' | translate }} --</option>
+            <option *ngFor="let type of vesselTypes" [value]="type.vesselTypeId">
+              {{ type.name }} {{ type.capacityTEU ? '(' + type.capacityTEU + ' TEU)' : '' }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Organization -->
+        <div class="form-group">
+          <label for="organizationId">{{ 'VESSELS.ORGANIZATION' | translate }} *</label>
+          <select id="organizationId" name="organizationId" [(ngModel)]="currentVessel.organizationId" required
+            class="form-control">
+            <option value="">-- {{ 'VESSELS.ORGANIZATION' | translate }} --</option>
+            <option *ngFor="let org of shippingAgentOrganizations" [value]="org.id">
+              {{ org.legalName }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Capacity TEU -->
+        <div class="form-group">
+          <label for="capacityTEU">{{ 'VESSELS.CAPACITY' | translate }}</label>
+          <input type="number" id="capacityTEU" name="capacityTEU" [(ngModel)]="currentVessel.capacityTEU" min="0"
+            placeholder="TEU" class="form-control">
+          <small class="form-hint">Twenty-foot Equivalent Unit (optional)</small>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="close()">{{ 'COMMON.CANCEL' | translate }}</button>
+        <button type="submit" class="btn btn-primary" [disabled]="!vesselForm.form.valid || saving">
+          {{ saving ? ('COMMON.SAVING' | translate) : (isEditMode ? ('VESSELS.UPDATE' | translate) : ('VESSELS.CREATE' |
+          translate)) }}
+        </button>
+      </div>
+    </form>
+
+    <!-- Loading Overlay for Saving -->
+    <app-loading *ngIf="saving" [message]="'COMMON.SAVING'"></app-loading>
+  </div>
+</div>

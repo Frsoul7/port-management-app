@@ -1,0 +1,90 @@
+@startuml
+title Class Diagram excerpt - US 2.2.8 Create & Submit VVN
+
+package "Visits" {
+  class VesselVisitNotification {
+    +VvnGuid : Guid
+    +State : VVNState
+    +Purpose : VisitPurpose
+    +VesselImo : string
+    +EtaUtc : DateTime
+    +EtdUtc : DateTime
+    +CaptainName : string
+    +CrewCount : int
+    .. Manifests ..
+    +LoadingManifest : LoadingCargoManifest
+    +UnloadingManifest : UnloadingCargoManifest
+    .. Crew ..
+    +CrewMembers : List\<CrewMember\>
+    .. Behaviors ..
+    +Submit(submittedBy: UserId)
+    +SetLoadingManifest(m : LoadingCargoManifest)
+    +SetUnloadingManifest(m : UnloadingCargoManifest)
+  }
+
+  enum VVNState {
+    IN_PROGRESS
+    SUBMITTED
+    APPROVED
+    REJECTED
+  }
+
+  enum VisitPurpose {
+    LOAD
+    UNLOAD
+    BOTH
+    MAINTENANCE
+  }
+
+  abstract class CargoManifest {
+    +Id : Guid
+    +VvnGuid : Guid
+    +Entries : IReadOnlyCollection\<ManifestEntry\>
+    +AddEntry(e: ManifestEntry)
+    +RemoveEntry(id: Guid)
+  }
+  class LoadingCargoManifest
+  class UnloadingCargoManifest
+
+  class ManifestEntry {
+    +Id : Guid
+    +ContainerUniqueId : string
+    +HazardousGoods : bool
+    +ContainerBayNr : int
+    +ContainerRowNr : int
+    +ContainerTierNr : int
+    +GoodsDescription : string
+    {static} Create(...)
+  }
+
+  class CrewMember {
+    +CrewMemberId : Guid
+    +Name : string
+    +CitizenId : string
+    +Nationality : string
+  }
+}
+
+package "Shared" {
+  class Iso6346 {
+    {static} IsValid(code: string) : bool
+  }
+}
+
+package "Users" { 
+  class UserId 
+  }
+package "Organizations" { 
+  class OrganizationId 
+  }
+package "Vessels" { 
+  class Vessel 
+  }
+
+VesselVisitNotification --> Vessel : vessel reference (IMO)
+VesselVisitNotification *-- LoadingCargoManifest
+VesselVisitNotification *-- UnloadingCargoManifest
+CargoManifest o-- ManifestEntry
+VesselVisitNotification o-- CrewMember
+ManifestEntry ..> Iso6346 : validates
+@enduml

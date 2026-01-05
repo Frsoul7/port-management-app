@@ -1,0 +1,41 @@
+<div class="toolbar">
+  <div class="search-section">
+    <input 
+      type="text" 
+      [placeholder]="'VESSELS.SEARCH_IMO' | translate" 
+      [(ngModel)]="searchParams.vesselImo"
+      (keyup.enter)="handleEnter()"
+      class="search-input">
+    
+    <select 
+      [(ngModel)]="searchParams.status"
+      class="search-input">
+      <option *ngFor="let option of statusOptions" [value]="option.value">
+        {{ option.label }}
+      </option>
+    </select>
+    
+    <input 
+      type="date" 
+      placeholder="From Date..." 
+      [(ngModel)]="searchParams.fromDate"
+      class="search-input date-input">
+    
+    <input 
+      type="date" 
+      placeholder="To Date..." 
+      [(ngModel)]="searchParams.toDate"
+      class="search-input date-input">
+    
+    <button class="btn btn-primary" (click)="search()">{{ 'COMMON.SEARCH' | translate }}</button>
+  </div>
+  <div class="action-buttons">
+    <button class="btn btn-secondary" (click)="clear()">{{ 'COMMON.CLEAR' | translate }}</button>
+    <button 
+      *ngIf="isShippingAgent" 
+      class="btn btn-success" 
+      (click)="addVvn()">
+      {{ 'VVN.CREATE' | translate }}
+    </button>
+  </div>
+</div>

@@ -1,0 +1,89 @@
+@startuml
+title US 4.1.1 - Nível 3 (Sequence Diagram / Fluxo de Requisição HTTP)
+
+skinparam shadowing false
+skinparam responseMessageBelowArrow true
+
+actor "Client\n(SPA)" as Client
+control "Express App" as App
+control "CORS Middleware" as CORS
+control "JSON Parser" as JSON
+control "Auth Middleware" as Auth
+control "Validation Middleware" as Valid
+control "Controller" as Controller
+control "Application Service" as Service
+entity "Domain Entity" as Domain
+entity "Repository" as Repo
+database "MongoDB" as DB
+control "Error Middleware" as Error
+control "Logger" as Log
+
+Client -> App : HTTP Request\nPOST /api/v1/resource\nAuthorization: Bearer <JWT>
+
+App -> CORS : Check origin
+alt Origin not allowed
+  CORS --> Client : 403 Forbidden
+else Origin allowed
+  CORS -> JSON : Parse JSON body
+  JSON -> Log : Log incoming request
+  Log -> Auth : Validate JWT token
+  
+  alt Invalid/missing token
+    Auth -> Error : AuthenticationError
+    Error -> Log : Log auth failure
+    Error --> Client : 401 Unauthorized\n{ success: false, error: "Invalid token" }
+  else Valid token
+    Auth -> Auth : Decode JWT\nextract { sub, email, role }
+    Auth -> Valid : Attach user to req.user
+    Valid -> Valid : Validate input\n(express-validator)
+    
+    alt Validation fails
+      Valid -> Error : ValidationError
+      Error --> Client : 400 Bad Request\n{ errors: [...] }
+    else Valid input
+      Valid -> Controller : Invoke controller method
+      Controller -> Service : Delegate to service layer
+      Service -> Domain : Create/validate domain entity
+      
+      alt Domain validation error
+        Domain --> Service : DomainError
+        Service -> Error : Business rule violation
+        Error --> Client : 422 Unprocessable Entity
+      else Valid
+        Domain --> Service : Valid entity
+        Service -> Repo : Save/query using repository
+        Repo -> DB : MongoDB operation
+        DB --> Repo : Result
+        Repo --> Service : Domain entity
+        Service --> Controller : DTO (Data Transfer Object)
+        Controller -> Log : Log success
+        Controller --> Client : 200/201 Success\n{ success: true, data: {...} }
+      end
+    end
+  end
+end
+
+note right of Auth
+**JWT Authentication:**
+• Extract token from header
+• Verify signature (JWT_SECRET)
+• Decode payload
+• Attach user to request
+end note
+
+note right of Error
+**Global Error Handler:**
+• Catches all errors
+• Maps to HTTP status codes
+• Formats consistent responses
+• Logs with context
+end note
+
+note left of Domain
+**Clean Architecture:**
+• Domain has zero dependencies
+• Business rules enforced
+• Framework-independent
+end note
+
+@enduml

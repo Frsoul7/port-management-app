@@ -1,0 +1,47 @@
+@startuml
+title Domain Model – US 2.2.13 (Qualifications)
+
+class StaffMemberQualification <<Entity>> {
+  + QualificationId : string
+  + Name : string
+  + Description : string?
+  --
+  + StaffMemberQualification(id, name, description?)
+  + Update(name, description?): void
+}
+
+class StaffMember <<Entity>> {
+  + MecanographicNumber : long
+  + ShortName : string
+  + Qualifications : List<StaffMemberQualification>
+  --
+  + AddQualification(qual): void
+  + RemoveQualification(qual): void
+}
+
+class PhysicalResource <<Entity>> {
+  + ResourceId : Guid
+  + Code : string
+  + RequiredQualifications : List<StaffMemberQualification>
+  --
+  + SetRequiredQualifications(quals): void
+}
+
+note right of StaffMemberQualification
+  QualificationId:
+  - Alphanumeric
+  - Max 15 characters
+  - Stored upper-case
+  - Unique
+  - Immutable
+  
+  Name:
+  - At least 2 words
+  - Max 150 characters
+  - Required
+end note
+
+StaffMember "0..*" -- "0..*" StaffMemberQualification : holds
+PhysicalResource "0..*" -- "0..*" StaffMemberQualification : requires
+
+@enduml

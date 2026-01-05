@@ -1,0 +1,40 @@
+@startuml
+title SSD - US 4.1.7 Create VVE (Black-box)
+
+skinparam shadowing false
+skinparam responseMessageBelowArrow true
+
+actor "Logistics Operator" as Op
+boundary "SPA" as SPA
+system "OEM System" as OEM
+
+Op -> SPA : Select approved operation plan
+SPA -> SPA : Display plan details\nwith list of VVNs
+Op -> SPA : Select VVN and enter actual arrival time
+SPA -> SPA : Validate arrival time format
+
+SPA -> OEM : POST /vessel-visit-executions/initialize\n{ operationPlanId, vvnId, arrivalTime }
+
+alt Unauthorized or invalid input
+  OEM --> SPA : 401/400\n{ error }
+  SPA --> Op : Show error message
+else Operation plan not found
+  OEM --> SPA : 404 Not Found\n{ error: "Plan not found" }
+  SPA --> Op : Show error
+else Operation plan not approved
+  OEM --> SPA : 422 Unprocessable Entity\n{ error: "Plan must be approved" }
+  SPA --> Op : Show validation error
+else VVE already exists for VVN
+  OEM --> SPA : 409 Conflict\n{ error: "VVE already exists" }
+  SPA --> Op : Show conflict message\n(navigate to existing VVE)
+else No operations for VVN in plan
+  OEM --> SPA : 404 Not Found\n{ error: "No operations for VVN" }
+  SPA --> Op : Show error
+else Success
+  OEM --> SPA : 201 Created\n{ vve: { vveId, status=IN_PROGRESS,\n  operations[], arrivalTime } }
+  SPA --> Op : Display VVE details\n(VVE-000001, operations with STARTED status,\n  timeline, resources)
+  Op -> SPA : Review and monitor execution
+  SPA --> Op : Show real-time execution view
+end
+
+@enduml

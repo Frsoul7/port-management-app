@@ -1,0 +1,22 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+title C4 L3 - Components (OEM API) (US 4.1.6)
+
+Container_Boundary(oem, "OEM API (Express)") {
+
+  Component(controller, "ResourceAllocationController", "Express Controller", "Handles HTTP request/response")
+  Component(service, "ResourceAllocationService", "Application Service", "Aggregates allocation totals over saved plans")
+  Component(repo, "OperationPlanRepository", "Repository Adapter", "Queries persisted operation plans from MongoDB")
+  Component(auth, "Auth Middleware", "JWT/OIDC Middleware", "Validates token and enforces RBAC/ABAC")
+  Component(logger, "Logger", "Logging Adapter", "Structured logs for audit/debug")
+}
+
+ContainerDb(oemDb, "MongoDB", "MongoDB", "Operation plans data")
+
+Rel(controller, service, "Invokes")
+Rel(service, repo, "Queries plans by resource+period")
+Rel(repo, oemDb, "Reads", "MongoDB driver")
+Rel(controller, auth, "Uses", "middleware")
+Rel(controller, logger, "Logs request/response")
+
+@enduml

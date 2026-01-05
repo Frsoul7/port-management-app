@@ -1,0 +1,62 @@
+@startuml
+title System Diagram – US 2.2.5 Register Shipping Agent Organizations
+
+actor "Port Authority Officer" as Officer
+
+' --- Client Layer ---
+rectangle "Client Layer" {
+  [Scalar UI / API Client] as ApiClient
+}
+
+' --- Web API Layer ---
+node "Web API" {
+  [OrganizationsController] as C_O
+}
+
+' --- Application Layer ---
+package "Application DTOs" {
+  [CreateOrganizationDto]
+  [AddRepresentativesDto]
+  [RepresentativeInputDto]
+  [OrganizationResponseDto]
+}
+
+' --- Infrastructure Layer ---
+package "Infrastructure" {
+  [OrganizationRepository] as OR
+  [PortDbContext] as Db
+  [OrganizationConfiguration] as OC
+  database "EF Core (InMemory/SQL)" as Store
+}
+
+' --- Domain Layer ---
+package "Domain" {
+  [Organization]
+  [Representative]
+  [OrganizationType]
+}
+
+' --- Interactions ---
+Officer --> ApiClient : uses API UI
+ApiClient --> C_O : HTTP\nPOST / GET /api/organizations
+C_O --> OR : CRUD operations
+OR --> Db : query/persist
+OC --> Db : configure mappings
+Db --> Store : persist data
+
+' DTO relationships
+C_O ..> CreateOrganizationDto
+C_O ..> AddRepresentativesDto
+C_O ..> RepresentativeInputDto
+C_O ..> OrganizationResponseDto
+
+' Persistence model
+Db ..> Organization
+Db ..> Representative
+Db ..> OrganizationType
+
+' Domain relationships
+Organization "1" --> "1..*" Representative : has
+Organization --> OrganizationType : classified as
+
+@enduml

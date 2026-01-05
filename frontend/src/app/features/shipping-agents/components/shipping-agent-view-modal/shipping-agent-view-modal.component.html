@@ -1,0 +1,96 @@
+<div class="modal-overlay" *ngIf="show && organization" (click)="close()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Organization Details</h2>
+      <button class="close-btn" (click)="close()">&times;</button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Organization Information -->
+      <div class="info-section">
+        <h3>Organization Information</h3>
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="label">Identifier:</span>
+            <span class="value">{{ organization.identifier }}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Legal Name:</span>
+            <span class="value">{{ organization.legalName }}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Alternative Name:</span>
+            <span class="value">{{ organization.alternativeName }}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Tax Number:</span>
+            <span class="value">{{ organization.taxNumber }}</span>
+          </div>
+          <div class="info-item full-width">
+            <span class="label">Address:</span>
+            <span class="value">{{ organization.address }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Representatives Section -->
+      <div class="info-section">
+        <div class="section-header">
+          <h3>Representatives ({{ organization.representatives.length || 0 }})</h3>
+          <button class="btn btn-primary" (click)="addRepresentative()">
+            ➕ Add Representative
+          </button>
+        </div>
+
+        <div class="representatives-list" *ngIf="organization.representatives && organization.representatives.length > 0">
+          <div *ngFor="let rep of organization.representatives" class="rep-card"
+               [class.inactive]="!rep.isActive">
+            <div class="rep-header">
+              <h4>{{ rep.name }}</h4>
+              <span class="status-badge" [class.active]="rep.isActive" [class.inactive]="!rep.isActive">
+                {{ rep.isActive ? 'Active' : 'Inactive' }}
+              </span>
+            </div>
+            <div class="rep-body">
+              <div class="rep-info">
+                <span class="label">Citizen ID:</span>
+                <span class="value">{{ rep.citizenId }}</span>
+              </div>
+              <div class="rep-info">
+                <span class="label">Nationality:</span>
+                <span class="value">{{ rep.nationality }}</span>
+              </div>
+              <div class="rep-info">
+                <span class="label">Email:</span>
+                <span class="value">{{ rep.email }}</span>
+              </div>
+              <div class="rep-info">
+                <span class="label">Phone:</span>
+                <span class="value">{{ rep.phone }}</span>
+              </div>
+            </div>
+            <div class="rep-actions">
+              <button class="btn btn-sm btn-secondary" (click)="editRepresentative(rep)">
+                ✏️ Edit
+              </button>
+              <button class="btn btn-sm" 
+                      [class.btn-warning]="rep.isActive"
+                      [class.btn-success]="!rep.isActive"
+                      (click)="toggleRepresentativeStatus(rep)">
+                {{ rep.isActive ? '🚫 Deactivate' : '✅ Activate' }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="no-data" *ngIf="!organization.representatives || organization.representatives.length === 0">
+          <p>No representatives registered for this organization.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="close()">Close</button>
+    </div>
+  </div>
+</div>

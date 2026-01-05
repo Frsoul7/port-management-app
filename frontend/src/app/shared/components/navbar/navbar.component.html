@@ -1,0 +1,25 @@
+<nav class="navbar" *ngIf="currentUser">
+  <div class="navbar-container">
+    <app-navbar-brand></app-navbar-brand>
+
+    <app-navbar-menu 
+      [navItems]="visibleNavItems"
+      [isMobileOpen]="isMobileMenuOpen"
+      (linkClick)="onCloseMobileMenu()">
+    </app-navbar-menu>
+    
+    <div class="navbar-right">
+      <app-language-selector></app-language-selector>
+      
+      <app-navbar-user 
+        [user]="currentUser"
+        (logout)="onLogout()">
+      </app-navbar-user>
+
+      <app-mobile-menu-toggle 
+        [isActive]="isMobileMenuOpen"
+        (toggle)="onToggleMobileMenu()">
+      </app-mobile-menu-toggle>
+    </div>
+  </div>
+</nav>

@@ -1,0 +1,178 @@
+<div class="missing-plans-container">
+  <!-- Header -->
+  <div class="header">
+    <div class="header-content">
+      <h1>Missing Operation Plans</h1>
+      <button class="back-btn" (click)="goBack()">Back to Operation Plans</button>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="content">
+
+  <!-- Query Form -->
+  <div class="query-card">
+    <h3>Find VVNs Without Operation Plans</h3>
+    
+    <div class="form-grid">
+      <!-- Date Picker -->
+      <div class="form-group">
+        <label for="targetDate">Target Date *</label>
+        <input
+          type="date"
+          id="targetDate"
+          [(ngModel)]="selectedDate"
+          class="input-field"
+          required
+        />
+      </div>
+
+      <!-- Algorithm Selection -->
+      <div class="form-group">
+        <label for="algorithm">Regeneration Algorithm *</label>
+        <select
+          id="algorithm"
+          [(ngModel)]="selectedAlgorithm"
+          class="input-field"
+        >
+          <option *ngFor="let algo of algorithmOptions" [value]="algo.value">
+            {{ algo.label }}
+          </option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="form-actions">
+      <button 
+        class="btn-primary" 
+        (click)="loadMissingPlans()"
+        [disabled]="loading() || !selectedDate"
+      >
+        <span *ngIf="loading()" class="spinner"></span>
+        <span class="icon" *ngIf="!loading()">🔍</span>
+        {{ loading() ? 'Searching...' : 'Find Missing Plans' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="error()" class="error-message">
+    <span class="icon">⚠️</span>
+    <span>{{ error() }}</span>
+  </div>
+
+  <!-- Results Section -->
+  <div *ngIf="missingVvns().length > 0 && !loading()" class="results-section">
+    <!-- Summary Card -->
+    <div class="summary-card">
+      <div class="summary-item">
+        <div class="summary-label">Missing Plans</div>
+        <div class="summary-value">{{ missingVvns().length }}</div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-label">Target Date</div>
+        <div class="summary-value">{{ selectedDate }}</div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-label">Selected Algorithm</div>
+        <div class="summary-value">{{ getAlgorithmLabel() }}</div>
+      </div>
+    </div>
+
+    <!-- Regenerate Button -->
+    <div class="regenerate-section">
+      <button 
+        class="btn-warning" 
+        (click)="showRegenerateConfirmation()"
+        [disabled]="regenerating()"
+      >
+        <span *ngIf="regenerating()" class="spinner"></span>
+        <span class="icon" *ngIf="!regenerating()">🔄</span>
+        {{ regenerating() ? 'Regenerating...' : 'Regenerate Plans for This Day' }}
+      </button>
+      <p class="warning-text">
+        ⚠️ This will regenerate operation plans for ALL VVNs on {{ selectedDate }} and may overwrite existing plans.
+      </p>
+    </div>
+
+    <!-- Missing VVNs Table -->
+    <div class="table-card">
+      <h3>VVNs Without Operation Plans ({{ missingVvns().length }})</h3>
+      
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>VVN ID</th>
+              <th>Vessel IMO</th>
+              <th>ETA</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let vvn of missingVvns()">
+              <td><strong>{{ vvn.vvnId }}</strong></td>
+              <td>{{ vvn.vesselImo || 'N/A' }}</td>
+              <td>{{ formatDate(vvn.eta) }}</td>
+              <td>
+                <span class="badge badge-warning">No Plan</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- No Results Message -->
+  <div *ngIf="missingVvns().length === 0 && !loading() && !error()" class="no-results">
+    <span class="icon">✅</span>
+    <p>No missing plans found for the selected date.</p>
+    <p class="sub-text">All VVNs have operation plans assigned.</p>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading()" class="loading-state">
+    <div class="spinner large"></div>
+    <p>Searching for missing plans...</p>
+  </div>
+  </div>
+</div>
+
+<!-- Confirmation Dialog -->
+<div *ngIf="showConfirmDialog" class="modal-overlay" (click)="cancelRegeneration()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>⚠️ Confirm Regeneration</h2>
+    </div>
+    
+    <div class="modal-body">
+      <p><strong>Are you sure you want to regenerate operation plans for {{ selectedDate }}?</strong></p>
+      
+      <div class="warning-box">
+        <p><strong>⚠️ Warning:</strong></p>
+        <ul>
+          <li>This will regenerate plans for <strong>ALL VVNs</strong> on this date</li>
+          <li><strong>Existing plans may be overwritten</strong> once confirmed</li>
+          <li>The selected algorithm will be: <strong>{{ getAlgorithmLabel() }}</strong></li>
+          <li>This action will be logged with timestamp and author</li>
+        </ul>
+      </div>
+
+      <p class="info-text">
+        Found <strong>{{ missingVvns().length }}</strong> VVN(s) without operation plans.
+      </p>
+    </div>
+    
+    <div class="modal-actions">
+      <button class="btn-secondary" (click)="cancelRegeneration()">
+        Cancel
+      </button>
+      <button class="btn-danger" (click)="regeneratePlans()">
+        <span class="icon">🔄</span>
+        Yes, Regenerate Plans
+      </button>
+    </div>
+  </div>
+</div>

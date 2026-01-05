@@ -1,0 +1,140 @@
+@startuml
+title Class Diagram – US 2.2.1 Create & Update Vessel Types
+
+' ===== Domain =====
+class VesselType {
+  + string VesselTypeId
+  + string Name
+  + string Description
+  + int MaxCapacityTEU
+  + int MaxRows
+  + int MaxBays
+  + int MaxTiers
+  + decimal MaxLength
+  + decimal MaxBeam
+  + decimal MaxDraft
+  + ICollection<Vessel> Vessels
+  --
+  + VesselType(string name, string description, int maxCapacityTEU, int maxRows, int maxBays, int maxTiers, decimal maxLength, decimal maxBeam, decimal maxDraft)
+  + Update(string? description, int? maxCapacityTEU, int? maxRows, int? maxBays, int? maxTiers, decimal? maxLength, decimal? maxBeam, decimal? maxDraft) : void
+  + UpdateName(string name) : void
+}
+
+class Vessel {
+  + string ImoNumber
+  + string Name
+  + string VesselTypeId
+  + VesselType? VesselType
+  + OrganizationId OrganizationId
+  + Organization? Organization
+  + decimal Length
+  + decimal Beam
+  + decimal Draft
+  + int CapacityTEU
+  + ICollection<VesselVisitNotification> VesselVisitNotifications
+  --
+  + Vessel(string imoNumber, string name, string vesselTypeId, OrganizationId organizationId, decimal length, decimal beam, decimal draft, int capacityTeu)
+  + static IsValidImo(string imo) : bool
+  + static NormalizeImo(string imo) : string
+}
+
+' ===== Infrastructure =====
+class PortDbContext {
+  + DbSet<VesselType> VesselTypes
+  + DbSet<Vessel> Vessels
+  + DbSet<Organization> Organizations
+  + DbSet<User> Users
+  --
+  + PortDbContext(DbContextOptions<PortDbContext> options)
+  # OnModelCreating(ModelBuilder modelBuilder) : void
+}
+
+' ===== Controllers =====
+class VesselTypesController {
+  - PortDbContext _context
+  --
+  + VesselTypesController(PortDbContext context)
+  + Create(CreateVesselTypeDto dto) : Task<IActionResult>
+  + Update(string id, UpdateVesselTypeDto dto) : Task<IActionResult>
+  + GetById(string id) : Task<IActionResult>
+  + GetAll() : Task<IActionResult>
+  + Search(string? nameFilter, string? descriptionFilter, string? searchOperator) : Task<IActionResult>
+  + Delete(string id) : Task<IActionResult>
+  -- 
+  - ToResponse(VesselType vt) : VesselTypeResponseDto
+  - ValidatePositiveValues(int? maxCapacityTEU, int? maxRows, int? maxBays, int? maxTiers, decimal? maxLength, decimal? maxBeam, decimal? maxDraft) : bool
+}
+
+' ===== DTOs =====
+class CreateVesselTypeDto {
+  + string Name
+  + string Description
+  + int MaxCapacityTEU
+  + int MaxRows
+  + int MaxBays
+  + int MaxTiers
+  + decimal MaxLength
+  + decimal MaxBeam
+  + decimal MaxDraft
+}
+
+class UpdateVesselTypeDto {
+  + string? Name
+  + string? Description
+  + int? MaxCapacityTEU
+  + int? MaxRows
+  + int? MaxBays
+  + int? MaxTiers
+  + decimal? MaxLength
+  + decimal? MaxBeam
+  + decimal? MaxDraft
+}
+
+class VesselTypeResponseDto {
+  + string VesselTypeId
+  + string Name
+  + string Description
+  + int MaxCapacityTEU
+  + int MaxRows
+  + int MaxBays
+  + int MaxTiers
+  + decimal MaxLength
+  + decimal MaxBeam
+  + decimal MaxDraft
+}
+
+' ===== Security =====
+class CallerContext {
+  + string? UserId
+  + Guid OrgId
+  + string Role
+  --
+  + static FromHeaders(HttpRequest request) : CallerContext
+  + IsPortAuthority() : bool
+  + IsShippingAgent() : bool
+}
+
+' ===== Relationships =====
+VesselType "1" o-- "0..*" Vessel : Vessels
+PortDbContext --> VesselType
+PortDbContext --> Vessel
+VesselTypesController --> PortDbContext : uses
+VesselTypesController ..> CreateVesselTypeDto : receives
+VesselTypesController ..> UpdateVesselTypeDto : receives
+VesselTypesController ..> VesselTypeResponseDto : returns
+VesselTypesController ..> CallerContext : validates authorization
+
+note right of VesselType
+  Aggregate Root with invariants:
+  - Name uniqueness (enforced at DB level)
+  - All numeric values must be positive
+  - Serves as upper bounds for Vessel dimensions
+end note
+
+note right of VesselTypesController
+  Authorization: Only Port Authority Officers
+  can create, update, or delete vessel types.
+  Search is available to all authenticated users.
+end note
+
+@enduml

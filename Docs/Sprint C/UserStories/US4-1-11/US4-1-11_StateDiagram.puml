@@ -1,0 +1,29 @@
+@startuml
+title State Diagram - Vessel Visit Execution Lifecycle (US 4.1.11)
+
+skinparam shadowing false
+
+[*] --> PLANNED
+
+PLANNED --> IN_PROGRESS : startExecution()\n(record berthTime)
+IN_PROGRESS --> IN_PROGRESS : recordCargoOperationFinished(opId)\n(mark op finished)
+
+IN_PROGRESS --> IN_PROGRESS : recordUnberthing(unberthTime)\n[unberthTime > berthTime]
+
+IN_PROGRESS --> COMPLETED : markAsCompleted(departureTime)\n[unberth exists]\n[departureTime > unberthTime]\n[all cargo operations finished]
+
+COMPLETED --> [*]
+
+' Guardrails / invalid transitions
+PLANNED --> COMPLETED : (invalid)
+COMPLETED --> IN_PROGRESS : (invalid)
+COMPLETED --> COMPLETED : (invalid updates)\n(read-only)
+
+note right of COMPLETED
+After COMPLETED:
+- Read-only for standard roles
+- Admin correction (if implemented) must be explicit
+- Changes should be audited
+end note
+
+@enduml

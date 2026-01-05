@@ -1,0 +1,44 @@
+@startuml
+title SSD – Register Storage Area (Create)
+
+actor "Port Authority Officer" as User
+participant "Scalar / API Client" as Client
+participant "StorageAreasController" as C
+participant "PortDbContext" as Db
+participant "StorageArea (Domain)" as D
+database "EF (InMemory)" as Store
+
+User -> Client : POST /api/storageareas\n{ Name, Location, MaxCapacityTEU, Type, ServesAllDocks, ServedDockCodes, YardNotes, WarehouseNotes }
+Client -> C : Create(dto)
+activate C
+
+C -> C : validate dto (MaxCapacityTEU > 0)
+alt invalid capacity
+  C --> Client : 400 Bad Request\n"Max capacity must be positive"
+  deactivate C
+else valid data
+  C -> D : new StorageArea(dto.Name, dto.Location, dto.MaxCapacityTEU, dto.Type, dto.ServesAllDocks)
+  D --> C : storageArea
+
+  alt Type is YARD and dto.YardNotes provided
+    C -> D : storageArea.SetYardSpec(dto.YardNotes)
+  else Type is WAREHOUSE and dto.WarehouseNotes provided
+    C -> D : storageArea.SetWarehouseSpec(dto.WarehouseNotes)
+  end
+
+  alt not ServesAllDocks and ServedDockCodes provided
+    C -> Db : Where(d => dto.ServedDockCodes.Contains(d.Code)).ToListAsync()
+    Db -> Store : query
+    Store --> Db : List<Dock>
+    C -> D : storageArea.SetServedDocks(docks)
+  end
+
+  C -> Db : Add(storageArea)
+  C -> Db : SaveChangesAsync()
+  Db -> Store : insert
+  Store --> Db : ok
+
+  C --> Client : 201 Created + StorageAreaResponseDto
+  deactivate C
+end
+@enduml

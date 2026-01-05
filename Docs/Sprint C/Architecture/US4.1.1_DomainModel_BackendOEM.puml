@@ -1,0 +1,297 @@
+@startuml US4.1.1_DomainModel_OEMBackend
+!theme plain
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+skinparam classFontSize 12
+skinparam classAttributeFontSize 10
+
+title OEM Backend - Domain Model\n(Port Operations Execution Module)
+
+' ====== LEGEND ======
+legend right
+  |= Symbol |= Meaning |
+  | <<Aggregate Root>> | DDD Aggregate Root |
+  | <<Value Object>> | Immutable Value Object |
+  | <<Entity>> | Supporting Entity |
+  | ◆───── | Composition (owns lifecycle) |
+  | ○───── | Aggregation (shared lifecycle) |
+  | ────── | Association (reference by ID) |
+endlegend
+
+' ====== STYLING ======
+skinparam class {
+  BackgroundColor<<AggregateRoot>> #E6D0DE
+  BorderColor<<AggregateRoot>> #9673A6
+  BackgroundColor<<ValueObject>> #FFF2CC
+  BorderColor<<ValueObject>> #D6B656
+  BackgroundColor<<Entity>> #DAE8FC
+  BorderColor<<Entity>> #6C8EBF
+}
+
+' ====== AGGREGATE ROOTS ======
+
+class OperationPlan <<AggregateRoot>> {
+  +operationPlanId: string {readonly}
+  -targetDate: Date
+  -algorithm: PlanningAlgorithm
+  -createdBy: string
+  -status: OperationPlanStatus
+  -totalDelay: number
+  -auditLog: AuditEntry[]
+  --
+  +addOperation(op: PlannedOperation): void
+  +removeOperation(vvnId: string): void
+  +approve(approvedBy: string): void
+  +startExecution(): void
+  +complete(): void
+  +updateTotalDelay(delay: number): void
+}
+
+class VesselVisitExecution <<AggregateRoot>> {
+  +vveId: string {readonly}
+  -vvnId: string
+  -operationPlanId?: string
+  -actualPortArrivalTime?: Date
+  -actualBerthTime?: Date
+  -actualUnberthTime?: Date
+  -actualPortDepartureTime?: Date
+  -assignedDock?: string
+  -status: VVEStatus
+  -incidentIds: string[]
+  --
+  +startExecution(): void
+  +recordArrival(time: Date): void
+  +recordBerthing(time: Date, dock: string): void
+  +recordUnberthing(time: Date): void
+  +recordDeparture(time: Date): void
+  +complete(): void
+  +markDisrupted(): void
+  +addIncident(incidentId: string): void
+  +addOperation(op: ExecutedOperation): void
+}
+
+class Incident <<AggregateRoot>> {
+  +incidentId: string {readonly}
+  -incidentTypeId: string
+  -vveId?: string
+  -title: string
+  -description: string
+  -severity: IncidentSeverity
+  -status: IncidentStatus
+  -reportedAt: Date
+  -resolvedAt?: Date
+  -closedAt?: Date
+  -externalEntitiesInvolved: string[]
+  -notes: IncidentNote[]
+  -resolutionSummary?: string
+  --
+  +startInvestigation(): void
+  +resolve(summary: string): void
+  +close(): void
+  +addNote(note: string, author: string): void
+  +addExternalEntity(entity: string): void
+  +updateSeverity(severity: IncidentSeverity): void
+}
+
+class ComplementaryTask <<AggregateRoot>> {
+  +taskId: string {readonly}
+  -taskCategoryId: string
+  -vveId?: string
+  -title: string
+  -description: string
+  -status: TaskStatus
+  -assignedTo?: string
+  -dueDate?: Date
+  -createdAt: Date
+  -startedAt?: Date
+  -completedAt?: Date
+  -estimatedDurationHours?: number
+  -notes: TaskNote[]
+  --
+  +start(): void
+  +complete(): void
+  +cancel(reason: string): void
+  +assignTo(userId: string): void
+  +addNote(note: string, author: string): void
+  +updateDueDate(date: Date): void
+}
+
+' ====== SUPPORTING ENTITIES ======
+
+class IncidentType <<Entity>> {
+  +incidentTypeId: string {readonly}
+  +code: string {readonly}
+  -typeName: string
+  -description: string
+  -defaultSeverity: IncidentSeverity
+  -categoryCode: string
+  -parentTypeId?: string
+  -requiresExternalEntities: boolean
+  -estimatedResolutionTimeHours: number
+  -isActive: boolean
+  --
+  +update(name, desc, severity): void
+  +activate(): void
+  +deactivate(): void
+}
+
+class TaskCategory <<Entity>> {
+  +taskCategoryId: string {readonly}
+  +categoryCode: string {readonly}
+  -categoryName: string
+  -description: string
+  -defaultDurationHours?: number
+  -expectedImpact?: string
+  -isActive: boolean
+  --
+  +update(name, desc, duration): void
+  +activate(): void
+  +deactivate(): void
+}
+
+' ====== VALUE OBJECTS ======
+
+class PlannedOperation <<ValueObject>> {
+  +vvnId: string {readonly}
+  +vesselImo: string {readonly}
+  +plannedStart: Date {readonly}
+  +plannedEnd: Date {readonly}
+  +assignedCranes: number[] {readonly}
+  +assignedDock: string {readonly}
+  +assignedStaff: string[] {readonly}
+  +operationType: OperationType {readonly}
+  --
+  +equals(other: PlannedOperation): boolean
+  +getDurationMinutes(): number
+}
+
+class ExecutedOperation <<ValueObject>> {
+  +operationType: OperationType {readonly}
+  +startTime?: Date {readonly}
+  +endTime?: Date {readonly}
+  +containersProcessed?: number {readonly}
+  +cranesUsed: number[] {readonly}
+  +staffAssigned: string[] {readonly}
+  +status: ExecutionStatus {readonly}
+  +plannedOperationId?: string {readonly}
+  --
+  +equals(other: ExecutedOperation): boolean
+  +getActualDuration(): number
+  +getDelayMinutes(): number
+}
+
+' ====== ENUMERATIONS ======
+
+enum OperationPlanStatus {
+  GENERATED
+  APPROVED
+  IN_EXECUTION
+  COMPLETED
+}
+
+enum VVEStatus {
+  PLANNED
+  IN_PROGRESS
+  COMPLETED
+  DISRUPTED
+}
+
+enum IncidentStatus {
+  REPORTED
+  UNDER_INVESTIGATION
+  RESOLVED
+  CLOSED
+}
+
+enum TaskStatus {
+  PLANNED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum IncidentSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum OperationType {
+  LOADING
+  UNLOADING
+  BERTHING
+  UNBERTHING
+}
+
+enum ExecutionStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum PlanningAlgorithm {
+  GREEDY
+  GENETIC
+  SIMULATED_ANNEALING
+}
+
+' ====== RELATIONSHIPS ======
+
+' Compositions (Value Objects inside Aggregates)
+OperationPlan "1" *-- "0..*" PlannedOperation : contains >
+VesselVisitExecution "1" *-- "0..*" ExecutedOperation : contains >
+
+' Associations (References by ID)
+VesselVisitExecution "0..*" ..> "0..1" OperationPlan : operationPlanId
+VesselVisitExecution "0..*" ..> "0..*" Incident : incidentIds
+Incident "0..*" --> "1" IncidentType : incidentTypeId
+Incident "0..*" ..> "0..1" VesselVisitExecution : vveId
+ComplementaryTask "0..*" --> "1" TaskCategory : taskCategoryId
+ComplementaryTask "0..*" ..> "0..1" VesselVisitExecution : vveId
+
+' Self-reference for IncidentType hierarchy
+IncidentType "0..*" ..> "0..1" IncidentType : parentTypeId
+
+' Enum associations
+OperationPlan --> OperationPlanStatus
+VesselVisitExecution --> VVEStatus
+Incident --> IncidentStatus
+Incident --> IncidentSeverity
+ComplementaryTask --> TaskStatus
+PlannedOperation --> OperationType
+ExecutedOperation --> OperationType
+ExecutedOperation --> ExecutionStatus
+OperationPlan --> PlanningAlgorithm
+
+' ====== NOTES ======
+
+note bottom of OperationPlan
+  <b>Invariants:</b>
+  - Cannot create for past dates
+  - Must have at least one operation
+  - Operations cannot overlap for same dock
+end note
+
+note bottom of VesselVisitExecution
+  <b>Invariants:</b>
+  - Times must be chronological
+  - Cannot complete with active incidents
+  - References Core Backend VVN by ID
+end note
+
+note right of Incident
+  <b>Invariants:</b>
+  - Title required (max 200 chars)
+  - Cannot close without resolution
+  - Severity escalation allowed
+end note
+
+note right of ComplementaryTask
+  <b>US 4.1.14:</b>
+  Supports ad-hoc tasks during
+  vessel visit execution
+end note
+
+@enduml

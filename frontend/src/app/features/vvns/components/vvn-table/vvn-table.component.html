@@ -1,0 +1,141 @@
+<div class="table-container">
+  <!-- Desktop Table View -->
+  <table class="vvns-table desktop-table" *ngIf="vvns.length > 0; else noVvns">
+    <thead>
+      <tr>
+        <th>{{ 'VVN.VVN_ID' | translate }}</th>
+        <th>{{ 'VESSELS.IMO' | translate }}</th>
+        <th>{{ 'VVN.VESSEL_NAME' | translate }}</th>
+        <th>{{ 'VVN.PURPOSE' | translate }}</th>
+        <th>{{ 'VVN.STATUS' | translate }}</th>
+        <th>{{ 'VVN.ARRIVAL_DATE' | translate }}</th>
+        <th>{{ 'VVN.DEPARTURE_DATE' | translate }}</th>
+        <th *ngIf="isShippingAgent">Submitted At</th>
+        <th *ngIf="!isShippingAgent">Assigned Dock</th>
+        <th>{{ 'COMMON.ACTIONS' | translate }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let vvn of vvns" class="vvn-row">
+        <td data-label="VVN ID"><strong>{{ vvn.vvnBusinessId }}</strong></td>
+        <td data-label="Vessel IMO">{{ vvn.vesselImo }}</td>
+        <td data-label="Vessel Name">{{ getVesselName(vvn) }}</td>
+        <td data-label="Purpose">{{ vvn.purpose }}</td>
+        <td data-label="Status">
+          <span class="status-badge" [class]="getStatusClass(vvn.status)">
+            {{ getStatusLabel(vvn.status) }}
+          </span>
+        </td>
+        <td data-label="ETA">{{ formatDate(vvn.eta) }}</td>
+        <td data-label="ETD">{{ formatDate(vvn.etd) }}</td>
+        <td *ngIf="isShippingAgent" data-label="Submitted At">{{ formatDate(vvn.submittedAt) }}</td>
+        <td *ngIf="!isShippingAgent" data-label="Assigned Dock">{{ getAssignedDock(vvn) }}</td>
+        <td class="actions" data-label="Actions">
+          <button class="btn-icon btn-view" (click)="viewVvn(vvn)" title="View Details">
+            👁️
+          </button>
+          <button 
+            *ngIf="canEdit(vvn)" 
+            class="btn-icon btn-edit" 
+            (click)="editVvn(vvn)" 
+            title="Edit VVN">
+            ✏️
+          </button>
+          <button 
+            *ngIf="canSubmit(vvn)" 
+            class="btn-icon btn-submit" 
+            (click)="submitVvn(vvn)" 
+            title="Submit for Approval">
+            📤
+          </button>
+          <button 
+            *ngIf="canReopen(vvn)" 
+            class="btn-icon btn-reopen" 
+            (click)="reopenVvn(vvn)" 
+            title="Reopen VVN">
+            🔓
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Mobile Card View -->
+  <div class="vvns-cards mobile-cards" *ngIf="vvns.length > 0">
+    <div *ngFor="let vvn of vvns" class="vvn-card">
+      <div class="card-header">
+        <div>
+          <h3>{{ vvn.vvnBusinessId }}</h3>
+          <span class="status-badge" [class]="getStatusClass(vvn.status)">
+            {{ getStatusLabel(vvn.status) }}
+          </span>
+        </div>
+        <div class="card-actions">
+          <button class="btn-icon btn-view" (click)="viewVvn(vvn)" title="View Details">
+            👁️
+          </button>
+          <button 
+            *ngIf="canEdit(vvn)" 
+            class="btn-icon btn-edit" 
+            (click)="editVvn(vvn)" 
+            title="Edit VVN">
+            ✏️
+          </button>
+          <button 
+            *ngIf="canSubmit(vvn)" 
+            class="btn-icon btn-submit" 
+            (click)="submitVvn(vvn)" 
+            title="Submit for Approval">
+            📤
+          </button>
+          <button 
+            *ngIf="canReopen(vvn)" 
+            class="btn-icon btn-reopen" 
+            (click)="reopenVvn(vvn)" 
+            title="Reopen VVN">
+            🔓
+          </button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="card-row">
+          <span class="label">Vessel IMO:</span>
+          <span class="value">{{ vvn.vesselImo }}</span>
+        </div>
+        <div class="card-row">
+          <span class="label">Vessel Name:</span>
+          <span class="value">{{ getVesselName(vvn) }}</span>
+        </div>
+        <div class="card-row">
+          <span class="label">Purpose:</span>
+          <span class="value">{{ vvn.purpose }}</span>
+        </div>
+        <div class="card-row">
+          <span class="label">ETA:</span>
+          <span class="value">{{ formatDate(vvn.eta) }}</span>
+        </div>
+        <div class="card-row">
+          <span class="label">ETD:</span>
+          <span class="value">{{ formatDate(vvn.etd) }}</span>
+        </div>
+        <div class="card-row" *ngIf="isShippingAgent">
+          <span class="label">Submitted At:</span>
+          <span class="value">{{ formatDate(vvn.submittedAt) }}</span>
+        </div>
+        <div class="card-row" *ngIf="!isShippingAgent">
+          <span class="label">Assigned Dock:</span>
+          <span class="value">{{ getAssignedDock(vvn) }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <ng-template #noVvns>
+    <div class="empty-state" *ngIf="!loading">
+      <p>{{ 'VVN.NO_VVNS' | translate }}</p>
+      <p *ngIf="isShippingAgent" class="hint">{{ 'VVN.CREATE_FIRST' | translate }}</p>
+    </div>
+    <app-loading *ngIf="loading" [message]="'VVN.LOADING'" [overlay]="false"></app-loading>
+  </ng-template>
+</div>

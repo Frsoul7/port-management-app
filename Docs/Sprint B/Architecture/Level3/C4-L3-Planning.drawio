@@ -1,0 +1,257 @@
+<mxfile host="Electron" modified="2025-11-23T23:10:00.000Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/22.1.11 Chrome/114.0.5735.289 Electron/25.9.8 Safari/537.36" etag="C4L3Planning" version="22.1.11" type="device">
+  <diagram name="Level 3 - Planning Container" id="C4L3Planning">
+    <mxGraphModel dx="1422" dy="820" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1000" pageHeight="800" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <!-- System Boundary -->
+        <mxCell id="planning_boundary" value="Planning Container (Prolog)" style="whiteSpace=wrap;html=1;fillColor=none;strokeColor=#000000;strokeWidth=2;align=left;verticalAlign=top;fontSize=14;fontStyle=1;dashed=1;shadow=1;" parent="1" vertex="1">
+          <mxGeometry x="40" y="40" width="920" height="680" as="geometry" />
+        </mxCell>
+        
+        <!-- Components with Module Icon -->
+        <mxCell id="comp_rest_api" value="&lt;b&gt;REST API Endpoint&lt;/b&gt;&lt;br&gt;«component» «container (C4)»&lt;br&gt;&lt;br&gt;HTTP Interface:&lt;br&gt;• POST /api/scheduling/optimize&lt;br&gt;• GET /api/scheduling/status&lt;br&gt;• POST /api/planning/dock-assignment&lt;br&gt;• POST /api/planning/resource-allocation&lt;br&gt;&lt;br&gt;Request/Response:&lt;br&gt;• JSON Input/Output&lt;br&gt;• Validation Layer&lt;br&gt;• Error Handling" style="html=1;dropTarget=0;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;align=center;verticalAlign=top;fontSize=11;spacingTop=10;" parent="1" vertex="1">
+          <mxGeometry x="540" y="80" width="380" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="comp_rest_api_module" value="" style="shape=module;jettyWidth=8;jettyHeight=4;" parent="comp_rest_api" vertex="1">
+          <mxGeometry x="1" width="20" height="20" relative="1" as="geometry">
+            <mxPoint x="-27" y="7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="comp_scheduling_engine" value="&lt;b&gt;Scheduling Engine&lt;/b&gt;&lt;br&gt;«component» «container (C4)»&lt;br&gt;&lt;br&gt;Prolog Algorithms:&lt;br&gt;• Vessel Schedule Optimization&lt;br&gt;• Constraint Satisfaction Solver&lt;br&gt;• Backtracking Search&lt;br&gt;• Priority-based Scheduling&lt;br&gt;• Time Window Constraints&lt;br&gt;• Conflict Detection&lt;br&gt;• Optimization Heuristics" style="html=1;dropTarget=0;whiteSpace=wrap;fillColor=#f8cecc;strokeColor=#b85450;align=center;verticalAlign=top;fontSize=11;spacingTop=10;" parent="1" vertex="1">
+          <mxGeometry x="540" y="320" width="380" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="comp_scheduling_engine_module" value="" style="shape=module;jettyWidth=8;jettyHeight=4;" parent="comp_scheduling_engine" vertex="1">
+          <mxGeometry x="1" width="20" height="20" relative="1" as="geometry">
+            <mxPoint x="-27" y="7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="comp_dock_assignment" value="&lt;b&gt;Dock Assignment Planner&lt;/b&gt;&lt;br&gt;«component» «container (C4)»&lt;br&gt;&lt;br&gt;Prolog Rules:&lt;br&gt;• Dock Capacity Matching&lt;br&gt;• Vessel Type Compatibility&lt;br&gt;• Dock Availability Checks&lt;br&gt;• Assignment Optimization&lt;br&gt;• Conflict Resolution" style="html=1;dropTarget=0;whiteSpace=wrap;fillColor=#f8cecc;strokeColor=#b85450;align=center;verticalAlign=top;fontSize=11;spacingTop=10;" parent="1" vertex="1">
+          <mxGeometry x="80" y="320" width="380" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="comp_dock_assignment_module" value="" style="shape=module;jettyWidth=8;jettyHeight=4;" parent="comp_dock_assignment" vertex="1">
+          <mxGeometry x="1" width="20" height="20" relative="1" as="geometry">
+            <mxPoint x="-27" y="7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="comp_resource_allocation" value="&lt;b&gt;Resource Allocation Planner&lt;/b&gt;&lt;br&gt;«component» «container (C4)»&lt;br&gt;&lt;br&gt;Prolog Rules:&lt;br&gt;• Staff Assignment&lt;br&gt;• Equipment Allocation&lt;br&gt;• Resource Availability&lt;br&gt;• Skill Matching&lt;br&gt;• Load Balancing" style="html=1;dropTarget=0;whiteSpace=wrap;fillColor=#f8cecc;strokeColor=#b85450;align=center;verticalAlign=top;fontSize=11;spacingTop=10;" parent="1" vertex="1">
+          <mxGeometry x="80" y="500" width="380" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="comp_resource_allocation_module" value="" style="shape=module;jettyWidth=8;jettyHeight=4;" parent="comp_resource_allocation" vertex="1">
+          <mxGeometry x="1" width="20" height="20" relative="1" as="geometry">
+            <mxPoint x="-27" y="7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="comp_knowledge_base" value="&lt;b&gt;Knowledge Base&lt;/b&gt;&lt;br&gt;«component» «container (C4)»&lt;br&gt;&lt;br&gt;Prolog Facts &amp; Rules:&lt;br&gt;• Port Constraints&lt;br&gt;• Business Rules&lt;br&gt;• Domain Knowledge&lt;br&gt;• Optimization Rules" style="html=1;dropTarget=0;whiteSpace=wrap;fillColor=#fff2cc;strokeColor=#d6b656;align=center;verticalAlign=top;fontSize=11;spacingTop=10;" parent="1" vertex="1">
+          <mxGeometry x="540" y="540" width="380" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="comp_knowledge_base_module" value="" style="shape=module;jettyWidth=8;jettyHeight=4;" parent="comp_knowledge_base" vertex="1">
+          <mxGeometry x="1" width="20" height="20" relative="1" as="geometry">
+            <mxPoint x="-27" y="7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="comp_data_adapter" value="&lt;b&gt;Data Adapter&lt;/b&gt;&lt;br&gt;«component» «container (C4)»&lt;br&gt;&lt;br&gt;Data Transformation:&lt;br&gt;• JSON ↔ Prolog Facts&lt;br&gt;• Data Validation&lt;br&gt;• Format Conversion" style="html=1;dropTarget=0;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;align=center;verticalAlign=top;fontSize=11;spacingTop=10;" parent="1" vertex="1">
+          <mxGeometry x="80" y="80" width="380" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="comp_data_adapter_module" value="" style="shape=module;jettyWidth=8;jettyHeight=4;" parent="comp_data_adapter" vertex="1">
+          <mxGeometry x="1" width="20" height="20" relative="1" as="geometry">
+            <mxPoint x="-27" y="7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- External System -->
+        <mxCell id="ext_backend" value="&lt;b&gt;Backend API&lt;/b&gt;&lt;br&gt;Data Provider" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=3;fontSize=11;" parent="1" vertex="1">
+          <mxGeometry x="700" y="20" width="80" height="80" as="geometry" />
+        </mxCell>
+        
+        <!-- Title -->
+        <mxCell id="title" value="&lt;b&gt;C4 Level 3 - Component Diagram: Planning Container&lt;/b&gt;&lt;br&gt;Port Management System - Prolog Planning Service [Sprint B - Planned]" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=14;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="200" y="-30" width="600" height="50" as="geometry" />
+        </mxCell>
+        
+        <!-- Legend -->
+        <mxCell id="legend" value="&lt;b&gt;Legend:&lt;/b&gt;&lt;br&gt;Blue = API Layer&lt;br&gt;Green = Data Adapter&lt;br&gt;Red = Prolog Engines&lt;br&gt;Yellow = Knowledge Base&lt;br&gt;White Circle = External System" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;align=left;verticalAlign=top;spacingLeft=10;spacingTop=10;fontSize=10;" parent="1" vertex="1">
+          <mxGeometry x="40" y="740" width="250" height="120" as="geometry" />
+        </mxCell>
+        
+        <!-- Note -->
+        <mxCell id="note" value="&lt;b&gt;Architecture Characteristics:&lt;/b&gt;&lt;br&gt;• Stateless Service (no data persistence)&lt;br&gt;• On-demand Computation&lt;br&gt;• Horizontally Scalable&lt;br&gt;• Receives operational data from Backend&lt;br&gt;• Returns optimization results as JSON&lt;br&gt;&lt;br&gt;&lt;b&gt;Technology Stack:&lt;/b&gt;&lt;br&gt;• Prolog (SWI-Prolog)&lt;br&gt;• REST API (HTTP)&lt;br&gt;• JSON serialization&lt;br&gt;• Port 8080&lt;br&gt;&lt;br&gt;&lt;b&gt;Status: Planned for Sprint B&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;align=left;verticalAlign=top;spacingLeft=10;spacingTop=10;fontSize=10;" parent="1" vertex="1">
+          <mxGeometry x="320" y="740" width="320" height="220" as="geometry" />
+        </mxCell>
+        
+        <!-- Note Connections -->
+        <mxCell id="note_connections" value="&lt;b&gt;Key Connections:&lt;/b&gt;&lt;br&gt;• REST API ← Backend (request)&lt;br&gt;• REST API → Data Adapter&lt;br&gt;• Data Adapter → Scheduling Engine&lt;br&gt;• Scheduling Engine → Dock Assignment&lt;br&gt;• Scheduling Engine → Resource Allocation&lt;br&gt;• All Engines → Knowledge Base&lt;br&gt;• Results → Backend (response)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1f5fe;strokeColor=#01579b;align=left;verticalAlign=top;spacingLeft=10;spacingTop=10;fontSize=10;" parent="1" vertex="1">
+          <mxGeometry x="670" y="740" width="290" height="160" as="geometry" />
+        </mxCell>
+        
+        <!-- API Connection Points (Provided Interfaces - Rectangles) -->
+        <mxCell id="api_adapter_provided" value="" style="shape=rectangle;fillColor=#000000;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="460" y="145" width="10" height="10" as="geometry" />
+        </mxCell>
+        <mxCell id="api_scheduling_provided" value="" style="shape=rectangle;fillColor=#000000;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="535" y="405" width="10" height="10" as="geometry" />
+        </mxCell>
+        <mxCell id="api_dock_provided" value="" style="shape=rectangle;fillColor=#000000;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="460" y="385" width="10" height="10" as="geometry" />
+        </mxCell>
+        <mxCell id="api_resource_provided" value="" style="shape=rectangle;fillColor=#000000;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="460" y="565" width="10" height="10" as="geometry" />
+        </mxCell>
+        <mxCell id="api_knowledge_provided" value="" style="shape=rectangle;fillColor=#000000;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="535" y="605" width="10" height="10" as="geometry" />
+        </mxCell>
+        
+        <!-- Connections: Backend API → REST API Endpoint -->
+        <mxCell id="conn_backend_restapi_call" value="" style="endArrow=oval;endFill=0;endSize=10;strokeWidth=2;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" target="comp_rest_api" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="740" y="60" as="sourcePoint" />
+            <mxPoint x="730" y="80" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- Connections: REST API → Data Adapter -->
+        <mxCell id="conn_restapi_adapter_require" value="" style="endArrow=oval;endFill=0;endSize=10;strokeWidth=2;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;" parent="1" source="comp_rest_api" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="540" y="180" as="sourcePoint" />
+            <mxPoint x="470" y="150" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="510" y="180" />
+              <mxPoint x="510" y="150" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="conn_adapter_provide" value="" style="endArrow=none;html=1;endFill=0;strokeWidth=2;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" target="api_adapter_provided" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="510" y="150" as="sourcePoint" />
+            <mxPoint x="470" y="150" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- Connections: Data Adapter → Scheduling Engine -->
+        <mxCell id="conn_adapter_scheduling_require" value="" style="endArrow=oval;endFill=0;endSize=10;strokeWidth=2;html=1;exitX=1;exitY=1;exitDx=0;exitDy=0;" parent="1" source="comp_data_adapter" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="460" y="220" as="sourcePoint" />
+            <mxPoint x="545" y="410" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="480" y="220" />
+              <mxPoint x="480" y="280" />
+              <mxPoint x="520" y="280" />
+              <mxPoint x="520" y="410" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="conn_scheduling_provide" value="" style="endArrow=none;html=1;endFill=0;strokeWidth=2;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" target="api_scheduling_provided" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="520" y="410" as="sourcePoint" />
+            <mxPoint x="535" y="410" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- Connections: Scheduling Engine → Dock Assignment -->
+        <mxCell id="conn_scheduling_dock_require" value="" style="endArrow=oval;endFill=0;endSize=10;strokeWidth=2;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;" parent="1" source="comp_scheduling_engine" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="540" y="410" as="sourcePoint" />
+            <mxPoint x="470" y="390" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="500" y="410" />
+              <mxPoint x="500" y="390" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="conn_dock_provide" value="" style="endArrow=none;html=1;endFill=0;strokeWidth=2;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" target="api_dock_provided" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="500" y="390" as="sourcePoint" />
+            <mxPoint x="470" y="390" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- Connections: Scheduling Engine → Resource Allocation -->
+        <mxCell id="conn_scheduling_resource_require" value="" style="endArrow=oval;endFill=0;endSize=10;strokeWidth=2;html=1;exitX=0;exitY=0.75;exitDx=0;exitDy=0;" parent="1" source="comp_scheduling_engine" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="540" y="455" as="sourcePoint" />
+            <mxPoint x="470" y="570" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="490" y="455" />
+              <mxPoint x="490" y="570" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="conn_resource_provide" value="" style="endArrow=none;html=1;endFill=0;strokeWidth=2;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" target="api_resource_provided" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="490" y="570" as="sourcePoint" />
+            <mxPoint x="470" y="570" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- Connections: Scheduling Engine → Knowledge Base -->
+        <mxCell id="conn_scheduling_knowledge_require" value="" style="endArrow=oval;endFill=0;endSize=10;strokeWidth=2;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" parent="1" source="comp_scheduling_engine" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="730" y="500" as="sourcePoint" />
+            <mxPoint x="545" y="610" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="730" y="520" />
+              <mxPoint x="520" y="520" />
+              <mxPoint x="520" y="610" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="conn_knowledge_provide" value="" style="endArrow=none;html=1;endFill=0;strokeWidth=2;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" target="api_knowledge_provided" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="520" y="610" as="sourcePoint" />
+            <mxPoint x="535" y="610" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- Connections: Dock Assignment → Knowledge Base -->
+        <mxCell id="conn_dock_knowledge_require" value="" style="endArrow=oval;endFill=0;endSize=10;strokeWidth=2;html=1;exitX=0.75;exitY=1;exitDx=0;exitDy=0;" parent="1" source="comp_dock_assignment" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="365" y="460" as="sourcePoint" />
+            <mxPoint x="545" y="610" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="365" y="480" />
+              <mxPoint x="60" y="480" />
+              <mxPoint x="60" y="700" />
+              <mxPoint x="520" y="700" />
+              <mxPoint x="520" y="610" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- Connections: Resource Allocation → Knowledge Base -->
+        <mxCell id="conn_resource_knowledge_require" value="" style="endArrow=oval;endFill=0;endSize=10;strokeWidth=2;html=1;exitX=1;exitY=0.75;exitDx=0;exitDy=0;" parent="1" source="comp_resource_allocation" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="460" y="605" as="sourcePoint" />
+            <mxPoint x="545" y="610" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="480" y="605" />
+              <mxPoint x="480" y="610" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- Connections: Data Adapter → Dock Assignment (direct data flow) -->
+        <mxCell id="conn_adapter_dock_require" value="" style="endArrow=oval;endFill=0;endSize=10;strokeWidth=2;html=1;exitX=0;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="comp_data_adapter" target="comp_dock_assignment" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="80" y="220" as="sourcePoint" />
+            <mxPoint x="270" y="320" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- Connections: Data Adapter → Resource Allocation (direct data flow) -->
+        <mxCell id="conn_adapter_resource_require" value="" style="endArrow=oval;endFill=0;endSize=10;strokeWidth=2;html=1;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="comp_data_adapter" target="comp_resource_allocation" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="175" y="220" as="sourcePoint" />
+            <mxPoint x="270" y="500" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

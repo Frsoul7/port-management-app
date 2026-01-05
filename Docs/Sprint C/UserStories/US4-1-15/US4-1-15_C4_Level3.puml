@@ -1,0 +1,48 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+title C4 L3 - Components (OEM API) (US 4.1.15 - Complementary Tasks)
+
+Container_Boundary(oem, "OEM API (Express)") {
+
+  Component(auth, "Auth Middleware", "JWT/OIDC Middleware", "Validates tokens and enforces RBAC/ABAC")
+
+  Component(taskController, "ComplementaryTaskController", "Express Controller",
+    "Handles HTTP requests to create/list/update complementary tasks for a VVE")
+
+  Component(taskService, "ComplementaryTaskService", "Application Service",
+    "Orchestrates complementary task use cases and enforces application policies")
+
+  Component(taskRepo, "ComplementaryTaskRepository Adapter", "Repository",
+    "Persists and queries complementary tasks in MongoDB")
+
+  Component(catRepo, "TaskCategoryRepository Adapter", "Repository",
+    "Provides access to complementary task categories (defined in US 4.1.14)")
+
+  Component(vveRepo, "VVERepository Adapter", "Repository",
+    "Loads VVEs and validates VVE state constraints (e.g., completed read-only)")
+
+  Component(logger, "Logging Adapter", "Logger", "Structured logs for audit/debug")
+}
+
+ContainerDb(oemDb, "OEM Database", "MongoDB", "Stores VVEs, tasks and categories")
+
+Rel(taskController, auth, "Uses", "middleware")
+Rel(taskController, taskService, "Invokes")
+Rel(taskService, vveRepo, "Loads VVE / checks state")
+Rel(taskService, catRepo, "Validates category")
+Rel(taskService, taskRepo, "Creates/queries tasks")
+Rel(taskRepo, oemDb, "Reads/Writes", "MongoDB driver")
+Rel(catRepo, oemDb, "Reads", "MongoDB driver")
+Rel(vveRepo, oemDb, "Reads", "MongoDB driver")
+Rel(taskController, logger, "Logs request/response")
+Rel(taskService, logger, "Logs business events")
+
+note right of taskService
+Core policies:
+- task must reference an existing VVE
+- task must have a valid category
+- startTime < endTime
+- if VVE is COMPLETED, updates restricted (unless admin correction is implemented)
+end note
+
+@enduml

@@ -1,0 +1,43 @@
+@startuml
+title Sequence Diagram – Deactivate Physical Resource
+
+actor "Logistics Operator" as Operator
+participant "API Client" as Client
+participant "PhysicalResourcesController" as C
+participant "PhysicalResourceRepository" as Repo
+participant "PortDbContext" as Db
+database "EF (InMemory)" as Store
+
+Operator -> Client : PATCH /api/resources/{code}/deactivate {reason}
+Client -> C : Deactivate(code, dto)
+activate C
+
+C -> Repo : GetByCodeAsync(code, includeQualifications: true)
+activate Repo
+Repo -> Db : query
+Db -> Store : resource
+Store --> Db : resource
+Db --> Repo : resource
+deactivate Repo
+
+alt resource already deactivated
+  C --> Client : 200 OK (idempotent)
+else
+  C -> C : resource.Deactivate(reason) (set DeactivatedAt, DeactivationReason)
+  C -> Repo : Update(resource)
+  activate Repo
+  Repo -> Db : Update
+  Db -> Store : UPDATE
+  Store --> Db : ok
+  Db --> Repo : ok
+  deactivate Repo
+
+  C -> Db : SaveChangesAsync()
+  Db -> Store : commit
+  Store --> Db : ok
+  Db --> C : ok
+
+  C --> Client : 200 OK + resource
+end
+deactivate C
+@enduml

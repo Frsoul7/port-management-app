@@ -1,0 +1,84 @@
+{
+  "APP": {
+    "TITLE": "Port Management System",
+    "WELCOME": "Welcome"
+  },
+  "NAV": {
+    "HOME": "Home",
+    "VVN": "Vessel Visit Notifications",
+    "OPERATION_PLANS": "Operation Plans",
+    "VESSEL_VISIT_EXECUTIONS": "Vessel Visit Executions",
+    "INCIDENT_TYPES": "Incident Types",
+    "INCIDENTS": "Incident Records",
+    "TASK_CATEGORIES": "Complementary Task Categories",
+    "VESSELS": "Vessels",
+    "VESSEL_TYPES": "Vessel Types",
+    "DOCKS": "Docks",
+    "STORAGE": "Storage Areas",
+    "RESOURCES": "Physical Resources",
+    "SHIPPING_AGENTS": "Shipping Agents",
+    "HR": "Human Resources",
+    "VISUALIZATION": "3D Visualization",
+    "USER_MANAGEMENT": "User Management",
+    "LOGOUT": "Logout",
+    "BACK_TO_DASHBOARD": "Back to Dashboard"
+  },
+  "COMMON": {
+    "SAVE": "Save",
+    "CANCEL": "Cancel",
+    "DELETE": "Delete",
+    "EDIT": "Edit",
+    "CREATE": "Create",
+    "SEARCH": "Search",
+    "LOADING": "Loading...",
+    "ERROR": "Error",
+    "SUCCESS": "Success",
+    "CONFIRM": "Confirm",
+    "ACTIONS": "Actions"
+  },
+  "VVN": {
+    "TITLE": "Vessel Visit Notifications",
+    "CREATE": "Create VVN",
+    "VVN_ID": "VVN ID",
+    "VESSEL_NAME": "Vessel Name",
+    "STATUS": "Status",
+    "PENDING": "Pending",
+    "APPROVED": "Approved",
+    "REJECTED": "Rejected"
+  },
+  "SHIPPING_AGENTS": {
+    "TITLE": "Shipping Agent Organizations",
+    "REGISTER": "Register Organization",
+    "IDENTIFIER": "Identifier",
+    "LEGAL_NAME": "Legal Name",
+    "ALTERNATIVE_NAME": "Alternative Name",
+    "TAX_NUMBER": "Tax Number",
+    "ADDRESS": "Address",
+    "REPRESENTATIVES": "Representatives",
+    "ADD_REPRESENTATIVE": "Add Representative",
+    "EDIT_REPRESENTATIVE": "Edit Representative",
+    "REPRESENTATIVE_NAME": "Name",
+    "CITIZEN_ID": "Citizen ID",
+    "NATIONALITY": "Nationality",
+    "EMAIL": "Email",
+    "PHONE": "Phone",
+    "ACTIVE": "Active",
+    "INACTIVE": "Inactive",
+    "ACTIVATE": "Activate",
+    "DEACTIVATE": "Deactivate",
+    "ORGANIZATION_INFO": "Organization Information",
+    "AT_LEAST_ONE_REP": "At least one representative required"
+  },
+    "VISUALIZATION_3D": {
+    "TITLE": "3D Port Visualization",
+    "SUBTITLE": "Interactive 3D view",
+    "DESCRIPTION": "Explore the port layout, operational areas, vessels and physical resources using an interactive 3D view. This screen will evolve to use live data from the core APIs."
+  },
+  "ERRORS": {
+    "CONNECTION": "Cannot connect to server",
+    "UNAUTHORIZED": "Authentication required",
+    "FORBIDDEN": "Permission denied",
+    "NOT_FOUND": "Resource not found",
+    "SERVER_ERROR": "Server error occurred"
+  }
+}

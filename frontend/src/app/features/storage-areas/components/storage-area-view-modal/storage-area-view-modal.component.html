@@ -1,0 +1,81 @@
+<div class="modal-overlay" *ngIf="show" (click)="close()">
+  <div class="modal modal-view" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ 'STORAGE.STORAGE_INFO' | translate }}</h2>
+      <button class="close-btn" (click)="close()">×</button>
+    </div>
+    
+    <div class="modal-body" *ngIf="storageArea">
+      <div class="detail-grid">
+        <div class="detail-item">
+          <label>Name</label>
+          <div class="detail-value">{{ storageArea.name }}</div>
+        </div>
+
+        <div class="detail-item">
+          <label>Location</label>
+          <div class="detail-value">{{ storageArea.location }}</div>
+        </div>
+
+        <div class="detail-item">
+          <label>Type</label>
+          <div class="detail-value">
+            <span class="type-badge" [class]="'type-' + storageArea.type.toLowerCase()">
+              {{ formatType(storageArea.type) }}
+            </span>
+          </div>
+        </div>
+
+        <div class="detail-item">
+          <label>Maximum Capacity</label>
+          <div class="detail-value">{{ storageArea.maxCapacityTEU }} TEU</div>
+        </div>
+
+        <div class="detail-item">
+          <label>Current Occupancy</label>
+          <div class="detail-value">
+            <div class="occupancy-display">
+              <span class="occupancy-text">{{ storageArea.currentOccupancyTEU }} / {{ storageArea.maxCapacityTEU }} TEU</span>
+              <span class="occupancy-percentage">({{ getOccupancyPercentage(storageArea) | number:'1.0-0' }}%)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-item">
+          <label>Serves All Docks</label>
+          <div class="detail-value">
+            <span class="badge" [class]="storageArea.servesAllDocks ? 'badge-yes' : 'badge-no'">
+              {{ storageArea.servesAllDocks ? 'Yes' : 'No' }}
+            </span>
+          </div>
+        </div>
+
+        <div class="detail-item" *ngIf="!storageArea.servesAllDocks && storageArea.servedDockCodes.length > 0">
+          <label>Served Docks</label>
+          <div class="detail-value">
+            <div class="dock-list">
+              <span *ngFor="let code of storageArea.servedDockCodes" class="dock-badge">
+                {{ code }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-item" *ngIf="storageArea.yardNotes">
+          <label>Yard Notes</label>
+          <div class="detail-value notes">{{ storageArea.yardNotes }}</div>
+        </div>
+
+        <div class="detail-item" *ngIf="storageArea.warehouseNotes">
+          <label>Warehouse Notes</label>
+          <div class="detail-value notes">{{ storageArea.warehouseNotes }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="close()">Close</button>
+      <button class="btn btn-primary" (click)="edit()">Edit Storage Area</button>
+    </div>
+  </div>
+</div>

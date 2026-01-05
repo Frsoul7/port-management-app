@@ -1,0 +1,318 @@
+<div class="operation-plans-container">
+  <!-- Header -->
+  <div class="header">
+    <div class="header-content">
+      <h1>{{ 'OPERATION_PLANS.TITLE' | translate }}</h1>
+      <button class="back-btn" (click)="goBack()">{{ 'NAV.BACK_TO_DASHBOARD' | translate }}</button>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="content">
+    <!-- Action Buttons -->
+    <div class="action-bar">
+      <button class="btn-warning" routerLink="/operation-plans/missing">
+        <span class="icon">⚠️</span>
+        {{ 'OPERATION_PLANS.MISSING_PLANS' | translate }}
+      </button>
+      <button class="btn-secondary" routerLink="/operation-plans/resource-allocation">
+        <span class="icon">📊</span>
+        {{ 'OPERATION_PLANS.RESOURCE_ALLOCATION' | translate }}
+      </button>
+      <button class="btn-primary" routerLink="/operation-plans/generate">
+        <span class="icon">+</span>
+        {{ 'OPERATION_PLANS.GENERATE_NEW_PLAN' | translate }}
+      </button>
+    </div>
+
+    <!-- Filters -->
+  <div class="filters-card">
+    <h3>{{ 'OPERATION_PLANS.FILTERS' | translate }}</h3>
+    <div class="filters-grid">
+      <!-- VVN ID Filter -->
+      <div class="filter-group">
+        <label for="vvnId">{{ 'OPERATION_PLANS.VVN_ID' | translate }}</label>
+        <input
+          type="text"
+          id="vvnId"
+          [(ngModel)]="filters.vvnId"
+          placeholder="Enter VVN ID"
+          class="input-field"
+        />
+      </div>
+
+      <!-- Status Filter -->
+      <div class="filter-group">
+        <label for="status">{{ 'OPERATION_PLANS.STATUS' | translate }}</label>
+        <select id="status" [(ngModel)]="filters.status" class="input-field">
+          <option value="">{{ 'OPERATION_PLANS.ALL_STATUSES' | translate }}</option>
+          <option *ngFor="let status of statusOptions.slice(1)" [value]="status">
+            {{ status }}
+          </option>
+        </select>
+      </div>
+
+      <!-- From Date Filter -->
+      <div class="filter-group">
+        <label for="fromDate">{{ 'OPERATION_PLANS.FROM_DATE' | translate }}</label>
+        <input
+          type="date"
+          id="fromDate"
+          [(ngModel)]="filters.fromDate"
+          class="input-field"
+        />
+      </div>
+
+      <!-- To Date Filter -->
+      <div class="filter-group">
+        <label for="toDate">{{ 'OPERATION_PLANS.TO_DATE' | translate }}</label>
+        <input
+          type="date"
+          id="toDate"
+          [(ngModel)]="filters.toDate"
+          class="input-field"
+        />
+      </div>
+    </div>
+
+    <!-- Filter Actions -->
+    <div class="filter-actions">
+      <button class="clear-btn" (click)="clearFilters()">{{ 'OPERATION_PLANS.CLEAR_FILTERS' | translate }}</button>
+      <button class="apply-btn" (click)="applyFilters()">{{ 'OPERATION_PLANS.APPLY_FILTERS' | translate }}</button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading()" class="loading">
+    {{ 'OPERATION_PLANS.LOADING' | translate }}
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error()" class="alert-error">
+    {{ error() }}
+  </div>
+
+  <!-- Table -->
+  <div *ngIf="!loading() && !error()" class="table-container">
+    <!-- Results Summary -->
+    <div class="results-summary">
+      Showing <strong>{{ operationPlans().length }}</strong> of
+      <strong>{{ totalItems }}</strong> operation plans
+    </div>
+
+    <!-- Table -->
+    <table class="plans-table">
+      <thead>
+        <tr>
+          <th (click)="sortByColumn('targetDate')" class="sortable">
+            {{ 'OPERATION_PLANS.TARGET_DATE' | translate }} {{ getSortIcon('targetDate') }}
+          </th>
+          <th (click)="sortByColumn('status')" class="sortable">
+            {{ 'OPERATION_PLANS.STATUS' | translate }} {{ getSortIcon('status') }}
+          </th>
+          <th (click)="sortByColumn('algorithm')" class="sortable">
+            {{ 'OPERATION_PLANS.ALGORITHM' | translate }} {{ getSortIcon('algorithm') }}
+          </th>
+          <th>Operations</th>
+          <th>{{ 'OPERATION_PLANS.TOTAL_TIME' | translate }}</th>
+          <th (click)="sortByColumn('createdAt')" class="sortable">
+            {{ 'OPERATION_PLANS.CREATED' | translate }} {{ getSortIcon('createdAt') }}
+          </th>
+          <th>{{ 'OPERATION_PLANS.ACTIONS' | translate }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngIf="operationPlans().length === 0">
+          <td colspan="7" class="empty-state">
+            {{ 'OPERATION_PLANS.NO_RESULTS' | translate }}
+          </td>
+        </tr>
+        <tr *ngFor="let plan of operationPlans()" class="plan-row">
+          <!-- Target Date -->
+          <td class="date-cell">
+            {{ formatDate(plan.targetDate) }}
+          </td>
+
+          <!-- Status -->
+          <td>
+            <span class="status-badge" [ngClass]="getStatusClass(plan.status)">
+              {{ plan.status }}
+            </span>
+          </td>
+
+          <!-- Algorithm -->
+          <td class="algorithm-cell">
+            {{ plan.algorithm }}
+          </td>
+
+          <!-- Operations Count -->
+          <td class="operations-cell">
+            <span class="operations-count">
+              {{ getOperationsCount(plan) }} operations
+            </span>
+          </td>
+
+          <!-- Total Processing Time -->
+          <td class="time-cell">
+            {{ getTotalProcessingTime(plan) }}
+          </td>
+
+          <!-- Created At -->
+          <td class="date-cell">
+            {{ formatDate(plan.createdAt) }}
+          </td>
+
+          <!-- Actions -->
+          <td class="actions-cell">
+            <!-- US 4.1.7: Start VVE Button -->
+            <button
+              *ngIf="canInitializeVVE(plan)"
+              class="btn-success"
+              (click)="openVVEModal(plan)"
+              [title]="'OPERATION_PLANS.INITIALIZE_VVE_TITLE' | translate"
+            >
+              {{ 'OPERATION_PLANS.START_VVE' | translate }}
+            </button>
+            <button
+              *ngIf="canEdit(plan)"
+              class="btn-edit"
+              (click)="editPlan(plan)"
+              [title]="'OPERATION_PLANS.EDIT_TITLE' | translate"
+            >
+              ✏️ {{ 'OPERATION_PLANS.EDIT' | translate }}
+            </button>
+            <button
+              class="btn-view"
+              (click)="viewPlan(plan)"
+              [title]="'OPERATION_PLANS.VIEW_TITLE' | translate"
+            >
+              👁️ {{ 'OPERATION_PLANS.VIEW' | translate }}
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Pagination -->
+    <div class="pagination" *ngIf="totalPages > 1">
+      <!-- Previous Button -->
+      <button
+        class="pagination-btn"
+        [disabled]="currentPage === 1"
+        (click)="goToPage(currentPage - 1)"
+      >
+        ←
+      </button>
+
+      <!-- Page Numbers -->
+      <button
+        *ngFor="let page of getPageNumbers()"
+        class="pagination-btn"
+        [class.active]="page === currentPage"
+        (click)="goToPage(page)"
+      >
+        {{ page }}
+      </button>
+
+      <!-- Next Button -->
+      <button
+        class="pagination-btn"
+        [disabled]="currentPage === totalPages"
+        (click)="goToPage(currentPage + 1)"
+      >
+        →
+      </button>
+
+      <!-- Page Info -->
+      <span class="page-info">
+        Page {{ currentPage }} of {{ totalPages }}
+      </span>
+    </div>
+  </div>
+  </div>
+
+  <!-- US 4.1.7: VVE Creation Modal -->
+  <div *ngIf="showVVEModal()" class="modal-overlay" (click)="closeVVEModal()">
+    <div class="modal-content vve-modal" (click)="$event.stopPropagation()">
+      <!-- Modal Header -->
+      <div class="modal-header">
+        <h3>{{ 'OPERATION_PLANS.VVE_MODAL.TITLE' | translate }}</h3>
+        <button class="btn-close" (click)="closeVVEModal()">✕</button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="modal-body">
+        <!-- Success Message -->
+        <div *ngIf="vveSuccess()" class="success-banner">
+          ✓ {{ vveSuccess() }}
+        </div>
+
+        <!-- Error Message -->
+        <div *ngIf="vveError()" class="error-banner">
+          ✗ {{ vveError() }}
+        </div>
+
+        <!-- Plan Information (Read-only) -->
+        <div class="info-section">
+          <h4>{{ 'OPERATION_PLANS.VVE_MODAL.PLAN_DETAILS' | translate }}</h4>
+          <div class="info-grid">
+            <div class="info-item">
+              <label>{{ 'OPERATION_PLANS.VVE_MODAL.PLAN_ID' | translate }}:</label>
+              <span>{{ selectedPlanForVVE()?.operationPlanId }}</span>
+            </div>
+            <div class="info-item">
+              <label>{{ 'OPERATION_PLANS.VVE_MODAL.TARGET_DATE' | translate }}:</label>
+              <span>{{ formatDate(selectedPlanForVVE()!.targetDate) }}</span>
+            </div>
+            <div class="info-item">
+              <label>{{ 'OPERATION_PLANS.VVE_MODAL.OPERATIONS' | translate }}:</label>
+              <span>{{ selectedPlanForVVE()?.operations?.length || 0 }} {{ 'OPERATION_PLANS.VVE_MODAL.OPERATIONS_LABEL' | translate }}</span>
+            </div>
+            <div class="info-item">
+              <label>{{ 'OPERATION_PLANS.VVE_MODAL.ALGORITHM' | translate }}:</label>
+              <span>{{ selectedPlanForVVE()?.algorithm }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- VVE Form -->
+        <div class="form-section">
+          <h4>{{ 'OPERATION_PLANS.VVE_MODAL.ARRIVAL_INFO' | translate }}</h4>
+          <div class="form-group">
+            <label for="arrivalTime">{{ 'OPERATION_PLANS.VVE_MODAL.ARRIVAL_TIME' | translate }} *</label>
+            <input
+              type="datetime-local"
+              id="arrivalTime"
+              [(ngModel)]="vveArrivalTime"
+              class="input-field"
+              [disabled]="creatingVVE() || vveSuccess() !== null"
+              required
+            />
+            <small class="help-text">
+              {{ 'OPERATION_PLANS.VVE_MODAL.ARRIVAL_TIME_HELP' | translate }}
+            </small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="modal-footer">
+        <button
+          class="btn-secondary"
+          (click)="closeVVEModal()"
+          [disabled]="creatingVVE()"
+        >
+          {{ vveSuccess() ? ('OPERATION_PLANS.VVE_MODAL.CLOSE' | translate) : ('OPERATION_PLANS.VVE_MODAL.CANCEL' | translate) }}
+        </button>
+        <button
+          *ngIf="!vveSuccess()"
+          class="btn-primary"
+          (click)="initializeVVE()"
+          [disabled]="!vveArrivalTime() || creatingVVE()"
+        >
+          {{ creatingVVE() ? ('OPERATION_PLANS.VVE_MODAL.CREATING' | translate) : ('OPERATION_PLANS.VVE_MODAL.INITIALIZE' | translate) }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

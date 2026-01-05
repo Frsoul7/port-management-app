@@ -1,0 +1,20 @@
+@startuml
+title SSD - US 4.1.6 Query Resource Allocation Summary
+
+skinparam shadowing false
+
+actor "Logistics Operator" as Op
+boundary "SPA (UI)" as SPA
+system "OEM System (REST API)" as OEM
+
+Op -> SPA : Seleciona resourceId, type, from, to\nClica "Consultar"
+SPA -> OEM : GET /resource-allocations\n?resourceId=&type=&from=&to=
+alt Parâmetros inválidos
+  OEM --> SPA : 400 Bad Request\n{error}
+  SPA --> Op : Mensagem de erro
+else Válido
+  OEM --> SPA : 200 OK\n{totalAllocatedMinutes, operationCount}
+  SPA --> Op : Mostrar resumo em tabela
+end
+
+@enduml

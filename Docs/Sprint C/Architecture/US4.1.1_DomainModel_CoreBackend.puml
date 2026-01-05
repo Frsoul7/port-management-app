@@ -1,0 +1,438 @@
+@startuml US4.1.1_DomainModel_CoreBackend
+!theme plain
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+skinparam classFontSize 12
+skinparam classAttributeFontSize 10
+
+title Core Backend - Domain Model\n(Port Authority Planning Module - .NET/C#)
+
+' ====== LEGEND ======
+legend right
+  |= Symbol |= Meaning |
+  | <<Aggregate Root>> | DDD Aggregate Root |
+  | <<Entity>> | Entity (inside Aggregate) |
+  | <<Value Object>> | Immutable Value Object |
+  | ◆───── | Composition (owns lifecycle) |
+  | ○───── | Aggregation (shared lifecycle) |
+  | ────── | Association (reference by ID) |
+endlegend
+
+' ====== STYLING ======
+skinparam class {
+  BackgroundColor<<AggregateRoot>> #E6D0DE
+  BorderColor<<AggregateRoot>> #9673A6
+  BackgroundColor<<ValueObject>> #FFF2CC
+  BorderColor<<ValueObject>> #D6B656
+  BackgroundColor<<Entity>> #DAE8FC
+  BorderColor<<Entity>> #6C8EBF
+}
+
+' ==========================================
+'  VESSEL VISIT NOTIFICATION AGGREGATE
+' ==========================================
+
+class VesselVisitNotification <<AggregateRoot>> {
+  +VvnGuid: Guid {readonly}
+  +VvnBusinessId: string {readonly}
+  -State: VVNState
+  -VisitPurpose: VisitPurpose
+  -VesselImo: string
+  -Eta: DateTime
+  -Etd: DateTime
+  -CreatedAt: DateTime
+  -SubmittedAt?: DateTime
+  -ApprovedAt?: DateTime
+  -RejectedAt?: DateTime
+  -RejectionReason?: string
+  -CaptainName: string
+  -CaptainCitizenId: string
+  -CaptainNationality: string
+  -CrewCount: int
+  -LoadingCount: int
+  -UnloadingCount: int
+  --
+  +Submit(userId: UserId): void
+  +Approve(userId: UserId): void
+  +Reject(userId: UserId, reason: string): void
+  +AddLoadingEntry(entry: ManifestEntry): void
+  +AddUnloadingEntry(entry: ManifestEntry): void
+  +AddCrewMember(crew: CrewMember): void
+}
+
+class LoadingCargoManifest <<Entity>> {
+  +Id: Guid {readonly}
+  +VvnGuid: Guid {readonly}
+  --
+  +AddEntry(entry: ManifestEntry): void
+  +RemoveEntry(entryId: Guid): void
+}
+
+class UnloadingCargoManifest <<Entity>> {
+  +Id: Guid {readonly}
+  +VvnGuid: Guid {readonly}
+  --
+  +AddEntry(entry: ManifestEntry): void
+  +RemoveEntry(entryId: Guid): void
+}
+
+class ManifestEntry <<ValueObject>> {
+  +Id: Guid {readonly}
+  +ContainerUniqueId: string {readonly}
+  +HazardousGoods: bool {readonly}
+  +ContainerBayNr: int {readonly}
+  +ContainerRowNr: int {readonly}
+  +ContainerTierNr: int {readonly}
+  +GoodsDescription?: string {readonly}
+  --
+  +{static} Create(...): ManifestEntry
+}
+
+class CrewMember <<Entity>> {
+  +CrewMemberId: Guid {readonly}
+  -Name: string
+  -CitizenId: string
+  -Nationality: string
+}
+
+' ==========================================
+'  DOCK ASSIGNMENT AGGREGATE
+' ==========================================
+
+class DockAssignment <<AggregateRoot>> {
+  +DockAssignmentId: Guid {readonly}
+  -BerthFrom: DateTime
+  -BerthTo: DateTime
+  -Status: DockAssignmentStatus
+  -DockCode: string
+  -CreatedAt: DateTime
+  -VesselVisitNotificationId: Guid
+  --
+  +{static} Create(...): DockAssignment
+  +ReassignDock(dockCode, userId, reason): void
+  +Reschedule(from, to, userId, reason): void
+  +MarkInProgress(): void
+  +Complete(): void
+  +Cancel(userId, reason): void
+}
+
+class DockAssignmentEvent <<ValueObject>> {
+  +DockAssignmentEventId: int {readonly}
+  +AssignedAt: DateTime {readonly}
+  +AssignedById: string {readonly}
+  +FromDockCode?: string {readonly}
+  +ToDockCode: string {readonly}
+  +Reason?: string {readonly}
+}
+
+' ==========================================
+'  USER AGGREGATE
+' ==========================================
+
+class User <<AggregateRoot>> {
+  +UserId: UserId {readonly}
+  -Name: string
+  -Email: string
+  -ProfilePictureUrl?: string
+  -PasswordHash?: string
+  -Role?: UserRole
+  -IsActive: bool
+  -EmailVerified: bool
+  -ActivationToken?: string
+  -ActivationTokenExpiry?: DateTime
+  -CreatedAt: DateTime
+  --
+  +VerifyEmail(): void
+  +Activate(): void
+  +Deactivate(): void
+  +SetRole(role: UserRole): void
+  +UpdateProfile(name, picture): void
+  +{static} CreateVerifiedAdmin(...): User
+}
+
+' ==========================================
+'  ORGANIZATION AGGREGATE
+' ==========================================
+
+class Organization <<AggregateRoot>> {
+  +OrganizationId: OrganizationId {readonly}
+  -Identifier: string
+  -LegalName: string
+  -AlternativeName: string
+  -AddressLine: string
+  -TaxNumber: string
+  -Type: OrganizationType
+  --
+  +SetIdentifier(id: string): void
+  +SetLegalName(name: string): void
+  +SetAddressLine(addr: string): void
+  +AddRepresentative(rep: Representative): void
+  +RemoveRepresentative(repId): void
+}
+
+class Representative <<Entity>> {
+  +RepresentativeId: RepresentativeId {readonly}
+  -Name: string
+  -CitizenId: string
+  -Nationality: string
+  -Email: string
+  -Phone: string
+  -IsActive: bool
+  -CreatedAt: DateTime
+  --
+  +Activate(): void
+  +Deactivate(): void
+}
+
+' ==========================================
+'  VESSEL AGGREGATE
+' ==========================================
+
+class Vessel <<AggregateRoot>> {
+  +ImoNumber: string {readonly}
+  -Name: string
+  -CapacityTEU?: int
+  -VesselTypeId: string
+  -OwnerOrganizationId: OrganizationId
+  --
+  +{static} Create(...): Vessel
+  +UpdateBasics(name, type, org, teu): void
+}
+
+class VesselType <<Entity>> {
+  +VesselTypeId: string {readonly}
+  -Name: string
+  -Description?: string
+  -CapacityTEU?: int
+  -MaxRows?: int
+  -MaxBays?: int
+  -MaxTiers?: int
+  -OperationalConstraints?: string
+  --
+  +Update(...): void
+}
+
+' ==========================================
+'  DOCK AGGREGATE
+' ==========================================
+
+class Dock <<AggregateRoot>> {
+  +Code: string {readonly}
+  -Name: string
+  -Location: string
+  -LengthM: double
+  -DepthM: double
+  -MaxDraftM: double
+  --
+  +Update(name, location, ...): void
+  +SetAllowedVesselTypes(types): void
+  +CanAccommodateVesselType(typeId): bool
+}
+
+class DockStorageDistance <<ValueObject>> {
+  +DockStorageDistanceId: int {readonly}
+  +DistanceMeters: int {readonly}
+  +DockCode: string {readonly}
+  +StorageAreaId: string {readonly}
+}
+
+' ==========================================
+'  STORAGE AREA AGGREGATE
+' ==========================================
+
+class StorageArea <<AggregateRoot>> {
+  +StorageAreaId: string {readonly}
+  -Name: string
+  -Location: string
+  -MaxCapacityTEU: int
+  -CurrentOccupancyTEU: int
+  -ServesAllDocks: bool
+  -Type: StorageAreaType
+  --
+  +Update(name, location, ...): void
+  +SetYardSpec(spec: YardSpec): void
+  +SetWarehouseSpec(spec: WarehouseSpec): void
+  +AddCapacity(teu: int): void
+  +RemoveCapacity(teu: int): void
+}
+
+class YardSpec <<ValueObject>> {
+  +Rows: int {readonly}
+  +Bays: int {readonly}
+  +Tiers: int {readonly}
+}
+
+class WarehouseSpec <<ValueObject>> {
+  +AreaM2: double {readonly}
+  +HeightM: double {readonly}
+}
+
+' ==========================================
+'  RESOURCES
+' ==========================================
+
+class STSCrane <<Entity>> {
+  +Code: string {readonly}
+  -Description?: string
+  -SetupTimeSeconds: int
+  -AvgContainersPerHour: int
+  -InstalledAtDockCode?: string
+  --
+  +Update(...): void
+}
+
+class MobileEquipment <<Entity>> {
+  +Code: string {readonly}
+  -Description?: string
+  -SetupTimeSeconds: int
+  -MobileEquipmentType: MobileEquipmentType
+  -MaxSpeedKph?: int
+  -ContainersPerTrip?: int
+  -AvgContainersPerHour?: int
+  -CurrentDockCode?: string
+  --
+  +Update(...): void
+  +AllocateToDock(dockCode): void
+}
+
+' ==========================================
+'  ENUMERATIONS
+' ==========================================
+
+enum VVNState {
+  IN_PROGRESS
+  SUBMITTED
+  APPROVED
+  REJECTED
+}
+
+enum VisitPurpose {
+  LOAD
+  UNLOAD
+  BOTH
+  MAINTENANCE
+}
+
+enum DockAssignmentStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum UserRole {
+  SHIPPING_AGENT_REPRESENTATIVE
+  PORT_AUTHORITY_OFFICER
+  LOGISTICS_OPERATOR
+  ADMINISTRATOR
+}
+
+enum OrganizationType {
+  SHIPPING_AGENT
+  PORT_AUTHORITY
+  LOGISTICS_OPERATOR
+  ADMINISTRATOR
+}
+
+enum StorageAreaType {
+  ORDINARY
+  YARD
+  WAREHOUSE
+}
+
+enum MobileEquipmentType {
+  TRUCK
+  YARD_GANTRY_CRANE
+}
+
+' ==========================================
+'  RELATIONSHIPS
+' ==========================================
+
+' VVN Aggregate Compositions
+VesselVisitNotification "1" *-- "0..1" LoadingCargoManifest : loadingManifest
+VesselVisitNotification "1" *-- "0..1" UnloadingCargoManifest : unloadingManifest
+VesselVisitNotification "1" *-- "0..*" CrewMember : crewMembers
+LoadingCargoManifest "1" *-- "0..*" ManifestEntry : entries
+UnloadingCargoManifest "1" *-- "0..*" ManifestEntry : entries
+
+' Dock Assignment Aggregate
+DockAssignment "1" *-- "0..*" DockAssignmentEvent : assignmentHistory
+
+' Organization Aggregate
+Organization "1" *-- "0..*" Representative : representatives
+
+' Storage Area Aggregate
+StorageArea "1" *-- "0..1" YardSpec : yardSpec
+StorageArea "1" *-- "0..1" WarehouseSpec : warehouseSpec
+
+' Cross-Aggregate Associations (by ID/reference)
+VesselVisitNotification "0..*" --> "1" Vessel : vesselImo
+VesselVisitNotification "0..*" --> "1" Organization : organizationId
+VesselVisitNotification "0..*" --> "0..1" User : submittedById
+VesselVisitNotification "0..*" --> "0..1" User : approvedById
+VesselVisitNotification "0..*" --> "0..1" DockAssignment : dockAssignmentId
+
+DockAssignment "0..*" --> "1" Dock : dockCode
+DockAssignment "0..*" --> "1" VesselVisitNotification : vvnId
+
+User "0..*" --> "1" Organization : organizationId
+
+Vessel "0..*" --> "1" VesselType : vesselTypeId
+Vessel "0..*" --> "1" Organization : ownerOrganizationId
+
+Dock "*" -- "*" VesselType : allowedVesselTypes
+Dock "*" -- "*" StorageArea : servedStorageAreas
+Dock "1" *-- "0..1" STSCrane : stsCrane
+Dock "1" o-- "0..*" MobileEquipment : mobileEquipments
+
+' Enum associations
+VesselVisitNotification --> VVNState
+VesselVisitNotification --> VisitPurpose
+DockAssignment --> DockAssignmentStatus
+User --> UserRole
+Organization --> OrganizationType
+StorageArea --> StorageAreaType
+MobileEquipment --> MobileEquipmentType
+
+' ==========================================
+'  NOTES
+' ==========================================
+
+note bottom of VesselVisitNotification
+  <b>Invariants:</b>
+  - ETD must be after ETA
+  - Captain info required
+  - State machine: IN_PROGRESS → SUBMITTED → APPROVED/REJECTED
+  - Business ID format: 2025-PTLEI-000001
+end note
+
+note bottom of DockAssignment
+  <b>Invariants:</b>
+  - BerthTo must be after BerthFrom
+  - Cannot modify COMPLETED/CANCELLED
+  - Tracks full reassignment history
+end note
+
+note right of Organization
+  <b>US 2.2.5:</b>
+  - Identifier: alphanumeric, max 10
+  - Tax number: EU format
+  - Representatives must have unique emails
+end note
+
+note bottom of Dock
+  <b>Port Infrastructure:</b>
+  - Code is immutable after creation
+  - Links to allowed vessel types
+  - Has STS crane + mobile equipment
+end note
+
+note right of StorageArea
+  <b>Types:</b>
+  - ORDINARY: generic storage
+  - YARD: has row/bay/tier spec
+  - WAREHOUSE: has area/height spec
+end note
+
+@enduml

@@ -1,0 +1,41 @@
+@startuml
+title SD - US 4.1.6 (Camadas internas OEM)
+
+skinparam shadowing false
+
+actor "Logistics Operator" as Op
+boundary "SPA" as SPA
+control "ResourceAllocationController" as C
+control "Auth Middleware (RBAC/ABAC)" as Auth
+control "ResourceAllocationService" as S
+entity "IOperationPlanRepository" as Repo
+database "MongoDB" as DB
+
+Op -> SPA : Consultar utilização do recurso
+SPA -> C : GET /resource-allocations\n(resourceId,type,from,to)
+
+C -> Auth : validateToken() + authorize(role)
+alt Não autorizado
+  Auth --> C : forbidden
+  C --> SPA : 403 Forbidden
+  SPA --> Op : Access denied
+else Autorizado
+  Auth --> C : ok
+  C -> C : validateQuery(from<to, type válido)
+  alt Query inválida
+    C --> SPA : 400 Bad Request
+    SPA --> Op : Erro de validação
+  else Query válida
+    C -> S : getAllocationSummary(resourceId,type,from,to)
+    S -> Repo : findByResourceAndPeriod(resourceId,type,from,to)
+    Repo -> DB : query OperationPlans + operations
+    DB --> Repo : plans[]
+    Repo --> S : plans[]
+    S -> S : aggregate durations + count ops\n(only saved plans)
+    S --> C : AllocationSummaryDTO
+    C --> SPA : 200 OK AllocationSummaryDTO
+    SPA --> Op : Mostrar resultados
+  end
+end
+
+@enduml

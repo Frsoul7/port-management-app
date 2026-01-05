@@ -1,0 +1,48 @@
+@startuml
+title Sequence Diagram – Update Physical Resource
+
+actor "Logistics Operator" as Operator
+participant "API Client" as Client
+participant "PhysicalResourcesController" as C
+participant "PhysicalResourceRepository" as Repo
+participant "QualificationRepository" as QRepo
+participant "PortDbContext" as Db
+database "EF (InMemory)" as Store
+
+Operator -> Client : PUT /api/resources/{code} {body}
+Client -> C : Update(code, dto)
+activate C
+
+C -> Repo : GetByCodeAsync(code, includeQualifications: true)
+activate Repo
+Repo -> Db : query
+Db -> Store : resource
+Store --> Db : resource
+Db --> Repo : resource
+deactivate Repo
+
+C -> C : Reject attempts to modify Code
+C -> QRepo : SearchAsync(dto.RequiredQualificationIds)
+activate QRepo
+QRepo -> Db : query quals
+Db -> Store : quals[]
+Store --> Db : quals[]
+Db --> QRepo : quals[]
+deactivate QRepo
+
+C -> Repo : Update(entity with new values)
+activate Repo
+Repo -> Db : Update
+Db -> Store : UPDATE
+Store --> Db : ok
+Db --> Repo : ok
+deactivate Repo
+
+C -> Db : SaveChangesAsync()
+Db -> Store : commit
+Store --> Db : ok
+Db --> C : ok
+
+C --> Client : 200 OK + updated resource
+deactivate C
+@enduml

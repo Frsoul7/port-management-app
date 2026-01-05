@@ -1,0 +1,53 @@
+@startuml
+title SSD – Update Physical Resource
+
+actor "Logistics Operator" as Operator
+participant "API Client" as Client
+participant "PhysicalResourcesController" as C
+participant "PhysicalResourceRepository" as Repo
+participant "QualificationRepository" as QRepo
+participant "PortDbContext" as Db
+database "EF (InMemory)" as Store
+
+Operator -> Client : PUT /api/resources/{code} {payload}
+Client -> C : Update(code, dto)
+activate C
+
+C -> Repo : GetByCodeAsync(code, includeQualifications: true)
+activate Repo
+Repo -> Db : query resource by code
+Db -> Store : query
+Store --> Db : resource
+Db --> Repo : resource
+deactivate Repo
+
+alt not found
+  C --> Client : 404 Not Found
+else
+  C -> C : Ensure dto.Code not provided / not changed
+  C -> QRepo : SearchAsync(dto.RequiredQualificationIds)
+  activate QRepo
+  QRepo -> Db : query quals
+  Db -> Store : query
+  Store --> Db : quals[]
+  Db --> QRepo : quals[]
+  deactivate QRepo
+
+  C -> C : Validate capacity fields per type; validate area existence if provided
+  C -> Repo : Update(resource)
+  activate Repo
+  Repo -> Db : Update(entity)
+  Db -> Store : UPDATE
+  Store --> Db : ok
+  Db --> Repo : ok
+  deactivate Repo
+
+  C -> Db : SaveChangesAsync()
+  Db -> Store : commit
+  Store --> Db : ok
+  Db --> C : ok
+
+  C --> Client : 200 OK + updated resource
+end
+deactivate C
+@enduml

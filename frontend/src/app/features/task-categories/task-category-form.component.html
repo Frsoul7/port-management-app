@@ -1,0 +1,116 @@
+<div class="modal-overlay" (click)="onCancel()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ modalTitle }}</h2>
+      <button class="close-button" (click)="onCancel()">&times;</button>
+    </div>
+
+    <form (ngSubmit)="onSubmit()" #categoryForm="ngForm">
+      <div class="modal-body">
+        @if (errorMessage()) {
+          <div class="alert-error">
+            {{ errorMessage() }}
+          </div>
+        }
+
+        <!-- Category Code (shown only when editing) -->
+        @if (category) {
+          <div class="form-group">
+            <label>Category Code</label>
+            <input
+              type="text"
+              [value]="category.categoryCode"
+              disabled
+              class="input-disabled" />
+            <small class="form-help">Category code cannot be changed</small>
+          </div>
+        }
+
+        <!-- Category Name -->
+        <div class="form-group">
+          <label for="categoryName">Category Name *</label>
+          <input
+            type="text"
+            id="categoryName"
+            name="categoryName"
+            [(ngModel)]="formData.categoryName"
+            [class.input-error]="validationErrors.categoryName"
+            maxlength="100"
+            placeholder="e.g., Security Check, Hull Maintenance"
+            required />
+          @if (validationErrors.categoryName) {
+            <span class="error-text">{{ validationErrors.categoryName }}</span>
+          }
+          <small class="form-help">Maximum 100 characters</small>
+        </div>
+
+        <!-- Description -->
+        <div class="form-group">
+          <label for="description">Description *</label>
+          <textarea
+            id="description"
+            name="description"
+            [(ngModel)]="formData.description"
+            [class.input-error]="validationErrors.description"
+            rows="4"
+            maxlength="500"
+            placeholder="Provide a clear description of this task category"
+            required></textarea>
+          @if (validationErrors.description) {
+            <span class="error-text">{{ validationErrors.description }}</span>
+          }
+          <small class="form-help">Maximum 500 characters ({{ formData.description.length }}/500)</small>
+        </div>
+
+        <!-- Default Duration Hours -->
+        <div class="form-group">
+          <label for="defaultDurationHours">Default Duration (hours)</label>
+          <input
+            type="number"
+            id="defaultDurationHours"
+            name="defaultDurationHours"
+            [(ngModel)]="formData.defaultDurationHours"
+            [class.input-error]="validationErrors.defaultDurationHours"
+            min="0.1"
+            max="168"
+            step="0.5"
+            placeholder="e.g., 2.5" />
+          @if (validationErrors.defaultDurationHours) {
+            <span class="error-text">{{ validationErrors.defaultDurationHours }}</span>
+          }
+          <small class="form-help">Optional: Typical duration for this task type (0.1 to 168 hours)</small>
+        </div>
+
+        <!-- Expected Impact -->
+        <div class="form-group">
+          <label for="expectedImpact">Expected Impact</label>
+          <textarea
+            id="expectedImpact"
+            name="expectedImpact"
+            [(ngModel)]="formData.expectedImpact"
+            [class.input-error]="validationErrors.expectedImpact"
+            rows="2"
+            maxlength="200"
+            placeholder="e.g., May delay cargo operations by 1-2 hours"></textarea>
+          @if (validationErrors.expectedImpact) {
+            <span class="error-text">{{ validationErrors.expectedImpact }}</span>
+          }
+          <small class="form-help">Optional: Expected impact on operations ({{ formData.expectedImpact.length }}/200)</small>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" (click)="onCancel()" [disabled]="loading()">
+          Cancel
+        </button>
+        <button type="submit" class="btn-primary" [disabled]="loading() || !categoryForm.valid">
+          @if (loading()) {
+            Saving...
+          } @else {
+            {{ submitButtonText }}
+          }
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

@@ -1,0 +1,115 @@
+@startuml
+title CD - US 4.1.2 Generate Operation Plan (Domain + Integration)
+
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+
+enum OperationPlanStatus {
+  GENERATED
+  APPROVED
+  IN_EXECUTION
+  COMPLETED
+  CANCELLED
+}
+
+enum PlanningAlgorithm {
+  OPTIMAL
+  WEIGHTED
+  MULTI_CRANES
+}
+
+class OperationPlan {
+  +operationPlanId: string
+  +targetDate: Date
+  +algorithm: PlanningAlgorithm
+  +status: OperationPlanStatus
+  +createdBy: string
+  +createdAt: Date
+  +totalDelay: number
+  +operations: PlannedOperation[]
+  +auditLog: AuditEntry[]
+  
+  +constructor(props)
+  -validateNoPastDate()
+  -validateOperations()
+}
+
+class PlannedOperation {
+  +vvnId: string
+  +vesselImo: string
+  +operationType: OperationType
+  +assignedDock: string
+  +assignedCranes: string[]
+  +assignedStaff: string[]
+  +plannedStart: Date
+  +plannedEnd: Date
+  +containersToProcess: number
+}
+
+class AuditEntry {
+  +timestamp: Date
+  +userId: string
+  +userName: string
+  +action: string
+  +changes: Change[]
+  +reason: string
+}
+
+interface IOperationPlanRepository {
+  +save(plan: OperationPlan): OperationPlan
+  +findById(id: string): OperationPlan
+  +findByTargetDate(date: Date): OperationPlan
+}
+
+class MongoOperationPlanRepository {
+  +save(plan: OperationPlan): OperationPlan
+  +findByTargetDate(date: Date): OperationPlan
+}
+
+interface ICoreBackendClient {
+  +getApprovedVvnsForDate(date: Date): VvnDto[]
+}
+
+interface IPlanningClient {
+  +generatePlan(date, algorithm, vvns): PlanningResult
+}
+
+class OperationPlanService {
+  -repo: IOperationPlanRepository
+  -coreClient: ICoreBackendClient
+  -planningClient: IPlanningClient
+  
+  +generatePlanSimple(targetDate, algorithm, userId, vvnIds?)
+}
+
+OperationPlan "1" o-- "*" PlannedOperation
+OperationPlan "1" o-- "*" AuditEntry
+OperationPlan ..> OperationPlanStatus
+OperationPlan ..> PlanningAlgorithm
+
+OperationPlanService --> IOperationPlanRepository : depends on (DIP)
+OperationPlanService --> ICoreBackendClient : depends on (DIP)
+OperationPlanService --> IPlanningClient : depends on (DIP)
+
+IOperationPlanRepository <|.. MongoOperationPlanRepository
+ICoreBackendClient <|.. CoreBackendClient
+IPlanningClient <|.. PlanningClient
+
+note right of OperationPlan
+  Business Rules:
+  • Cannot create plan for past dates
+  • Operations array must not be empty
+  • Total delay must be >= 0
+  • Audit log tracks creation event
+end note
+
+note bottom of OperationPlanService
+  Orchestration:
+  1. Check for duplicate plan (repo)
+  2. Fetch VVNs (Core Backend)
+  3. Generate plan (Planning Service)
+  4. Create domain entity
+  5. Save to repository
+end note
+
+@enduml

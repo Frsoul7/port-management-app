@@ -1,0 +1,212 @@
+@startuml DomainModel_Updated
+
+hide methods
+skinparam classBackgroundColor whitesmoke
+skinparam ArrowColor black
+skinparam packageBackgroundColor gainsboro
+skinparam classAttributeIconSize 0
+left to right direction
+
+' ============================
+' Aggregates & Core Packages
+' ============================
+
+package "<<aggregate>> Organizations" {
+  entity Organization <<entity>> <<root>> {
+    + OrganizationId : OrganizationId
+    + Identifier : string
+    + LegalName : string
+    + AlternativeName : string
+    + AddressLine : string
+    + TaxNumber : string
+    + Type : OrganizationType
+  }
+
+  class OrganizationId <<(V,orange) value object>>
+  enum OrganizationType { 
+    SHIPPING_AGENT
+    PORT_AUTHORITY
+    LOGISTICS_OPERATOR
+}
+
+  entity Representative <<entity>> {
+    + Id : Guid
+    + RepresentativeId : RepresentativeId
+    + Name : string
+    + CitizenId : string
+    + Nationality : string
+    + Email : string
+    + Phone : string
+    + IsActive : bool
+    + CreatedAt : DateTime
+  }
+  class RepresentativeId <<(V,orange) value object>>
+}
+
+Organization "1" o-- "0..*" Representative : has >
+
+package "<<aggregate>> Users" {
+  entity User <<entity>> <<root>> {
+    + UserId : UserId
+    + Name : string
+    + Email : string
+  }
+  class UserId <<(V,orange) value object>>
+}
+
+Organization "1" <.. "0..*" User : employs >
+
+package "<<aggregate>> Vessels" {
+  entity Vessel <<entity>> <<root>> {
+    + ImoNumber : string
+    + Name : string
+    + CapacityTEU : int?
+    + VesselTypeId : string
+    + OwnerOrganizationId : OrganizationId
+  }
+  entity VesselType <<entity>> <<root>> {
+    + VesselTypeId : string
+    + Name : string
+    + Description : string?
+    + CapacityTEU : int?
+    + MaxRows : int?
+    + MaxTiers : int?
+    + MaxBays : int?
+  }
+}
+
+Vessel "*" --> "1" VesselType : type >
+Vessel "*" --> "1" Organization : owner >
+
+package "<<aggregate>> Docks" {
+  entity Dock <<entity>> <<root>> {
+    + Code : string
+    + Name : string
+    + Location : string
+    + LengthM : double
+    + DepthM : double
+    + MaxDraftM : double
+  }
+}
+
+package "<<aggregate>> StorageAreas" {
+  entity StorageArea <<entity>> <<root>> {
+    + StorageAreaId : string
+    + Name : string
+    + Location : string
+    + MaxCapacityTEU : int
+    + CurrentOccupancyTEU : int
+    + ServesAllDocks : bool
+  }
+}
+
+Dock "0..*" -- "0..*" StorageArea : serves
+
+package "<<aggregate>> DockAssignments" {
+  entity DockAssignment <<entity>> <<root>> {
+    + DockAssignmentId : Guid
+    + StartUtc : DateTime
+    + EndUtc : DateTime
+    + Status : DockAssignmentStatus
+  }
+
+  enum DockAssignmentStatus { 
+    SCHEDULED 
+    IN_PROGRESS
+    COMPLETED
+    CANCELLED
+}
+}
+
+DockAssignment "*" --> "1" Dock : assigned to >
+
+package "<<aggregate>> Visits (VVN)" {
+  enum VVNState { 
+    IN_PROGRESS 
+    SUBMITTED
+    APPROVED
+    REJECTED 
+}
+  
+  enum VisitPurpose { 
+    LOAD
+    UNLOAD
+    BOTH
+    MAINTENANCE 
+    }
+
+  entity VesselVisitNotification <<entity>> <<root>> {
+    + VvnGuid : Guid
+    + VvnId : string
+    + State : VVNState
+    + VisitPurpose : VisitPurpose
+    + VesselImo : string
+    + Eta : DateTime
+    + Etd : DateTime
+    + CreatedAt : DateTime
+    + SubmittedAt : DateTime?
+    + ApprovedAt : DateTime?
+    + RejectedAt : DateTime?
+    + RejectionReason : string?
+
+    + LoadingCount : int
+    + UnloadingCount : int
+
+    + CaptainName : string
+    + CrewCount : int
+  }
+
+  ' Manifests
+  abstract class CargoManifest {
+    + Id : Guid
+    + VvnGuid : Guid
+  }
+  class LoadingCargoManifest <<(S,lightblue) subclass>>
+  class UnloadingCargoManifest <<(S,lightblue) subclass>>
+
+  entity ManifestEntry <<entity>> {
+    + Id : Guid
+    + ContainerUniqueId : string
+    + HazardousGoods : bool
+    + ContainerBayNr : int
+    + ContainerRowNr : int
+    + ContainerTierNr : int
+    + GoodsDescription : string?
+  }
+
+  entity CrewMember <<entity>> {
+    + CrewMemberId : Guid
+    + Name : string
+    + CitizenId : string
+    + Nationality : string
+    + VesselVisitNotificationId : Guid
+  }
+}
+
+' Relations around VVN
+VesselVisitNotification "*" <-- "1" Vessel : for vessel (by IMO) >
+VesselVisitNotification "1" o-- "0..1" LoadingCargoManifest : has >
+VesselVisitNotification "1" o-- "0..1" UnloadingCargoManifest : has >
+LoadingCargoManifest "1" o-- "0..*" ManifestEntry : entries >
+UnloadingCargoManifest "1" o-- "0..*" ManifestEntry : entries >
+VesselVisitNotification "1" o-- "0..*" CrewMember : crew >
+
+VesselVisitNotification "0..1" --> "1" DockAssignment : scheduled on >
+
+' User audit relationships
+VesselVisitNotification "0..*" --> "0..1" User : CreatedBy/SubmittedBy/ApprovedBy/RejectedBy
+
+' ============================
+' Shared Utilities (not aggregates) — optional visualization
+' ============================
+package "Shared" {
+  class ImoValidator <<utility>>
+  class Iso6346 <<utility>>
+  class JsonDateTimeConverter <<utility>>
+}
+
+Vessel ..> ImoValidator : validates IMO
+ManifestEntry ..> Iso6346 : validates container code
+VesselVisitNotification ..> JsonDateTimeConverter : JSON formatting
+
+@enduml

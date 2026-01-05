@@ -1,0 +1,64 @@
+@startuml
+title System Diagram – US 2.2.4 Register & Update Storage Areas
+
+actor "Port Authority Officer" as Officer
+
+' --- Client Layer ---
+rectangle "Client Layer" {
+  [Scalar UI / API Client] as ApiClient
+}
+
+' --- Web API Layer ---
+node "Web API" {
+  [StorageAreasController] as C_SA
+}
+
+' --- Application Layer ---
+package "Application DTOs" {
+  [CreateStorageAreaDto]
+  [UpdateStorageAreaDto]
+  [StorageAreaResponseDto]
+}
+
+' --- Infrastructure Layer ---
+package "Infrastructure" {
+  [PortDbContext] as Db
+  [StorageAreaRepository] as Repo
+  database "EF Core (InMemory)" as Store
+}
+
+' --- Domain Layer ---
+package "Domain" {
+  [StorageArea]
+  [StorageAreaType]
+  [YardSpec]
+  [WarehouseSpec]
+  [Dock]
+  [DockStorageDistance]
+}
+
+' --- Interactions ---
+Officer --> ApiClient : uses API UI
+ApiClient --> C_SA : HTTP\nPOST / PUT / GET /api/storageareas
+C_SA --> Repo : queries
+C_SA --> Db : CRUD via EF Core
+Repo --> Db : uses
+Db --> Store : persist data
+
+' DTO relationships
+C_SA ..> CreateStorageAreaDto
+C_SA ..> UpdateStorageAreaDto
+C_SA ..> StorageAreaResponseDto
+
+' Persistence model
+Db ..> StorageArea
+Db ..> Dock
+Db ..> DockStorageDistance
+
+' Domain relationships
+StorageArea --> StorageAreaType : has type
+StorageArea *-- YardSpec : owns (0..1)
+StorageArea *-- WarehouseSpec : owns (0..1)
+StorageArea "*" -- "*" Dock : many-to-many
+
+@enduml

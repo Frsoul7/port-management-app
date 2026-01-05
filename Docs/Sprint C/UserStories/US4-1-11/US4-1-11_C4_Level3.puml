@@ -1,0 +1,32 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+title C4 L3 - Components (OEM API) (US 4.1.11 - Complete VVE)
+
+Container_Boundary(oem, "OEM API (Express)") {
+
+  Component(auth, "Auth Middleware", "JWT/OIDC Middleware", "Validates tokens and enforces RBAC/ABAC")
+  Component(vveController, "VVE Controller", "Express Controller", "Handles HTTP requests for VVE lifecycle actions")
+  Component(vveService, "VVE Application Service", "Application Service", "Orchestrates unberth and completion use cases")
+  Component(vveRepo, "VVE Repository Adapter", "Repository", "Loads and persists VVE aggregates")
+  Component(logger, "Logging Adapter", "Logger", "Structured logs for audit/debug")
+}
+
+ContainerDb(oemDb, "OEM Database", "MongoDB", "Stores VVEs and related data")
+
+Rel(vveController, auth, "Uses", "middleware")
+Rel(vveController, vveService, "Invokes")
+Rel(vveService, vveRepo, "Loads/updates VVE")
+Rel(vveRepo, oemDb, "Reads/Writes", "MongoDB driver")
+Rel(vveController, logger, "Logs request/response")
+Rel(vveService, logger, "Logs business events")
+
+note right of vveService
+Core business rules enforced in the Domain:
+- must be IN_PROGRESS
+- unberth must exist before completion
+- departure > unberth
+- all cargo operations finished
+- after completion: read-only (except admin correction)
+end note
+
+@enduml

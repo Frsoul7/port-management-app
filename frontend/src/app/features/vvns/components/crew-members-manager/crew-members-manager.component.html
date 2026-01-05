@@ -1,0 +1,124 @@
+<div class="crew-manager" *ngIf="vvn">
+  <div class="section-header">
+    <h3>Hazardous Cargo Handlers</h3>
+    <button
+      *ngIf="editable && !showAddForm"
+      class="btn btn-sm btn-primary"
+      (click)="toggleAddForm()"
+      [disabled]="saving">
+      + Add Handler
+    </button>
+  </div>
+
+  <!-- Warning when hazardous goods exist but no crew members -->
+  <div class="alert alert-warning" *ngIf="needsCrewMembers">
+    <strong>Warning:</strong> This VVN contains hazardous cargo. You must specify at least one crew member who will handle these goods before submission.
+  </div>
+
+  <!-- Info when no hazardous goods -->
+  <div class="alert alert-info" *ngIf="!hasHazardousGoods && crewMembers.length === 0">
+    <strong>Info:</strong> No hazardous cargo handlers required. This section is only needed when containers with hazardous goods are added.
+  </div>
+
+  <!-- Add crew member form -->
+  <div class="add-form" *ngIf="showAddForm">
+    <h4>Add Hazardous Cargo Handler</h4>
+    <form (ngSubmit)="handleAddMember()">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="memberName">Name *</label>
+          <input
+            id="memberName"
+            type="text"
+            [(ngModel)]="formData.name"
+            name="name"
+            placeholder="Full name"
+            [disabled]="saving"
+            [class.error]="validationErrors['name']"
+          />
+          <span class="error-message" *ngIf="validationErrors['name']">{{ validationErrors['name'] }}</span>
+        </div>
+
+        <div class="form-group">
+          <label for="memberCitizenId">Citizen ID *</label>
+          <input
+            id="memberCitizenId"
+            type="text"
+            [(ngModel)]="formData.citizenId"
+            name="citizenId"
+            placeholder="e.g., 123456789"
+            [disabled]="saving"
+            [class.error]="validationErrors['citizenId']"
+          />
+          <span class="error-message" *ngIf="validationErrors['citizenId']">{{ validationErrors['citizenId'] }}</span>
+        </div>
+
+        <div class="form-group">
+          <label for="memberNationality">Nationality *</label>
+          <input
+            id="memberNationality"
+            type="text"
+            [(ngModel)]="formData.nationality"
+            name="nationality"
+            placeholder="e.g., PT, US"
+            maxlength="2"
+            [disabled]="saving"
+            [class.error]="validationErrors['nationality']"
+          />
+          <span class="error-message" *ngIf="validationErrors['nationality']">{{ validationErrors['nationality'] }}</span>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" (click)="cancelAddForm()" [disabled]="saving">
+          Cancel
+        </button>
+        <button type="submit" class="btn btn-primary" [disabled]="saving">
+          {{ saving ? 'Adding...' : 'Add Handler' }}
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Crew members list -->
+  <div class="crew-list" *ngIf="crewMembers.length > 0">
+    <table class="crew-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Citizen ID</th>
+          <th>Nationality</th>
+          <th *ngIf="editable" class="actions-col">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let member of crewMembers; let i = index">
+          <td>{{ member.name }}</td>
+          <td>{{ member.citizenId }}</td>
+          <td>{{ member.nationality }}</td>
+          <td *ngIf="editable" class="actions-col">
+            <button
+              class="btn btn-sm btn-danger"
+              (click)="handleRemoveMember(i)"
+              [disabled]="saving"
+              title="Remove handler">
+              Remove
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Empty state when no crew members and no hazardous goods -->
+  <div class="empty-state" *ngIf="crewMembers.length === 0 && !needsCrewMembers && !showAddForm && hasHazardousGoods">
+    <p>No hazardous cargo handlers specified yet.</p>
+    <button
+      *ngIf="editable"
+      class="btn btn-primary"
+      (click)="toggleAddForm()"
+      [disabled]="saving">
+      Add First Handler
+    </button>
+  </div>
+</div>

@@ -1,0 +1,41 @@
+@startuml
+title C4 Container – US 2.2.9 Reopen VVN
+
+actor "Shipping Agent\nRepresentative" as Agent
+
+node "Client Layer" {
+  [UI / API Client] as Client
+}
+
+node "Web API" {
+  [VesselVisitNotificationsController] as Ctl
+}
+
+node "Application Layer" {
+  [VesselVisitService] as Svc
+  [CallerContext] as Auth
+}
+
+database "Persistence" as Db
+node "Domain" as Dom {
+  [VesselVisitNotification] as Vvn
+  [DecisionLog] as Log
+}
+
+Agent --> Client : reopen rejected VVN
+Client --> Ctl : POST reopen
+Ctl --> Auth : verify organization
+Ctl --> Svc : reopen VVN
+Svc --> Db : persist state change
+Svc ..> Vvn : REJECTED → IN_PROGRESS
+Vvn ..> Log : preserve rejection history
+
+note right of Vvn
+  Reopen rules:
+  - Only REJECTED VVNs
+  - Same org as submitter
+  - Preserves rejection reason
+  - Becomes editable again
+end note
+
+@enduml

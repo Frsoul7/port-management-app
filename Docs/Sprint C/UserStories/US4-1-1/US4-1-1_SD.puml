@@ -1,0 +1,84 @@
+@startuml
+title SD - US 4.1.1 OEM Module API Request (White-box)
+
+skinparam shadowing false
+skinparam responseMessageBelowArrow true
+
+actor "External Client\n(SPA / API Consumer)" as Client
+control "Express App" as App
+control "CORS Middleware" as CORS
+control "JSON Parser" as JSON
+control "Auth Middleware" as Auth
+control "Router" as Router
+control "Validation Middleware" as Valid
+control "Controller" as Controller
+control "Application Service" as Service
+entity "Domain Entity" as Domain
+entity "Repository" as Repo
+database "MongoDB" as DB
+control "Error Middleware" as Error
+control "Logger" as Log
+
+== Typical REST API Request Flow ==
+Client -> App : HTTP Request\nPOST /api/v1/operation-plans/generate\nAuthorization: Bearer <JWT>\n{ targetDate, algorithm }
+
+App -> CORS : Check origin
+alt Origin not allowed
+  CORS --> Client : 403 Forbidden
+else Origin allowed
+  CORS -> JSON : Parse JSON body
+  JSON -> Log : Log request
+  Log -> Auth : Validate JWT
+  
+  alt Invalid/missing token
+    Auth -> Error : Authentication error
+    Error -> Log : Log error
+    Error --> Client : 401 Unauthorized\n{ error: "Invalid token" }
+  else Valid token
+    Auth -> Auth : Decode JWT payload\n{ sub, email, role }
+    Auth -> Router : Attach user to req.user
+    Router -> Valid : Apply validation rules
+    
+    alt Validation fails
+      Valid -> Error : Validation error
+      Error --> Client : 400 Bad Request\n{ errors: [...] }
+    else Validation passes
+      Valid -> Controller : Invoke controller method
+      Controller -> Service : Delegate to service
+      Service -> Domain : Create/validate entity
+      
+      alt Domain validation error
+        Domain --> Service : DomainError
+        Service -> Error : Business rule violation
+        Error --> Client : 422 Unprocessable Entity
+      else Valid
+        Domain --> Service : Valid entity
+        Service -> Repo : Save/query entity
+        Repo -> DB : MongoDB operation
+        DB --> Repo : Result
+        Repo --> Service : Domain entity
+        Service --> Controller : DTO
+        Controller -> Log : Log success
+        Controller --> Client : 201 Created\n{ success: true, data: {...} }
+      end
+    end
+  end
+end
+
+note right of Auth
+  JWT Validation:
+  • Extract token from header
+  • Verify signature with JWT_SECRET
+  • Decode payload
+  • Attach user to request
+end note
+
+note right of Error
+  Global Error Handler:
+  • Catches all errors
+  • Maps to HTTP status
+  • Formats consistent response
+  • Logs with context
+end note
+
+@enduml

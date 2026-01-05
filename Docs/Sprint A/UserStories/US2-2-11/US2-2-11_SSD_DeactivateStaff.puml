@@ -1,0 +1,26 @@
+@startuml
+title SSD – Deactivate Staff Member (US 2.2.11)
+
+actor "Logistics Operator" as Operator
+participant "System" as System
+
+Operator -> System : Deactivate Staff Member (staffId)
+alt Staff member not found
+  System --> Operator : Error: Staff member not found
+else Already inactive
+  System --> Operator : Error: Staff member already inactive
+else Success
+  System --> Operator : Staff member deactivated\n(ActivityStatus = INACTIVE)
+end
+
+== Reactivate Staff Member ==
+Operator -> System : Reactivate Staff Member (staffId)
+alt Staff member not found
+  System --> Operator : Error: Staff member not found
+else Already active
+  System --> Operator : Error: Staff member already active
+else Success
+  System --> Operator : Staff member reactivated\n(ActivityStatus = ACTIVE)
+end
+
+@enduml

@@ -1,0 +1,39 @@
+@startuml
+title SSD – Create / Update Staff Member (US 2.2.11)
+
+actor "Logistics Operator" as Operator
+participant "System" as System
+
+== Create Staff Member ==
+Operator -> System : Create Staff Member\n(mecanographicNumber, shortName,\n email, phone, status, startHour, endHour)
+alt Mecanographic number already exists
+  System --> Operator : Error: Duplicate mecanographic number
+else Invalid data (email, phone, hours)
+  System --> Operator : Error: Validation failed
+else Success
+  System --> Operator : Staff member created (id)
+end
+
+== Add Qualifications ==
+loop For each qualification
+  Operator -> System : Add Qualification\n(staffId, qualificationId)
+  alt Qualification already assigned
+    System --> Operator : Error: Duplicate qualification
+  else Success
+    System --> Operator : Qualification added
+  end
+end
+
+== Update Staff Member ==
+Operator -> System : Update Staff Member\n(staffId, email?, phone?, status?,\n startHour?, endHour?)
+alt Invalid data
+  System --> Operator : Error: Validation failed
+else Success
+  System --> Operator : Staff member updated
+end
+
+== Search/Filter Staff ==
+Operator -> System : Search Staff\n(mecanographicNumber?, name?,\n status?, qualifications?)
+System --> Operator : List of matching staff members
+
+@enduml

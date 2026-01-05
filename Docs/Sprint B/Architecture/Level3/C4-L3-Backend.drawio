@@ -1,0 +1,361 @@
+<mxfile host="Electron" modified="2025-11-23T23:10:00.000Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/22.1.11 Chrome/114.0.5735.289 Electron/25.9.8 Safari/537.36" etag="C4L3Backend" version="22.1.11" type="device">
+  <diagram name="Level 3 - Backend Container" id="C4L3Backend">
+    <mxGraphModel dx="1422" dy="820" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <!-- System Boundary -->
+        <mxCell id="backend_boundary" value="Backend Container (.NET 9.0)" style="whiteSpace=wrap;html=1;fillColor=none;strokeColor=#000000;strokeWidth=2;align=left;verticalAlign=top;fontSize=14;fontStyle=1;dashed=1;shadow=1;" parent="1" vertex="1">
+          <mxGeometry x="40" y="40" width="1320" height="800" as="geometry" />
+        </mxCell>
+        
+        <!-- Components with Module Icon -->
+        <mxCell id="comp_controllers" value="&lt;b&gt;Controllers&lt;/b&gt;&lt;br&gt;«component» «container (C4)»&lt;br&gt;&lt;br&gt;11 REST API Controllers:&lt;br&gt;• VesselsController&lt;br&gt;• VesselTypesController&lt;br&gt;• VesselVisitNotificationsController&lt;br&gt;• OrganizationsController&lt;br&gt;• DocksController&lt;br&gt;• StorageAreasController&lt;br&gt;• HumanResourcesController&lt;br&gt;• PhysicalResourcesController&lt;br&gt;• QualificationsController&lt;br&gt;• UsersController&lt;br&gt;• AuthenticationController" style="html=1;dropTarget=0;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;align=center;verticalAlign=top;fontSize=11;spacingTop=10;" parent="1" vertex="1">
+          <mxGeometry x="900" y="80" width="420" height="240" as="geometry" />
+        </mxCell>
+        <mxCell id="comp_controllers_module" value="" style="shape=module;jettyWidth=8;jettyHeight=4;" parent="comp_controllers" vertex="1">
+          <mxGeometry x="1" width="20" height="20" relative="1" as="geometry">
+            <mxPoint x="-27" y="7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="comp_services" value="&lt;b&gt;Services&lt;/b&gt;&lt;br&gt;«component» «container (C4)»&lt;br&gt;&lt;br&gt;11 Application Services:&lt;br&gt;• VesselService&lt;br&gt;• VesselTypeService&lt;br&gt;• VesselVisitService&lt;br&gt;• OrganizationService&lt;br&gt;• DockService&lt;br&gt;• StorageAreaService&lt;br&gt;• StaffMemberService&lt;br&gt;• PhysicalResourceService&lt;br&gt;• QualificationService&lt;br&gt;• UserService&lt;br&gt;• AuthenticationService&lt;br&gt;• SmtpEmailService" style="html=1;dropTarget=0;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;align=center;verticalAlign=top;fontSize=11;spacingTop=10;" parent="1" vertex="1">
+          <mxGeometry x="900" y="360" width="420" height="240" as="geometry" />
+        </mxCell>
+        <mxCell id="comp_services_module" value="" style="shape=module;jettyWidth=8;jettyHeight=4;" parent="comp_services" vertex="1">
+          <mxGeometry x="1" width="20" height="20" relative="1" as="geometry">
+            <mxPoint x="-27" y="7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="comp_dtos" value="&lt;b&gt;DTOs&lt;/b&gt;&lt;br&gt;«component» «container (C4)»&lt;br&gt;&lt;br&gt;Data Transfer Objects:&lt;br&gt;• VesselDto, CreateVesselDto&lt;br&gt;• VesselTypeDto&lt;br&gt;• VvnSummaryResponse&lt;br&gt;• VvnDetailResponse&lt;br&gt;• OrganizationDto&lt;br&gt;• DockDto, StorageAreaDto&lt;br&gt;• StaffMemberDto&lt;br&gt;• UserDto&lt;br&gt;• AuthenticationResult" style="html=1;dropTarget=0;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;align=center;verticalAlign=top;fontSize=11;spacingTop=10;" parent="1" vertex="1">
+          <mxGeometry x="80" y="80" width="280" height="240" as="geometry" />
+        </mxCell>
+        <mxCell id="comp_dtos_module" value="" style="shape=module;jettyWidth=8;jettyHeight=4;" parent="comp_dtos" vertex="1">
+          <mxGeometry x="1" width="20" height="20" relative="1" as="geometry">
+            <mxPoint x="-27" y="7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="comp_mappers" value="&lt;b&gt;Mappers&lt;/b&gt;&lt;br&gt;«component» «container (C4)»&lt;br&gt;&lt;br&gt;Entity ↔ DTO Conversion:&lt;br&gt;• VesselMapper&lt;br&gt;• VesselTypeMapper&lt;br&gt;• VvnMapper&lt;br&gt;• OrganizationMapper&lt;br&gt;• DockMapper&lt;br&gt;• StorageAreaMapper&lt;br&gt;• StaffMemberMapper&lt;br&gt;• PhysicalResourceMapper&lt;br&gt;• QualificationMapper" style="html=1;dropTarget=0;whiteSpace=wrap;fillColor=#fff2cc;strokeColor=#d6b656;align=center;verticalAlign=top;fontSize=11;spacingTop=10;" parent="1" vertex="1">
+          <mxGeometry x="420" y="80" width="280" height="240" as="geometry" />
+        </mxCell>
+        <mxCell id="comp_mappers_module" value="" style="shape=module;jettyWidth=8;jettyHeight=4;" parent="comp_mappers" vertex="1">
+          <mxGeometry x="1" width="20" height="20" relative="1" as="geometry">
+            <mxPoint x="-27" y="7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="comp_repositories" value="&lt;b&gt;Repositories&lt;/b&gt;&lt;br&gt;«component» «container (C4)»&lt;br&gt;&lt;br&gt;Data Access Layer:&lt;br&gt;• VesselRepository&lt;br&gt;• VesselTypeRepository&lt;br&gt;• VesselVisitNotificationRepository&lt;br&gt;• OrganizationRepository&lt;br&gt;• UserRepository&lt;br&gt;• DockRepository&lt;br&gt;• StorageAreaRepository&lt;br&gt;• StaffMemberRepository&lt;br&gt;• PhysicalResourceRepository&lt;br&gt;• QualificationRepository&lt;br&gt;• BaseRepository&lt;T&gt;" style="html=1;dropTarget=0;whiteSpace=wrap;fillColor=#fff2cc;strokeColor=#d6b656;align=center;verticalAlign=top;fontSize=11;spacingTop=10;" parent="1" vertex="1">
+          <mxGeometry x="80" y="360" width="340" height="240" as="geometry" />
+        </mxCell>
+        <mxCell id="comp_repositories_module" value="" style="shape=module;jettyWidth=8;jettyHeight=4;" parent="comp_repositories" vertex="1">
+          <mxGeometry x="1" width="20" height="20" relative="1" as="geometry">
+            <mxPoint x="-27" y="7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="comp_persistence" value="&lt;b&gt;Persistence&lt;/b&gt;&lt;br&gt;«component» «container (C4)»&lt;br&gt;&lt;br&gt;Infrastructure:&lt;br&gt;• PortDbContext (14 DbSets)&lt;br&gt;• UnitOfWork&lt;br&gt;• 13 EF Core Configurations&lt;br&gt;• Value Object Converters" style="html=1;dropTarget=0;whiteSpace=wrap;fillColor=#fff2cc;strokeColor=#d6b656;align=center;verticalAlign=top;fontSize=11;spacingTop=10;" parent="1" vertex="1">
+          <mxGeometry x="460" y="360" width="340" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="comp_persistence_module" value="" style="shape=module;jettyWidth=8;jettyHeight=4;" parent="comp_persistence" vertex="1">
+          <mxGeometry x="1" width="20" height="20" relative="1" as="geometry">
+            <mxPoint x="-27" y="7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="comp_domain" value="&lt;b&gt;Domain Models&lt;/b&gt;&lt;br&gt;«component» «container (C4)»&lt;br&gt;&lt;br&gt;Core Business Entities:&lt;br&gt;• Vessel, VesselType&lt;br&gt;• Organization, User&lt;br&gt;• VesselVisitNotification&lt;br&gt;• DockAssignment, Dock&lt;br&gt;• StorageArea, StaffMember&lt;br&gt;• PhysicalResource, Qualification&lt;br&gt;• CargoManifest, ManifestEntry&lt;br&gt;• Value Objects (OrganizationId, etc.)&lt;br&gt;• Repository Interfaces" style="html=1;dropTarget=0;whiteSpace=wrap;fillColor=#f8cecc;strokeColor=#b85450;align=center;verticalAlign=top;fontSize=11;spacingTop=10;" parent="1" vertex="1">
+          <mxGeometry x="80" y="640" width="380" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="comp_domain_module" value="" style="shape=module;jettyWidth=8;jettyHeight=4;" parent="comp_domain" vertex="1">
+          <mxGeometry x="1" width="20" height="20" relative="1" as="geometry">
+            <mxPoint x="-27" y="7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        
+        <mxCell id="comp_authorization" value="&lt;b&gt;Authorization Handlers&lt;/b&gt;&lt;br&gt;«component» «container (C4)»&lt;br&gt;&lt;br&gt;Policy-based Authorization:&lt;br&gt;• PortAuthorityHandler&lt;br&gt;• ShippingAgentHandler&lt;br&gt;• LogisticsPlannerHandler&lt;br&gt;&lt;br&gt;⚠️ Direct DB Access&lt;br&gt;(bypasses repositories)" style="html=1;dropTarget=0;whiteSpace=wrap;fillColor=#e1d5e7;strokeColor=#9673a6;align=center;verticalAlign=top;fontSize=11;spacingTop=10;" parent="1" vertex="1">
+          <mxGeometry x="500" y="640" width="260" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="comp_authorization_module" value="" style="shape=module;jettyWidth=8;jettyHeight=4;" parent="comp_authorization" vertex="1">
+          <mxGeometry x="1" width="20" height="20" relative="1" as="geometry">
+            <mxPoint x="-27" y="7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- External Systems -->
+        <mxCell id="ext_google" value="&lt;b&gt;Google OAuth API&lt;/b&gt;" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=3;fontSize=11;" parent="1" vertex="1">
+          <mxGeometry x="1000" y="660" width="100" height="100" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="ext_smtp" value="&lt;b&gt;SMTP API&lt;/b&gt;" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=3;fontSize=11;" parent="1" vertex="1">
+          <mxGeometry x="1180" y="660" width="100" height="100" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="ext_database" value="&lt;b&gt;Database API&lt;/b&gt;&lt;br&gt;(SQL Server)" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=3;fontSize=11;" parent="1" vertex="1">
+          <mxGeometry x="820" y="680" width="100" height="100" as="geometry" />
+        </mxCell>
+        
+        <!-- Title -->
+        <mxCell id="title" value="&lt;b&gt;C4 Level 3 - Component Diagram: Backend Container&lt;/b&gt;&lt;br&gt;Port Management System - .NET 9.0 Backend [Sprint B]" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=14;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="400" y="10" width="600" height="40" as="geometry" />
+        </mxCell>
+        
+        <!-- Legend -->
+        <mxCell id="legend" value="&lt;b&gt;Legend:&lt;/b&gt;&lt;br&gt;Blue = Presentation Layer&lt;br&gt;Green = Application Layer&lt;br&gt;Yellow = Infrastructure Layer&lt;br&gt;Red = Domain Layer&lt;br&gt;Purple = Authorization&lt;br&gt;White Circle = External System" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;align=left;verticalAlign=top;spacingLeft=10;spacingTop=10;fontSize=10;" parent="1" vertex="1">
+          <mxGeometry x="40" y="860" width="250" height="140" as="geometry" />
+        </mxCell>
+        
+        <!-- Note -->
+        <mxCell id="note" value="&lt;b&gt;Key Connections:&lt;/b&gt;&lt;br&gt;• Controllers → Services (only)&lt;br&gt;• Services → Mappers + Repositories&lt;br&gt;• Services → Google OAuth + SMTP&lt;br&gt;• Repositories → Persistence (DB Context)&lt;br&gt;• Authorization Handlers → DB Context (direct)&lt;br&gt;• Persistence → Database API&lt;br&gt;&lt;br&gt;All components use Domain Models" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;align=left;verticalAlign=top;spacingLeft=10;spacingTop=10;fontSize=10;" parent="1" vertex="1">
+          <mxGeometry x="320" y="860" width="300" height="140" as="geometry" />
+        </mxCell>
+        
+        <!-- API Connection Points (Provided Interfaces - Rectangles) -->
+        <mxCell id="api_services_provided" value="" style="shape=rectangle;fillColor=#000000;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="890" y="475" width="10" height="10" as="geometry" />
+        </mxCell>
+        <mxCell id="api_mappers_provided" value="" style="shape=rectangle;fillColor=#000000;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="700" y="195" width="10" height="10" as="geometry" />
+        </mxCell>
+        <mxCell id="api_repos_provided" value="" style="shape=rectangle;fillColor=#000000;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="420" y="475" width="10" height="10" as="geometry" />
+        </mxCell>
+        <mxCell id="api_persistence_provided" value="" style="shape=rectangle;fillColor=#000000;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="625" y="510" width="10" height="10" as="geometry" />
+        </mxCell>
+        <mxCell id="api_domain_provided" value="" style="shape=rectangle;fillColor=#000000;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="265" y="640" width="10" height="10" as="geometry" />
+        </mxCell>
+        <mxCell id="api_dtos_provided" value="" style="shape=rectangle;fillColor=#000000;strokeColor=#000000;" parent="1" vertex="1">
+          <mxGeometry x="360" y="195" width="10" height="10" as="geometry" />
+        </mxCell>
+        
+        <!-- Connections: Controllers → Services -->
+        <mxCell id="conn_controllers_services_require" value="" style="endArrow=oval;endFill=0;endSize=10;strokeWidth=2;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;" parent="1" source="comp_controllers" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="900" y="200" as="sourcePoint" />
+            <mxPoint x="900" y="480" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="870" y="200" />
+              <mxPoint x="870" y="480" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="conn_services_provide" value="" style="endArrow=none;html=1;endFill=0;strokeWidth=2;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" target="api_services_provided" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="900" y="480" as="sourcePoint" />
+            <mxPoint x="900" y="480" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- Connections: Services → Mappers -->
+        <mxCell id="conn_services_mappers_require" value="" style="endArrow=oval;endFill=0;endSize=10;strokeWidth=2;html=1;exitX=0;exitY=0.25;exitDx=0;exitDy=0;" parent="1" source="comp_services" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="900" y="420" as="sourcePoint" />
+            <mxPoint x="710" y="200" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="850" y="420" />
+              <mxPoint x="850" y="200" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="conn_mappers_provide" value="" style="endArrow=none;html=1;endFill=0;strokeWidth=2;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" target="api_mappers_provided" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="850" y="200" as="sourcePoint" />
+            <mxPoint x="710" y="200" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- Connections: Services → Repositories (via UnitOfWork) -->
+        <mxCell id="conn_services_repos_require" value="" style="endArrow=oval;endFill=0;endSize=10;strokeWidth=2;html=1;exitX=0;exitY=0.75;exitDx=0;exitDy=0;" parent="1" source="comp_services" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="900" y="540" as="sourcePoint" />
+            <mxPoint x="430" y="480" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="830" y="540" />
+              <mxPoint x="830" y="480" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="conn_repos_provide" value="" style="endArrow=none;html=1;endFill=0;strokeWidth=2;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" target="api_repos_provided" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="830" y="480" as="sourcePoint" />
+            <mxPoint x="430" y="480" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- Connections: Repositories → Persistence -->
+        <mxCell id="conn_repos_persistence_require" value="" style="endArrow=oval;endFill=0;endSize=10;strokeWidth=2;html=1;exitX=1;exitY=0.75;exitDx=0;exitDy=0;" parent="1" source="comp_repositories" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="420" y="540" as="sourcePoint" />
+            <mxPoint x="625" y="515" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="450" y="540" />
+              <mxPoint x="450" y="515" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="conn_persistence_provide" value="" style="endArrow=none;html=1;endFill=0;strokeWidth=2;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" target="api_persistence_provided" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="450" y="515" as="sourcePoint" />
+            <mxPoint x="625" y="515" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- Connections: Authorization Handlers → Persistence (Direct) -->
+        <mxCell id="conn_auth_persistence_require" value="" style="endArrow=oval;endFill=0;endSize=10;strokeWidth=2;strokeColor=#9673a6;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" parent="1" source="comp_authorization" target="comp_persistence" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="630" y="640" as="sourcePoint" />
+            <mxPoint x="630" y="510" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- Connections: Mappers → DTOs -->
+        <mxCell id="conn_mappers_dtos_require" value="" style="endArrow=oval;endFill=0;endSize=10;strokeWidth=2;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;" parent="1" source="comp_mappers" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="420" y="200" as="sourcePoint" />
+            <mxPoint x="370" y="200" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="conn_dtos_provide" value="" style="endArrow=none;html=1;endFill=0;strokeWidth=2;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" target="api_dtos_provided" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="420" y="200" as="sourcePoint" />
+            <mxPoint x="370" y="200" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- Connections: Controllers → DTOs -->
+        <mxCell id="conn_controllers_dtos_require" value="" style="endArrow=oval;endFill=0;endSize=10;strokeWidth=2;html=1;exitX=0;exitY=0.25;exitDx=0;exitDy=0;" parent="1" source="comp_controllers" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="900" y="140" as="sourcePoint" />
+            <mxPoint x="370" y="200" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="750" y="140" />
+              <mxPoint x="750" y="60" />
+              <mxPoint x="220" y="60" />
+              <mxPoint x="220" y="200" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- Connections: Services → DTOs -->
+        <mxCell id="conn_services_dtos_require" value="" style="endArrow=oval;endFill=0;endSize=10;strokeWidth=2;html=1;exitX=0;exitY=0.1;exitDx=0;exitDy=0;" parent="1" source="comp_services" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="900" y="384" as="sourcePoint" />
+            <mxPoint x="370" y="200" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="810" y="384" />
+              <mxPoint x="810" y="340" />
+              <mxPoint x="200" y="340" />
+              <mxPoint x="200" y="200" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- Connections: Mappers → Domain Models -->
+        <mxCell id="conn_mappers_domain_require" value="" style="endArrow=oval;endFill=0;endSize=10;strokeWidth=2;html=1;exitX=0;exitY=0.75;exitDx=0;exitDy=0;" parent="1" source="comp_mappers" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="420" y="260" as="sourcePoint" />
+            <mxPoint x="275" y="645" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="380" y="260" />
+              <mxPoint x="380" y="330" />
+              <mxPoint x="60" y="330" />
+              <mxPoint x="60" y="645" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="conn_domain_provide" value="" style="endArrow=none;html=1;endFill=0;strokeWidth=2;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" target="api_domain_provided" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="60" y="645" as="sourcePoint" />
+            <mxPoint x="265" y="645" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- Connections: Repositories → Domain Models -->
+        <mxCell id="conn_repos_domain_require" value="" style="endArrow=oval;endFill=0;endSize=10;strokeWidth=2;html=1;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="comp_repositories" target="comp_domain" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="165" y="600" as="sourcePoint" />
+            <mxPoint x="270" y="640" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- Connections: Persistence → Domain Models -->
+        <mxCell id="conn_persistence_domain_require" value="" style="endArrow=oval;endFill=0;endSize=10;strokeWidth=2;html=1;exitX=0;exitY=1;exitDx=0;exitDy=0;" parent="1" source="comp_persistence" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="460" y="510" as="sourcePoint" />
+            <mxPoint x="275" y="645" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="440" y="510" />
+              <mxPoint x="440" y="620" />
+              <mxPoint x="275" y="620" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- Connections: Services → Domain Models (for VOs) -->
+        <mxCell id="conn_services_domain_require" value="" style="endArrow=oval;endFill=0;endSize=10;strokeWidth=2;html=1;exitX=0;exitY=0.9;exitDx=0;exitDy=0;" parent="1" source="comp_services" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="900" y="576" as="sourcePoint" />
+            <mxPoint x="275" y="645" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="790" y="576" />
+              <mxPoint x="790" y="620" />
+              <mxPoint x="480" y="620" />
+              <mxPoint x="480" y="650" />
+              <mxPoint x="275" y="650" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- Connections: Controllers → Domain Models (for VOs) -->
+        <mxCell id="conn_controllers_domain_require" value="" style="endArrow=oval;endFill=0;endSize=10;strokeWidth=2;html=1;exitX=0;exitY=0.75;exitDx=0;exitDy=0;" parent="1" source="comp_controllers" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="900" y="260" as="sourcePoint" />
+            <mxPoint x="275" y="645" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="770" y="260" />
+              <mxPoint x="770" y="350" />
+              <mxPoint x="40" y="350" />
+              <mxPoint x="40" y="645" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- Connections: Persistence → Database API -->
+        <mxCell id="conn_persistence_db_require" value="" style="endArrow=oval;endFill=0;endSize=10;strokeWidth=2;html=1;exitX=1;exitY=1;exitDx=0;exitDy=0;" parent="1" source="comp_persistence" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="800" y="510" as="sourcePoint" />
+            <mxPoint x="870" y="690" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="800" y="580" />
+              <mxPoint x="800" y="690" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- Connections: Services → Google OAuth API -->
+        <mxCell id="conn_services_google_require" value="" style="endArrow=oval;endFill=0;endSize=10;strokeWidth=2;html=1;exitX=0.75;exitY=1;exitDx=0;exitDy=0;" parent="1" source="comp_services" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="1215" y="600" as="sourcePoint" />
+            <mxPoint x="1050" y="670" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        
+        <!-- Connections: Services → SMTP API -->
+        <mxCell id="conn_services_smtp_require" value="" style="endArrow=oval;endFill=0;endSize=10;strokeWidth=2;html=1;exitX=1;exitY=0.75;exitDx=0;exitDy=0;" parent="1" source="comp_services" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="1320" y="540" as="sourcePoint" />
+            <mxPoint x="1230" y="670" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="1340" y="540" />
+              <mxPoint x="1340" y="670" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

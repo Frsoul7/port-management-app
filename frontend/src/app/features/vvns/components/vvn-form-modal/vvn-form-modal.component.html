@@ -1,0 +1,111 @@
+<div class="modal-overlay" *ngIf="show" (click)="handleBackdropClick($event)">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ isEditMode ? ('VVN.EDIT' | translate) : ('VVN.ADD_NEW' | translate) }}</h2>
+      <button class="close-btn" (click)="close()" [disabled]="saving">×</button>
+    </div>
+
+    <form (ngSubmit)="handleSubmit()" class="modal-body">
+      <!-- Vessel Selection -->
+      <div class="form-group">
+        <label for="vesselImo">Vessel IMO *</label>
+        <input id="vesselImo" type="text" [(ngModel)]="formData.vesselImo" name="vesselImo"
+          placeholder="Enter 7-digit IMO number" [disabled]="isEditMode || saving"
+          [class.error]="validationErrors['vesselImo']" maxlength="7" class="form-control">
+        <small class="form-hint" *ngIf="validationErrors['vesselImo']" style="color: #dc3545;">
+          {{ validationErrors['vesselImo'] }}
+        </small>
+      </div>
+
+      <!-- Purpose -->
+      <div class="form-group">
+        <label for="purpose">Visit Purpose *</label>
+        <select id="purpose" [(ngModel)]="formData.purpose" name="purpose" [disabled]="saving"
+          [class.error]="validationErrors['purpose']" class="form-control">
+          <option *ngFor="let option of purposeOptions" [value]="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+        <small class="form-hint" *ngIf="validationErrors['purpose']" style="color: #dc3545;">
+          {{ validationErrors['purpose'] }}
+        </small>
+      </div>
+
+      <!-- ETA -->
+      <div class="form-group">
+        <label for="eta">Estimated Time of Arrival (ETA) *</label>
+        <input id="eta" type="datetime-local" [(ngModel)]="formData.eta" name="eta" [disabled]="saving"
+          [class.error]="validationErrors['eta']" class="form-control">
+        <small class="form-hint" *ngIf="validationErrors['eta']" style="color: #dc3545;">
+          {{ validationErrors['eta'] }}
+        </small>
+      </div>
+
+      <!-- ETD -->
+      <div class="form-group">
+        <label for="etd">Estimated Time of Departure (ETD) *</label>
+        <input id="etd" type="datetime-local" [(ngModel)]="formData.etd" name="etd" [disabled]="saving"
+          [class.error]="validationErrors['etd']" class="form-control">
+        <small class="form-hint" *ngIf="validationErrors['etd']" style="color: #dc3545;">
+          {{ validationErrors['etd'] }}
+        </small>
+      </div>
+
+      <!-- Captain Name -->
+      <div class="form-group">
+        <label for="captainName">Captain Name *</label>
+        <input id="captainName" type="text" [(ngModel)]="formData.captainName" name="captainName"
+          placeholder="Enter captain's full name" [disabled]="saving" [class.error]="validationErrors['captainName']"
+          class="form-control">
+        <small class="form-hint" *ngIf="validationErrors['captainName']" style="color: #dc3545;">
+          {{ validationErrors['captainName'] }}
+        </small>
+      </div>
+
+      <!-- Captain Citizen ID -->
+      <div class="form-group">
+        <label for="captainCitizenId">Captain Citizen ID *</label>
+        <input id="captainCitizenId" type="text" [(ngModel)]="formData.captainCitizenId" name="captainCitizenId"
+          placeholder="Enter captain's citizen ID" [disabled]="saving"
+          [class.error]="validationErrors['captainCitizenId']" class="form-control">
+        <small class="form-hint" *ngIf="validationErrors['captainCitizenId']" style="color: #dc3545;">
+          {{ validationErrors['captainCitizenId'] }}
+        </small>
+      </div>
+
+      <!-- Captain Nationality -->
+      <div class="form-group">
+        <label for="captainNationality">Captain Nationality (2-letter code) *</label>
+        <input id="captainNationality" type="text" [(ngModel)]="formData.captainNationality" name="captainNationality"
+          placeholder="e.g., US, PT, FR" [disabled]="saving" [class.error]="validationErrors['captainNationality']"
+          maxlength="2" style="text-transform: uppercase;" class="form-control">
+        <small class="form-hint" *ngIf="validationErrors['captainNationality']" style="color: #dc3545;">
+          {{ validationErrors['captainNationality'] }}
+        </small>
+      </div>
+
+      <!-- Crew Count -->
+      <div class="form-group">
+        <label for="crewCount">Crew Count *</label>
+        <input id="crewCount" type="number" [(ngModel)]="formData.crewCount" name="crewCount"
+          placeholder="Enter number of crew members" min="1" [disabled]="saving"
+          [class.error]="validationErrors['crewCount']" class="form-control">
+        <small class="form-hint" *ngIf="validationErrors['crewCount']" style="color: #dc3545;">
+          {{ validationErrors['crewCount'] }}
+        </small>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="close()" [disabled]="saving">
+          Cancel
+        </button>
+        <button type="submit" class="btn btn-primary" [disabled]="saving">
+          {{ saving ? 'Saving...' : (isEditMode ? 'Update VVN' : 'Create VVN') }}
+        </button>
+      </div>
+    </form>
+
+    <!-- Loading Overlay for Saving -->
+    <app-loading *ngIf="saving" [message]="'COMMON.SAVING'"></app-loading>
+  </div>
+</div>

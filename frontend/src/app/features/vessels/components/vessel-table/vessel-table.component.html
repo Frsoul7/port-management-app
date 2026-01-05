@@ -1,0 +1,77 @@
+<div class="table-container">
+  <!-- Desktop Table View -->
+  <table class="vessels-table desktop-table" *ngIf="vessels.length > 0; else noVessels">
+    <thead>
+      <tr>
+        <th>{{ 'VESSELS.IMO' | translate }}</th>
+        <th>{{ 'VESSELS.NAME' | translate }}</th>
+        <th>{{ 'VESSELS.TYPE' | translate }}</th>
+        <th>{{ 'VESSELS.ORGANIZATION' | translate }}</th>
+        <th>{{ 'VESSELS.CAPACITY' | translate }}</th>
+        <th>{{ 'COMMON.ACTIONS' | translate }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let vessel of vessels" class="vessel-row">
+        <td [attr.data-label]="'VESSELS.IMO' | translate"><strong>{{ vessel.imoNumber }}</strong></td>
+        <td [attr.data-label]="'VESSELS.NAME' | translate">{{ vessel.name }}</td>
+        <td [attr.data-label]="'VESSELS.TYPE' | translate">{{ vessel.vesselTypeName || vessel.vesselTypeId }}</td>
+        <td [attr.data-label]="'VESSELS.ORGANIZATION' | translate">{{ vessel.organizationName || vessel.organizationId }}</td>
+        <td [attr.data-label]="'VESSELS.CAPACITY' | translate">{{ vessel.capacityTEU || 'N/A' }}</td>
+        <td class="actions" [attr.data-label]="'COMMON.ACTIONS' | translate">
+          <button class="btn-icon btn-view" (click)="viewVessel(vessel)" [title]="'VESSELS.VIEW_DETAILS' | translate">
+            👁️
+          </button>
+          <button class="btn-icon btn-edit" (click)="editVessel(vessel)" [title]="'VESSELS.EDIT' | translate">
+            ✏️
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Mobile Card View -->
+  <div class="vessels-cards mobile-cards" *ngIf="vessels.length > 0">
+    <div *ngFor="let vessel of vessels" class="vessel-card">
+      <div class="card-header">
+        <h3>{{ vessel.name }}</h3>
+        <div class="card-actions">
+          <button class="btn-icon btn-view" (click)="viewVessel(vessel)" [title]="'VESSELS.VIEW_DETAILS' | translate">
+            👁️
+          </button>
+          <button class="btn-icon btn-edit" (click)="editVessel(vessel)" [title]="'VESSELS.EDIT' | translate">
+            ✏️
+          </button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="card-row">
+          <span class="label">{{ 'VESSELS.IMO' | translate }}:</span>
+          <span class="value"><strong>{{ vessel.imoNumber }}</strong></span>
+        </div>
+        <div class="card-row">
+          <span class="label">{{ 'VESSELS.TYPE' | translate }}:</span>
+          <span class="value">{{ vessel.vesselTypeName || vessel.vesselTypeId }}</span>
+        </div>
+        <div class="card-row">
+          <span class="label">{{ 'VESSELS.ORGANIZATION' | translate }}:</span>
+          <span class="value">{{ vessel.organizationName || vessel.organizationId }}</span>
+        </div>
+        <div class="card-row">
+          <span class="label">{{ 'VESSELS.CAPACITY' | translate }}:</span>
+          <span class="value">{{ vessel.capacityTEU || 'N/A' }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ng-template #noVessels>
+    <div class="no-data">
+      <div class="no-data-icon">🚢</div>
+      <p>{{ 'VESSELS.NO_VESSELS' | translate }}</p>
+    </div>
+  </ng-template>
+</div>
+
+<!-- Loading Indicator -->
+<app-loading *ngIf="loading" [message]="'VESSELS.LOADING'"></app-loading>

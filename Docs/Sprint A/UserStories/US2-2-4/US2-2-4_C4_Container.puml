@@ -1,0 +1,41 @@
+@startuml
+title C4 Container – US 2.2.4 Storage Areas
+
+actor "Port Authority\nOfficer" as Officer
+
+node "Client Layer" {
+  [UI / API Client] as Client
+}
+
+node "Web API" {
+  [StorageAreasController] as Ctl
+}
+
+node "Application Layer" {
+  [StorageAreaService] as Svc
+}
+
+database "Persistence" as Db
+node "Domain" as Dom {
+  [StorageArea] as SA
+  [Dock] as D
+}
+
+Officer --> Client : register/update storage areas
+Client --> Ctl : POST/PUT/GET
+Ctl --> Svc : CRUD operations
+Svc --> Db : persist/retrieve
+Svc ..> SA : create/update
+SA --> D : assigned to docks (optional)
+
+note right of SA
+  Storage Area:
+  - Unique ID
+  - Type (yard/warehouse)
+  - Location
+  - Max capacity (TEUs)
+  - Current occupancy
+  - Distance to docks
+end note
+
+@enduml

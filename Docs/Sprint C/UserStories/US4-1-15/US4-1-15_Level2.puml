@@ -1,0 +1,27 @@
+@startuml
+title US 4.1.15 - Nível 2 (Functional Flow)
+
+skinparam shadowing false
+
+actor "Logistics Operator" as Op
+boundary "SPA" as SPA
+control "OEM System" as OEM
+
+Op -> SPA : Create complementary task\n(category, start, end, blocksOps)
+SPA -> OEM : POST /vve/{id}/complementary-tasks
+
+alt Invalid input
+  OEM --> SPA : 400 Bad Request
+  SPA --> Op : Show validation error
+else Invalid VVE or category
+  OEM --> SPA : 404 / 422
+  SPA --> Op : Show error
+else VVE completed and not authorized
+  OEM --> SPA : 403 Forbidden
+  SPA --> Op : Access denied
+else Valid
+  OEM --> SPA : 201 Created\nComplementaryTask
+  SPA --> Op : Task registered
+end
+
+@enduml

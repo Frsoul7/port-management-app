@@ -1,0 +1,56 @@
+@startuml
+title System Diagram – US 2.2.6 Manage Representatives
+
+actor "Port Authority Officer" as Officer
+
+' --- Client Layer ---
+rectangle "Client Layer" {
+  [Scalar UI / API Client] as ApiClient
+}
+
+' --- Web API Layer ---
+node "Web API" {
+  [RepresentativesController] as C_R
+}
+
+' --- Application Layer ---
+package "Application DTOs" {
+  [UpdateRepresentativeDto]
+  [RepresentativeResponseDto]
+}
+
+
+' --- Infrastructure Layer ---
+package "Infrastructure" {
+  [OrganizationRepository] as OR
+  [PortDbContext] as Db
+  [OrganizationConfiguration] as OC
+  database "EF Core (InMemory/SQL)" as Store
+}
+
+' --- Domain Layer ---
+package "Domain" {
+  [Organization]
+  [Representative]
+}
+
+' --- Interactions ---
+Officer --> ApiClient : uses API UI
+ApiClient --> C_R : HTTP\nPOST / PUT / GET /api/representatives
+C_R --> OR : lookup organization
+C_R --> Db : persist representative changes
+OC --> Db : configure mappings
+Db --> Store : persist data
+
+' DTO relationships
+C_R ..> UpdateRepresentativeDto
+C_R ..> RepresentativeResponseDto
+
+' Persistence model
+Db ..> Organization
+Db ..> Representative
+
+' Domain relationships
+Organization "1" --> "1..*" Representative : has
+
+@enduml

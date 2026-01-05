@@ -1,0 +1,241 @@
+<div class="modal-overlay" *ngIf="show" (click)="handleBackdropClick($event)">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>{{ 'VVN.VVN_INFO' | translate }}</h2>
+      <button class="close-btn" (click)="close()" [disabled]="saving">&times;</button>
+    </div>
+
+    <div class="modal-body" *ngIf="vvn">
+      <!-- VVN Basic Information -->
+      <div class="info-section">
+        <h3>Basic Information</h3>
+        <div class="info-grid">
+          <div class="info-item">
+            <label>VVN ID:</label>
+            <span class="value"><strong>{{ vvn.vvnBusinessId }}</strong></span>
+          </div>
+          <div class="info-item">
+            <label>Status:</label>
+            <span class="status-badge" [class]="getStatusClass(vvn.status)">
+              {{ vvn.status }}
+            </span>
+          </div>
+          <div class="info-item">
+            <label>Vessel IMO:</label>
+            <span class="value">{{ vvn.vesselImo }}</span>
+          </div>
+          <div class="info-item">
+            <label>Vessel Name:</label>
+            <span class="value">{{ getVesselName() }}</span>
+          </div>
+          <div class="info-item">
+            <label>Purpose:</label>
+            <span class="value">{{ vvn.purpose }}</span>
+          </div>
+          <div class="info-item">
+            <label>ETA:</label>
+            <span class="value">{{ formatDate(vvn.eta) }}</span>
+          </div>
+          <div class="info-item">
+            <label>ETD:</label>
+            <span class="value">{{ formatDate(vvn.etd) }}</span>
+          </div>
+          <div class="info-item" *ngIf="vvn.submittedAt">
+            <label>Submitted At:</label>
+            <span class="value">{{ formatDate(vvn.submittedAt) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Detailed Information (only for VvnStatusResponse) -->
+      <div class="info-section" *ngIf="detailedVvn">
+        <h3>Captain & Crew</h3>
+        <div class="info-grid">
+          <div class="info-item">
+            <label>Captain Name:</label>
+            <span class="value">{{ detailedVvn.captainName }}</span>
+          </div>
+          <div class="info-item">
+            <label>Captain Citizen ID:</label>
+            <span class="value">{{ detailedVvn.captainCitizenId }}</span>
+          </div>
+          <div class="info-item">
+            <label>Captain Nationality:</label>
+            <span class="value">{{ detailedVvn.captainNationality }}</span>
+          </div>
+          <div class="info-item">
+            <label>Crew Count:</label>
+            <span class="value">{{ detailedVvn.crewCount }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Crew Members Manager (for hazardous cargo handlers) -->
+      <div *ngIf="detailedVvn">
+        <app-crew-members-manager
+          [vvn]="detailedVvn"
+          [editable]="canEdit()">
+        </app-crew-members-manager>
+      </div>
+
+      <!-- Cargo Manifest Manager (shows detailed view for editable VVNs) -->
+      <div *ngIf="detailedVvn">
+        <app-cargo-manifest-manager
+          [vvn]="detailedVvn"
+          [editable]="canEdit()">
+        </app-cargo-manifest-manager>
+      </div>
+
+      <!-- Dock Assignment (if approved) -->
+      <div class="info-section" *ngIf="detailedVvn?.dockAssignment">
+        <h3>Dock Assignment</h3>
+        <div class="info-grid">
+          <div class="info-item">
+            <label>Dock Code:</label>
+            <span class="value"><strong>{{ detailedVvn?.dockAssignment?.dockCode }}</strong></span>
+          </div>
+          <div class="info-item">
+            <label>Berth From:</label>
+            <span class="value">{{ formatDate(detailedVvn?.dockAssignment?.berthFrom) }}</span>
+          </div>
+          <div class="info-item">
+            <label>Berth To:</label>
+            <span class="value">{{ formatDate(detailedVvn?.dockAssignment?.berthTo) }}</span>
+          </div>
+          <div class="info-item">
+            <label>Assignment Status:</label>
+            <span class="value">{{ detailedVvn?.dockAssignment?.status }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rejection Details (if rejected) -->
+      <div class="info-section" *ngIf="vvn.status === 'REJECTED' && detailedVvn?.rejectionReason">
+        <h3>Rejection Details</h3>
+        <div class="rejection-info">
+          <label>Reason:</label>
+          <p class="rejection-reason">{{ detailedVvn?.rejectionReason }}</p>
+          <div class="info-item" *ngIf="detailedVvn?.rejectedAt">
+            <label>Rejected At:</label>
+            <span class="value">{{ detailedVvn?.rejectedAt ? formatDate(detailedVvn?.rejectedAt) : 'N/A' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Approval Form -->
+      <div class="action-section" *ngIf="showApprovalForm">
+        <h3>Approve VVN</h3>
+        <div class="form-group">
+          <label for="dockCode">Select Dock *</label>
+          <select 
+            id="dockCode" 
+            [(ngModel)]="approvalData.dockCode"
+            [disabled]="saving || loadingDocks"
+            class="form-select">
+            <option value="" disabled>{{ loadingDocks ? 'Loading docks...' : 'Select a dock' }}</option>
+            <option *ngFor="let dock of availableDocks" [value]="dock.code">
+              {{ dock.code }} - {{ dock.name }} (Location: {{ dock.location }})
+            </option>
+          </select>
+          <small class="form-hint" *ngIf="!loadingDocks && availableDocks.length === 0">
+            No docks available. Please contact an administrator.
+          </small>
+        </div>
+        <div class="form-group">
+          <label for="berthFrom">Berth From *</label>
+          <input 
+            id="berthFrom" 
+            type="datetime-local" 
+            [(ngModel)]="approvalData.berthFrom"
+            [disabled]="saving">
+        </div>
+        <div class="form-group">
+          <label for="berthTo">Berth To *</label>
+          <input 
+            id="berthTo" 
+            type="datetime-local" 
+            [(ngModel)]="approvalData.berthTo"
+            [disabled]="saving">
+        </div>
+        <div class="form-group">
+          <label for="approvalNotes">Notes (optional)</label>
+          <textarea 
+            id="approvalNotes" 
+            [(ngModel)]="approvalData.notes"
+            rows="3"
+            placeholder="Additional notes..."
+            [disabled]="saving"></textarea>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-secondary" (click)="cancelApproval()" [disabled]="saving">
+            Cancel
+          </button>
+          <button class="btn btn-success" (click)="submitApproval()" [disabled]="saving || loadingDocks">
+            {{ saving ? 'Approving...' : 'Confirm Approval' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Rejection Form -->
+      <div class="action-section" *ngIf="showRejectionForm">
+        <h3>Reject VVN</h3>
+        <div class="form-group">
+          <label for="rejectionReason">Reason for Rejection *</label>
+          <textarea 
+            id="rejectionReason" 
+            [(ngModel)]="rejectionData.reason"
+            rows="3"
+            placeholder="Provide a reason for rejecting this VVN..."
+            [disabled]="saving"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="rejectionNotes">Additional Notes (optional)</label>
+          <textarea 
+            id="rejectionNotes" 
+            [(ngModel)]="rejectionData.notes"
+            rows="2"
+            placeholder="Additional notes..."
+            [disabled]="saving"></textarea>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-secondary" (click)="cancelRejection()" [disabled]="saving">
+            Cancel
+          </button>
+          <button class="btn btn-danger" (click)="submitRejection()" [disabled]="saving">
+            {{ saving ? 'Rejecting...' : 'Confirm Rejection' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button 
+        *ngIf="canEdit()" 
+        class="btn btn-primary" 
+        (click)="handleEdit()" 
+        [disabled]="saving">
+        Edit VVN
+      </button>
+      <button 
+        *ngIf="canApproveReject() && !showApprovalForm && !showRejectionForm" 
+        class="btn btn-success" 
+        (click)="handleApprove()" 
+        [disabled]="saving">
+        Approve
+      </button>
+      <button 
+        *ngIf="canApproveReject() && !showApprovalForm && !showRejectionForm" 
+        class="btn btn-danger" 
+        (click)="handleReject()" 
+        [disabled]="saving">
+        Reject
+      </button>
+      <button class="btn btn-secondary" (click)="close()" [disabled]="saving">
+        Close
+      </button>
+    </div>
+    
+    <!-- Loading Overlay for Saving -->
+    <app-loading *ngIf="saving" [message]="'COMMON.SAVING'"></app-loading>
+  </div>
+</div>

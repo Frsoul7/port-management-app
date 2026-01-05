@@ -1,0 +1,484 @@
+@startuml Port_Management_Domain_Model
+!theme plain
+skinparam linetype ortho
+skinparam groupInheritance 2
+
+' ============================================
+' LEGEND & TITLE
+' ============================================
+title Port Management System - Complete Domain Model\n(Sprint A - Final State)
+
+legend right
+  |= Symbol |= Meaning |
+  | <<aggregate>> | Aggregate Root |
+  | <<entity>> | Entity |
+  | <<value object>> | Value Object |
+  | <<enum>> | Enumeration |
+  | ──> | Association |
+  | ──* | Composition |
+  | ──o | Aggregation |
+  | --|> | Inheritance |
+endlegend
+
+' ============================================
+' VESSEL VISIT NOTIFICATIONS AGGREGATE
+' ============================================
+package "Visits Aggregate" #LightBlue {
+  
+  class VesselVisitNotification <<aggregate>> {
+    +VvnGuid: Guid
+    +VvnBusinessId: string
+    +State: VVNState
+    +VisitPurpose: VisitPurpose
+    +VesselImo: string
+    +Eta: DateTime
+    +Etd: DateTime
+    +CaptainName: string
+    +CaptainCitizenId: string
+    +CaptainNationality: string
+    +CrewCount: int
+    +CreatedAt: DateTime
+    +SubmittedAt: DateTime?
+    +ApprovedAt: DateTime?
+    +RejectedAt: DateTime?
+    +RejectionReason: string?
+    --
+    +AddLoadingEntry(entry)
+    +AddUnloadingEntry(entry)
+    +Submit()
+    +Approve(dock, from, to)
+    +Reject(reason)
+    +Reopen()
+  }
+  
+  enum VVNState {
+    IN_PROGRESS
+    SUBMITTED
+    APPROVED
+    REJECTED
+  }
+  
+  enum VisitPurpose {
+    LOAD
+    UNLOAD
+    BOTH
+    MAINTENANCE
+  }
+  
+  abstract class CargoManifest <<entity>> {
+    +Id: Guid
+    +VvnGuid: Guid
+    +Entries: List<ManifestEntry>
+    --
+    +AddEntry(entry)
+    +RemoveEntry(entryId)
+  }
+  
+  class LoadingCargoManifest <<entity>> {
+  }
+  
+  class UnloadingCargoManifest <<entity>> {
+  }
+  
+  class ManifestEntry <<entity>> {
+    +Id: Guid
+    +ContainerUniqueId: string
+    +HazardousGoods: bool
+    +Bay: int
+    +Row: int
+    +Tier: int
+    +Goods: string
+    --
+    +Create(containerId, hazardous, bay, row, tier, goods)
+  }
+  
+  class CrewMember <<entity>> {
+    +Id: Guid
+    +Name: string
+    +CitizenId: string
+    +Nationality: string
+    +Role: string
+  }
+  
+  class DecisionLog <<entity>> {
+    +Id: Guid
+    +DecisionAt: DateTime
+    +DecisionBy: UserId
+    +Outcome: DecisionOutcome
+    +Reason: string?
+  }
+  
+  enum DecisionOutcome {
+    Approved
+    Rejected
+  }
+  
+  VesselVisitNotification "1" *-- "0..1" LoadingCargoManifest
+  VesselVisitNotification "1" *-- "0..1" UnloadingCargoManifest
+  VesselVisitNotification "1" *-- "*" CrewMember
+  VesselVisitNotification "1" *-- "*" DecisionLog
+  LoadingCargoManifest --|> CargoManifest
+  UnloadingCargoManifest --|> CargoManifest
+  CargoManifest "1" *-- "*" ManifestEntry
+  VesselVisitNotification --> VVNState
+  VesselVisitNotification --> VisitPurpose
+  DecisionLog --> DecisionOutcome
+}
+
+' ============================================
+' VESSELS AGGREGATE
+' ============================================
+package "Vessels Aggregate" #LightGreen {
+  
+  class Vessel <<aggregate>> {
+    +ImoNumber: string
+    +Name: string
+    +CapacityTEU: int?
+    +VesselTypeId: string
+    +OwnerOrganizationId: OrganizationId
+    --
+    +Create(imo, name, typeId, orgId, capacity)
+    +UpdateBasics(name, typeId, orgId, capacity)
+  }
+  
+  class VesselType <<aggregate>> {
+    +VesselTypeId: string
+    +Name: string
+    +Description: string?
+    +CapacityTEU: int?
+    +MaxRows: int?
+    +MaxBays: int?
+    +MaxTiers: int?
+    +OperationalConstraints: string?
+    --
+    +Update(...)
+  }
+  
+  Vessel "*" --> "1" VesselType : has type
+}
+
+' ============================================
+' ORGANIZATIONS AGGREGATE
+' ============================================
+package "Organizations Aggregate" #LightYellow {
+  
+  class Organization <<aggregate>> {
+    +OrganizationId: OrganizationId
+    +Identifier: string
+    +LegalName: string
+    +AlternativeName: string
+    +AddressLine: string
+    +TaxNumber: string
+    +Type: OrganizationType
+    --
+    +SetIdentifier(id)
+    +SetLegalName(name)
+    +AddRepresentative(rep)
+  }
+  
+  enum OrganizationType {
+    SHIPPING_AGENT
+    PORT_AUTHORITY
+    LOGISTICS_OPERATOR
+  }
+  
+  class Representative <<entity>> {
+    +Id: Guid
+    +RepresentativeId: RepresentativeId
+    +Name: string
+    +CitizenId: string
+    +Nationality: string
+    +Email: string
+    +Phone: string
+    +IsActive: bool
+    +CreatedAt: DateTime
+    --
+    +Deactivate()
+    +Activate()
+  }
+  
+  class OrganizationId <<value object>> {
+    +Value: Guid
+  }
+  
+  class RepresentativeId <<value object>> {
+    +Value: Guid
+  }
+  
+  Organization "1" *-- "*" Representative
+  Organization --> OrganizationType
+  Organization --> OrganizationId
+  Representative --> RepresentativeId
+}
+
+' ============================================
+' DOCKS AGGREGATE
+' ============================================
+package "Docks Aggregate" #Lavender {
+  
+  class Dock <<aggregate>> {
+    +Code: string
+    +Name: string
+    +Location: string
+    +LengthM: double
+    +DepthM: double
+    +MaxDraftM: double
+    --
+    +Update(name, location, length, depth, draft)
+    +SetAllowedVesselTypes(types)
+    +CanAccommodateVesselType(typeId)
+  }
+  
+  class DockAssignment <<aggregate>> {
+    +DockAssignmentId: Guid
+    +BerthFrom: DateTime
+    +BerthTo: DateTime
+    +Status: DockAssignmentStatus
+    +DockCode: string
+    +VesselVisitNotificationId: Guid
+    +CreatedAt: DateTime
+    --
+    +Create(vvnId, dock, from, to, userId, timestamp)
+    +Reassign(newDock, from, to, userId)
+    +Cancel(reason, userId)
+  }
+  
+  enum DockAssignmentStatus {
+    SCHEDULED
+    IN_PROGRESS
+    COMPLETED
+    CANCELLED
+  }
+  
+  class DockAssignmentEvent <<entity>> {
+    +Id: Guid
+    +Timestamp: DateTime
+    +EventType: string
+    +PerformedBy: string
+    +OldDockCode: string?
+    +NewDockCode: string?
+    +Reason: string?
+  }
+  
+  DockAssignment "1" *-- "*" DockAssignmentEvent
+  DockAssignment --> DockAssignmentStatus
+  Dock "*" -- "*" VesselType : allows
+}
+
+' ============================================
+' STORAGE AREAS AGGREGATE
+' ============================================
+package "Storage Areas Aggregate" #LightCyan {
+  
+  class StorageArea <<aggregate>> {
+    +StorageAreaId: string
+    +Name: string
+    +Location: string
+    +MaxCapacityTEU: int
+    +CurrentOccupancyTEU: int
+    +ServesAllDocks: bool
+    +Type: StorageAreaType
+    --
+    +Update(name, location, capacity, servesAll)
+    +SetYardSpec(spec)
+    +SetWarehouseSpec(spec)
+  }
+  
+  enum StorageAreaType {
+    ORDINARY
+    YARD
+    WAREHOUSE
+  }
+  
+  class YardSpec <<value object>> {
+    +Rows: int
+    +Columns: int
+    +Tiers: int
+  }
+  
+  class WarehouseSpec <<value object>> {
+    +FloorArea: double
+    +Volume: double
+  }
+  
+  class DockStorageDistance <<entity>> {
+    +Id: Guid
+    +DockCode: string
+    +StorageAreaId: string
+    +DistanceMeters: double
+  }
+  
+  StorageArea --> StorageAreaType
+  StorageArea "0..1" o-- "0..1" YardSpec
+  StorageArea "0..1" o-- "0..1" WarehouseSpec
+  StorageArea "*" -- "*" Dock : serves
+}
+
+' ============================================
+' HUMAN RESOURCES AGGREGATE
+' ============================================
+package "Human Resources Aggregate" #LightPink {
+  
+  class StaffMember <<aggregate>> {
+    +MecanographicNumber: long
+    +ShortName: string
+    +Email: string
+    +Phone: string
+    +Status: HumanResourceStatus
+    +ActivityStatus: EntityActiveStatus
+    +StartHour: TimeSpan
+    +EndHour: TimeSpan
+    --
+    +AddQualification(qual)
+    +RemoveQualification(qual)
+    +UpdateContactInfo(email, phone)
+    +UpdateOperationalStatus(status)
+    +UpdateActiveStatus(active)
+  }
+  
+  class StaffMemberQualification <<entity>> {
+    +QualificationId: string
+    +Name: string
+    +Description: string?
+    --
+    +Update(name, description)
+  }
+  
+  enum HumanResourceStatus {
+    AVAILABLE
+    ON_BREAK
+    ON_TASK
+    OFF_DUTY
+  }
+  
+  enum EntityActiveStatus {
+    ACTIVE
+    INACTIVE
+  }
+  
+  StaffMember "1" *-- "*" StaffMemberQualification
+  StaffMember --> HumanResourceStatus
+  StaffMember --> EntityActiveStatus
+}
+
+' ============================================
+' PHYSICAL RESOURCES AGGREGATE
+' ============================================
+package "Physical Resources Aggregate" #MistyRose {
+  
+  abstract class PhysicalResource <<aggregate>> {
+    +ResourceId: string
+    +Code: string
+    +Description: string?
+    +Availability: PhysicalResourceAvailability
+    +SetupTimeSeconds: int
+    +CreatedAt: DateTime
+    +DeactivatedAt: DateTime?
+    +DeactivationReason: string?
+    --
+    +Update(description, setupTime)
+    +SetAvailability(status)
+    +Deactivate(reason)
+  }
+  
+  enum PhysicalResourceAvailability {
+    AVAILABLE
+    MAINTENANCE
+    TEMP_OUT_OF_SERVICE
+  }
+  
+  enum MobileEquipmentType {
+    TRUCK
+    YARD_GANTRY_CRANE
+  }
+  
+  class STSCrane <<entity>> {
+    +MaxReach: double
+    +MaxLift: double
+    --
+    +Update(description, setupTime, reach, lift)
+  }
+  
+  class MobileEquipment <<entity>> {
+    +EquipmentType: MobileEquipmentType
+    +MaxLoad: double
+    --
+    +Update(description, setupTime, type, load)
+  }
+  
+  STSCrane --|> PhysicalResource
+  MobileEquipment --|> PhysicalResource
+  PhysicalResource --> PhysicalResourceAvailability
+  MobileEquipment --> MobileEquipmentType
+  PhysicalResource "*" -- "*" StaffMemberQualification : requires
+}
+
+' ============================================
+' USERS AGGREGATE (Security Context)
+' ============================================
+package "Users Aggregate" #WhiteSmoke {
+  
+  class User <<aggregate>> {
+    +UserId: UserId
+    +Email: string
+    +Name: string
+    +Role: string
+    +OrganizationId: OrganizationId
+  }
+  
+  class UserId <<value object>> {
+    +Value: Guid
+  }
+  
+  User --> UserId
+}
+
+' ============================================
+' SHARED KERNEL
+' ============================================
+package "Shared Kernel" #Wheat {
+  
+  interface IAggregateRoot
+  
+  abstract class Entity {
+    +Id: Guid
+  }
+  
+  class ImoValidator <<service>> {
+    +{static} IsValid(imo): bool
+    +{static} Normalize(imo): string
+  }
+  
+  class Iso6346 <<service>> {
+    +{static} IsValid(code): bool
+    +{static} ComputeCheckDigit(code): int
+  }
+  
+  interface ICrewCompliancePolicy {
+    +Validate(vvn): void
+  }
+  
+  class HazardousRequiresCrewPolicy {
+    +Validate(vvn): void
+  }
+  
+  HazardousRequiresCrewPolicy ..|> ICrewCompliancePolicy
+}
+
+' ============================================
+' CROSS-AGGREGATE RELATIONSHIPS
+' ============================================
+VesselVisitNotification "1" --> "1" Vessel : references
+VesselVisitNotification "1" --> "1" Organization : submitted by
+VesselVisitNotification "1" --> "0..1" User : submitted by
+VesselVisitNotification "1" --> "0..1" User : approved/rejected by
+VesselVisitNotification "1" --> "0..1" DockAssignment : assigned to
+Vessel "1" --> "1" Organization : owned by
+DockAssignment "*" --> "1" Dock : assigned to
+Dock "1" o-- "0..1" STSCrane : has
+Dock "1" o-- "*" MobileEquipment : has
+ManifestEntry ..> Iso6346 : validates with
+Vessel ..> ImoValidator : validates with
+VesselVisitNotification ..> ICrewCompliancePolicy : validates with
+
+@enduml

@@ -1,0 +1,27 @@
+<div class="toolbar">
+  <div class="search-section">
+    <input 
+      type="text" 
+      [placeholder]="'VESSELS.SEARCH_IMO' | translate" 
+      [(ngModel)]="searchParams.imo"
+      (keyup.enter)="handleEnter()"
+      class="search-input">
+    <input 
+      type="text" 
+      [placeholder]="'VESSELS.SEARCH_NAME' | translate" 
+      [(ngModel)]="searchParams.name"
+      (keyup.enter)="handleEnter()"
+      class="search-input">
+    <input 
+      type="text" 
+      [placeholder]="'SHIPPING_AGENTS.SEARCH_LEGAL_NAME' | translate" 
+      [(ngModel)]="searchParams.organizationName"
+      (keyup.enter)="handleEnter()"
+      class="search-input">
+    <button class="btn btn-primary" (click)="search()">{{ 'COMMON.SEARCH' | translate }}</button>
+  </div>
+  <div class="action-buttons">
+    <button class="btn btn-secondary" (click)="clear()">{{ 'COMMON.CLEAR' | translate }}</button>
+    <button class="btn btn-success" (click)="addVessel()">{{ 'VESSELS.CREATE' | translate }}</button>
+  </div>
+</div>

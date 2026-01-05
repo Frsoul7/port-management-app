@@ -1,0 +1,75 @@
+@startuml
+title SD - US 4.1.15 Create Complementary Task (White-box)
+
+skinparam shadowing false
+skinparam responseMessageBelowArrow true
+
+actor "SPA" as SPA
+control "Auth Middleware" as Auth
+control "ComplementaryTaskController" as C
+control "ComplementaryTaskService" as S
+entity "IVVERepository" as VVERepo
+entity "ITaskCategoryRepository" as CatRepo
+entity "IComplementaryTaskRepository" as TaskRepo
+database "MongoDB" as DB
+entity "VesselVisitExecution (Domain)" as VVE
+entity "ComplementaryTask (Domain)" as Task
+
+SPA -> Auth : request + JWT
+alt invalid token/role
+  Auth --> SPA : 403 Forbidden
+else authorized
+  Auth -> C : forward request
+  C -> C : validate(vveId, categoryId,\nstartTime, endTime, blocksOperations)
+
+  alt invalid input (e.g., startTime >= endTime)
+    C --> SPA : 400/422 Validation Error
+  else valid input
+    C -> S : createForVve(vveId, dto, userId)
+
+    S -> VVERepo : findById(vveId)
+    VVERepo -> DB : find VVE
+    DB --> VVERepo : VVE data / null
+    VVERepo --> S : VVE or null
+
+    alt VVE not found
+      S --> C : NotFoundError
+      C --> SPA : 404 Not Found
+    else VVE exists
+      S -> VVE : isCompleted()?
+      alt VVE completed and no override
+        VVE --> S : true
+        S --> C : ForbiddenBusinessRule
+        C --> SPA : 403 Forbidden
+      else allowed
+        VVE --> S : false
+
+        S -> CatRepo : findById(categoryId)
+        CatRepo -> DB : find category
+        DB --> CatRepo : category / null
+        CatRepo --> S : category or null
+
+        alt category invalid
+          S --> C : UnprocessableEntity
+          C --> SPA : 422 Unprocessable Entity
+        else category ok
+          S -> Task : new ComplementaryTask(dto)\nvalidateTimeWindow()
+          alt domain invariant violation
+            Task --> S : DomainError
+            S --> C : map error
+            C --> SPA : 422 Validation Error
+          else ok
+            S -> TaskRepo : create(Task)
+            TaskRepo -> DB : insert task document
+            DB --> TaskRepo : persisted document
+            TaskRepo --> S : persisted Task
+            S --> C : TaskDTO
+            C --> SPA : 201 Created TaskDTO
+          end
+        end
+      end
+    end
+  end
+end
+
+@enduml

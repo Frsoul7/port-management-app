@@ -1,0 +1,136 @@
+<div class="incident-type-form-container">
+  <div class="header">
+    <h2>{{ isEditMode() ? 'Edit' : 'Create' }} Incident Type</h2>
+  </div>
+
+  <!-- Loading state -->
+  @if (loading()) {
+    <div class="loading">
+      <div class="spinner"></div>
+      <p>Loading incident type...</p>
+    </div>
+  }
+
+  <!-- Error message -->
+  @if (error()) {
+    <div class="error-message">
+      <span class="icon">⚠️</span>
+      <p>{{ error() }}</p>
+    </div>
+  }
+
+  <!-- Form -->
+  @if (!loading()) {
+    <form (ngSubmit)="onSubmit()" class="incident-type-form">
+      <!-- Code (required, unique) -->
+      <div class="form-group">
+        <label for="code">
+          Code <span class="required">*</span>
+          <span class="help-text">Must follow format T-INC### (e.g., T-INC001, T-INC123)</span>
+        </label>
+        <input
+          type="text"
+          id="code"
+          name="code"
+          [(ngModel)]="formData.code"
+          [disabled]="isEditMode()"
+          required
+          maxlength="50"
+          pattern="T-INC\d{3}"
+          placeholder="e.g., T-INC001">
+        @if (isEditMode()) {
+          <small class="note">Code cannot be changed after creation</small>
+        }
+      </div>
+
+      <!-- Type Name (required) -->
+      <div class="form-group">
+        <label for="typeName">
+          Type Name <span class="required">*</span>
+        </label>
+        <input
+          type="text"
+          id="typeName"
+          name="typeName"
+          [(ngModel)]="formData.typeName"
+          required
+          maxlength="100"
+          placeholder="e.g., Environmental Conditions">
+      </div>
+
+      <!-- Description (required) -->
+      <div class="form-group">
+        <label for="description">
+          Description <span class="required">*</span>
+        </label>
+        <textarea
+          id="description"
+          name="description"
+          [(ngModel)]="formData.description"
+          required
+          rows="4"
+          maxlength="500"
+          placeholder="Detailed description of this incident type..."></textarea>
+      </div>
+
+      <!-- Default Severity (required) -->
+      <div class="form-group">
+        <label for="defaultSeverity">
+          Severity Classification <span class="required">*</span>
+        </label>
+        <select id="defaultSeverity" name="defaultSeverity" [(ngModel)]="formData.defaultSeverity" required>
+          @for (severity of severityOptions; track severity.value) {
+            <option [value]="severity.value">{{ severity.label }}</option>
+          }
+        </select>
+      </div>
+
+      <!-- Is Parent Type? (checkbox) -->
+      <div class="form-group">
+        <label class="checkbox-label">
+          <input
+            type="checkbox"
+            id="isParentType"
+            name="isParentType"
+            [(ngModel)]="formData.isParentType"
+            (ngModelChange)="onIsParentTypeChange()">
+          <span>Is Parent Type?</span>
+        </label>
+        <small class="help-text">Check this if this incident type is a top-level category</small>
+      </div>
+
+      <!-- Parent Type Selection (shown only if NOT parent type) -->
+      @if (!formData.isParentType) {
+        <div class="form-group">
+          <label for="parentTypeId">
+            Parent Type <span class="required">*</span>
+          </label>
+          <select id="parentTypeId" name="parentTypeId" [(ngModel)]="formData.parentTypeId" required>
+            <option value="">-- Select Parent Type --</option>
+            @for (parentType of availableParentTypes(); track parentType.incidentTypeId) {
+              <option [value]="parentType.incidentTypeId">
+                {{ parentType.code }} - {{ parentType.typeName }}
+              </option>
+            }
+          </select>
+          <small class="help-text">Select the parent incident type for this subtype</small>
+        </div>
+      }
+
+      <!-- Form Actions -->
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" (click)="onCancel()" [disabled]="saving()">
+          Cancel
+        </button>
+        <button type="submit" class="btn btn-primary" [disabled]="saving()">
+          @if (saving()) {
+            <span class="spinner-small"></span>
+            {{ isEditMode() ? 'Updating...' : 'Creating...' }}
+          } @else {
+            {{ isEditMode() ? 'Update' : 'Create' }} Incident Type
+          }
+        </button>
+      </div>
+    </form>
+  }
+</div>

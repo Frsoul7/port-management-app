@@ -1,0 +1,65 @@
+@startuml
+title US 4.1.2 - Operation Plan State Diagram
+
+skinparam shadowing false
+
+[*] --> GENERATED : US 4.1.2: generatePlanSimple()\n• Operator selects date & algorithm\n• System fetches VVNs\n• Planning Service generates schedule\n• Plan saved with GENERATED status
+
+state GENERATED {
+  [*] --> PendingReview
+  PendingReview : Operator reviews plan
+  PendingReview : Can view operations
+  PendingReview : Can view resource assignments
+}
+
+GENERATED --> APPROVED : Operator approves plan\n• Manual approval action\n• Plan becomes executable
+
+APPROVED --> IN_EXECUTION : US 4.1.7: First VVE created\n• Vessel arrives at port\n• VVE initialized from plan\n• Plan status transitions
+
+state IN_EXECUTION {
+  [*] --> PartiallyExecuted
+  PartiallyExecuted --> AllVVEsCreated : All vessels arrived
+  AllVVEsCreated --> OperationsInProgress : Operations ongoing
+  OperationsInProgress --> NearingCompletion : Most operations done
+}
+
+IN_EXECUTION --> COMPLETED : All VVEs completed\n• All vessels departed\n• All operations finished\n• Plan archived
+
+GENERATED --> CANCELLED : Operator cancels plan\n• Before approval\n• Conditions changed
+APPROVED --> CANCELLED : Emergency cancellation\n• Major disruption\n• Plan invalid
+
+CANCELLED --> [*]
+COMPLETED --> [*]
+
+note right of GENERATED
+  US 4.1.2 creates plan in GENERATED state
+  • targetDate: Selected date
+  • algorithm: optimal/weighted/multi_cranes
+  • status: GENERATED
+  • operations[]: PlannedOperation[]
+  • auditLog: [{ CREATED, userId, timestamp }]
+  • totalDelay: Calculated by algorithm
+end note
+
+note right of APPROVED
+  Plan ready for execution
+  • Operator has reviewed
+  • Resources confirmed available
+  • Ready to create VVEs
+end note
+
+note bottom of IN_EXECUTION
+  Active execution phase
+  • At least one VVE exists
+  • Operations being performed
+  • Real-time tracking enabled
+end note
+
+note bottom of COMPLETED
+  Historical record
+  • All operations finished
+  • Metrics can be calculated
+  • Actual vs planned comparison
+end note
+
+@enduml

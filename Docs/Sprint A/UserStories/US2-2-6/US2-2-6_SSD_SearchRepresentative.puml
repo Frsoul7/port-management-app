@@ -1,0 +1,35 @@
+@startuml
+title SSD – Search Representatives
+
+actor "Port Authority Officer" as Officer
+participant "API Client" as Client
+participant "OrganizationsController" as C
+participant "OrganizationRepository" as OR
+participant "PortDbContext" as Db
+database "EF (InMemory)" as Store
+
+Officer -> Client : GET /api/organizations/{orgId}/representatives?name=...&email=...
+Client -> C : GetRepresentatives(orgId, name?, email?)
+activate C
+
+C -> OR : GetByIdAsync(orgId)
+activate OR
+OR -> Store : query Organization.Include(Representatives)
+Store --> OR : Organization | null
+deactivate OR
+
+alt organization not found
+  C --> Client : 404 Not Found\n"Organization with ID '...' not found."
+  deactivate C
+else organization found
+  C -> C : filter Representatives
+  note right
+    - Name contains (case-insensitive)
+    - Email contains (case-insensitive)
+    - Optionally filter only active representatives
+  end note
+  C -> C : map to List<RepresentativeResponseDto>
+  C --> Client : 200 OK [RepresentativeResponseDto...]
+  deactivate C
+end
+@enduml

@@ -1,0 +1,43 @@
+@startuml
+title Sequence Diagram – Update Qualification (US 2.2.13)
+
+actor "Logistics Operator" as Operator
+participant ":QualificationsController" as Controller
+participant ":PortDbContext" as DbContext
+participant "qualification:StaffMemberQualification" as Qualification
+database ":EFCore InMemory" as DB
+
+Operator -> Controller : PUT /api/qualifications/{id}\nUpdateQualificationDto(Name?, Description?)
+activate Controller
+
+Controller -> Controller : Normalize id.ToUpperInvariant()
+
+Controller -> DbContext : Qualifications.FirstOrDefaultAsync(q => q.QualificationId == id)
+activate DbContext
+DbContext -> DB : SELECT * FROM Qualifications WHERE QualificationId = ?
+DB --> DbContext : qualification
+DbContext --> Controller : qualification
+deactivate DbContext
+
+alt qualification == null
+  Controller --> Operator : 404 Not Found
+else valid
+  Controller -> Qualification : Update(dto.Name, dto.Description)
+  activate Qualification
+  Qualification -> Qualification : Validate Name (if provided)
+  Qualification -> Qualification : Set Name and Description
+  Qualification --> Controller
+  deactivate Qualification
+  
+  Controller -> DbContext : SaveChangesAsync()
+  activate DbContext
+  DbContext -> DB : UPDATE Qualifications SET Name = ?, Description = ? WHERE QualificationId = ?
+  DB --> DbContext : ok
+  DbContext --> Controller
+  deactivate DbContext
+  
+  Controller --> Operator : 200 OK\nQualificationDto
+end
+deactivate Controller
+
+@enduml

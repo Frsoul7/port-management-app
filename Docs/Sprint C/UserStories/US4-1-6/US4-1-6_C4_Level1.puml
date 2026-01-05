@@ -1,0 +1,21 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+title C4 L1 - System Context (US 4.1.6)
+
+Person(operator, "Logistics Operator", "Queries resource utilization for a given period")
+System(spa, "Port Management SPA", "Web UI used by all roles")
+System_Boundary(oemBoundary, "OEM Service") {
+  System(oem, "Operations & Execution Management", "Stores Operation Plans and provides execution/analytics features")
+}
+System_Ext(core, "Core Backend", "VVNs, vessels, docks, staff/resources master data")
+System_Ext(planning, "Planning & Scheduling Service", "Generates operation plans via algorithms")
+System_Ext(iam, "IAM Provider", "Authentication / tokens")
+
+Rel(operator, spa, "Uses")
+Rel(spa, oem, "Calls REST API", "HTTPS/JSON")
+Rel(oem, core, "Consumes data when needed", "REST/JSON")
+Rel(oem, planning, "Consumes scheduling results (when generating plans)", "REST/JSON")
+Rel(spa, iam, "Authenticates user", "OIDC/OAuth2")
+Rel(oem, iam, "Validates tokens / RBAC-ABAC", "JWT/OIDC")
+
+@enduml

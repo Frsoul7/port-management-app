@@ -1,0 +1,202 @@
+<div class="page-container">
+  <!-- Header -->
+  <div class="page-header">
+    <button class="back-button" (click)="cancel()">
+      <span>←</span> {{ 'COMPLEMENTARY_TASKS.BACK_TO_LIST' | translate }}
+    </button>
+    <h1>{{ 'COMPLEMENTARY_TASKS.CREATE_TITLE' | translate }}</h1>
+  </div>
+
+  <!-- Error Message -->
+  @if (errorMessage()) {
+    <div class="alert alert-error">
+      {{ errorMessage() }}
+    </div>
+  }
+
+  <!-- Form -->
+  <form class="task-form" (ngSubmit)="onSubmit()">
+    <div class="form-section">
+      <h2>{{ 'COMPLEMENTARY_TASKS.FORM.BASIC_INFO' | translate }}</h2>
+
+      <!-- VVE ID -->
+      <div class="form-group">
+        <label for="vveId" class="required">
+          {{ 'COMPLEMENTARY_TASKS.FORM.VVE_ID' | translate }}
+        </label>
+        <input
+          type="text"
+          id="vveId"
+          [(ngModel)]="formData.vveId"
+          name="vveId"
+          [class.error]="validationErrors.vveId"
+          [placeholder]="'COMPLEMENTARY_TASKS.FORM.VVE_ID_PLACEHOLDER' | translate"
+          maxlength="50"
+          required
+        />
+        @if (validationErrors.vveId) {
+          <span class="error-message">{{ validationErrors.vveId }}</span>
+        }
+        <span class="help-text">{{ 'COMPLEMENTARY_TASKS.FORM.VVE_ID_HELP' | translate }}</span>
+      </div>
+
+      <!-- Task Category -->
+      <div class="form-group">
+        <label for="taskCategoryId" class="required">
+          {{ 'COMPLEMENTARY_TASKS.FORM.CATEGORY' | translate }}
+        </label>
+        <select
+          id="taskCategoryId"
+          [(ngModel)]="formData.taskCategoryId"
+          name="taskCategoryId"
+          [class.error]="validationErrors.taskCategoryId"
+          required
+        >
+          <option value="">{{ 'COMPLEMENTARY_TASKS.FORM.SELECT_CATEGORY' | translate }}</option>
+          @for (category of categories(); track category.taskCategoryId) {
+            <option [value]="category.taskCategoryId">
+              {{ category.categoryCode }} - {{ category.categoryName }}
+            </option>
+          }
+        </select>
+        @if (validationErrors.taskCategoryId) {
+          <span class="error-message">{{ validationErrors.taskCategoryId }}</span>
+        }
+        
+        <!-- Category Info Display -->
+        @if (getSelectedCategoryInfo(); as selectedCategory) {
+          <div class="category-details">
+            <p><strong>{{ 'COMPLEMENTARY_TASKS.FORM.CATEGORY_DESCRIPTION' | translate }}:</strong> {{ selectedCategory.description }}</p>
+            <p><strong>{{ 'COMPLEMENTARY_TASKS.FORM.EXPECTED_IMPACT' | translate }}:</strong> {{ selectedCategory.expectedImpact }}</p>
+            <p><strong>{{ 'COMPLEMENTARY_TASKS.FORM.TYPICAL_DURATION' | translate }}:</strong> {{ selectedCategory.defaultDurationHours }} {{ 'COMPLEMENTARY_TASKS.FORM.HOURS' | translate }}</p>
+          </div>
+        }
+      </div>
+
+      <!-- Title -->
+      <div class="form-group">
+        <label for="title" class="required">
+          {{ 'COMPLEMENTARY_TASKS.FORM.TITLE' | translate }}
+        </label>
+        <input
+          type="text"
+          id="title"
+          [(ngModel)]="formData.title"
+          name="title"
+          [class.error]="validationErrors.title"
+          [placeholder]="'COMPLEMENTARY_TASKS.FORM.TITLE_PLACEHOLDER' | translate"
+          maxlength="200"
+          required
+        />
+        @if (validationErrors.title) {
+          <span class="error-message">{{ validationErrors.title }}</span>
+        }
+        <span class="character-count">{{ formData.title.length }}/200</span>
+      </div>
+
+      <!-- Description -->
+      <div class="form-group">
+        <label for="description" class="required">
+          {{ 'COMPLEMENTARY_TASKS.FORM.DESCRIPTION' | translate }}
+        </label>
+        <textarea
+          id="description"
+          [(ngModel)]="formData.description"
+          name="description"
+          [class.error]="validationErrors.description"
+          [placeholder]="'COMPLEMENTARY_TASKS.FORM.DESCRIPTION_PLACEHOLDER' | translate"
+          rows="5"
+          maxlength="1000"
+          required
+        ></textarea>
+        @if (validationErrors.description) {
+          <span class="error-message">{{ validationErrors.description }}</span>
+        }
+        <span class="character-count">{{ formData.description.length }}/1000</span>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h2>{{ 'COMPLEMENTARY_TASKS.FORM.SCHEDULING' | translate }}</h2>
+
+      <!-- Due Date -->
+      <div class="form-group">
+        <label for="dueDate" class="required">
+          {{ 'COMPLEMENTARY_TASKS.FORM.DUE_DATE' | translate }}
+        </label>
+        <input
+          type="datetime-local"
+          id="dueDate"
+          [(ngModel)]="formData.dueDate"
+          name="dueDate"
+          [class.error]="validationErrors.dueDate"
+          required
+        />
+        @if (validationErrors.dueDate) {
+          <span class="error-message">{{ validationErrors.dueDate }}</span>
+        }
+        <span class="help-text">{{ 'COMPLEMENTARY_TASKS.FORM.DUE_DATE_HELP' | translate }}</span>
+      </div>
+
+      <!-- Estimated Duration -->
+      <div class="form-group">
+        <label for="estimatedDuration" class="required">
+          {{ 'COMPLEMENTARY_TASKS.FORM.ESTIMATED_DURATION' | translate }}
+        </label>
+        <div class="duration-input">
+          <input
+            type="number"
+            id="estimatedDuration"
+            [(ngModel)]="formData.estimatedDurationHours"
+            name="estimatedDuration"
+            [class.error]="validationErrors.estimatedDuration"
+            min="1"
+            max="24"
+            step="0.5"
+            required
+          />
+          <span class="duration-unit">{{ 'COMPLEMENTARY_TASKS.FORM.HOURS' | translate }}</span>
+        </div>
+        @if (validationErrors.estimatedDuration) {
+          <span class="error-message">{{ validationErrors.estimatedDuration }}</span>
+        }
+        <span class="help-text">
+          @if (formData.estimatedDurationHours && formData.estimatedDurationHours > 0) {
+            {{ formData.estimatedDurationHours }} {{ 'COMPLEMENTARY_TASKS.FORM.HOURS' | translate }}
+          }
+        </span>
+      </div>
+
+      <!-- Assigned To -->
+      <div class="form-group">
+        <label for="assignedTo">
+          {{ 'COMPLEMENTARY_TASKS.FORM.ASSIGNED_TO' | translate }}
+        </label>
+        <input
+          type="text"
+          id="assignedTo"
+          [(ngModel)]="formData.assignedTo"
+          name="assignedTo"
+          [placeholder]="'COMPLEMENTARY_TASKS.FORM.ASSIGNED_TO_PLACEHOLDER' | translate"
+          maxlength="100"
+        />
+        <span class="help-text">{{ 'COMPLEMENTARY_TASKS.FORM.ASSIGNED_TO_HELP' | translate }}</span>
+      </div>
+    </div>
+
+    <!-- Form Actions -->
+    <div class="form-actions">
+      <button type="button" class="btn-secondary" (click)="cancel()" [disabled]="loading()">
+        {{ 'COMPLEMENTARY_TASKS.FORM.CANCEL' | translate }}
+      </button>
+      <button type="submit" class="btn-primary" [disabled]="loading()">
+        @if (loading()) {
+          <span class="spinner-small"></span>
+          {{ 'COMPLEMENTARY_TASKS.FORM.CREATING' | translate }}
+        } @else {
+          {{ 'COMPLEMENTARY_TASKS.FORM.CREATE' | translate }}
+        }
+      </button>
+    </div>
+  </form>
+</div>

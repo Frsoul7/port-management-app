@@ -1,0 +1,81 @@
+@startuml
+title US 4.1.7 - Nível 4 (Class Diagram / Domínio + DIP)
+
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+
+enum OperationStatus {
+  PLANNED
+  IN_PROGRESS
+  FINISHED
+}
+
+enum VveStatus {
+  PLANNED
+  IN_PROGRESS
+  COMPLETED
+}
+
+class CargoOperation {
+  + id: string
+  + vveId: string
+  + status: OperationStatus
+  + startedAt: DateTime
+  + finishedAt: DateTime
+  + modifiedAt: DateTime
+  + modifiedBy: string
+
+  + markAsFinished(finishTime: DateTime, userId: string)
+  - ensureInProgress()
+  - ensureTemporalConsistency(finishTime: DateTime)
+}
+
+class VesselVisitExecution {
+  + id: string
+  + status: VveStatus
+  + ensureInProgress()
+}
+
+interface ICargoOperationRepository {
+  + findById(id: string): CargoOperation
+  + update(op: CargoOperation): CargoOperation
+}
+
+interface IVesselVisitExecutionRepository {
+  + findById(id: string): VesselVisitExecution
+}
+
+class MongoCargoOperationRepository {
+  + findById(id: string): CargoOperation
+  + update(op: CargoOperation): CargoOperation
+}
+
+class MongoVesselVisitExecutionRepository {
+  + findById(id: string): VesselVisitExecution
+}
+
+class CargoOperationService {
+  - repo: ICargoOperationRepository
+  - vveRepo: IVesselVisitExecutionRepository
+  + finishCargoOperation(id: string, finishTime: DateTime, userId: string)
+}
+
+CargoOperation ..> OperationStatus
+VesselVisitExecution ..> VveStatus
+CargoOperation --> VesselVisitExecution : belongs to
+
+CargoOperationService --> ICargoOperationRepository : depends on abstraction (DIP)
+CargoOperationService --> IVesselVisitExecutionRepository : depends on abstraction (DIP)
+ICargoOperationRepository <|.. MongoCargoOperationRepository
+IVesselVisitExecutionRepository <|.. MongoVesselVisitExecutionRepository
+
+note right of CargoOperation
+Business invariants:
+- status must be IN_PROGRESS
+- parent VVE must be IN_PROGRESS
+- finishTime > startedAt
+- Transitions to FINISHED
+- modifiedAt and modifiedBy are set
+end note
+
+@enduml

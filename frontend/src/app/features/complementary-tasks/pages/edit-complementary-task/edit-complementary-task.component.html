@@ -1,0 +1,314 @@
+<div class="page-container">
+  <!-- Header -->
+  <div class="page-header">
+    <button class="back-button" (click)="cancel()">
+      <span>←</span> {{ 'COMPLEMENTARY_TASKS.BACK_TO_LIST' | translate }}
+    </button>
+    <div class="header-content">
+      <h1>{{ 'COMPLEMENTARY_TASKS.EDIT_TITLE' | translate }}</h1>
+      @if (task(); as currentTask) {
+        <span class="status-badge" [ngClass]="getStatusClass(currentTask.status)">
+          {{ 'COMPLEMENTARY_TASKS.STATUS.' + currentTask.status | translate }}
+        </span>
+      }
+    </div>
+  </div>
+
+  <!-- Success Message -->
+  @if (successMessage()) {
+    <div class="alert alert-success">
+      {{ successMessage() }}
+    </div>
+  }
+
+  <!-- Error Message -->
+  @if (errorMessage()) {
+    <div class="alert alert-error">
+      {{ errorMessage() }}
+    </div>
+  }
+
+  <!-- Loading State -->
+  @if (loading() && !task()) {
+    <div class="loading-container">
+      <div class="spinner"></div>
+      <p>{{ 'COMPLEMENTARY_TASKS.LOADING' | translate }}</p>
+    </div>
+  }
+
+  <!-- Task Content -->
+  @if (task(); as currentTask) {
+    <div class="content-layout">
+      <!-- Main Form -->
+      <div class="main-content">
+        <!-- Task Info Section -->
+        <div class="info-section">
+          <h2>{{ 'COMPLEMENTARY_TASKS.FORM.TASK_INFO' | translate }}</h2>
+          <div class="info-grid">
+            <div class="info-item">
+              <label>{{ 'COMPLEMENTARY_TASKS.FORM.VVE_ID' | translate }}</label>
+              <div class="info-value">{{ currentTask.vveId }}</div>
+            </div>
+            <div class="info-item">
+              <label>{{ 'COMPLEMENTARY_TASKS.FORM.CATEGORY' | translate }}</label>
+              <div class="info-value">{{ getCategoryName() }}</div>
+            </div>
+            <div class="info-item">
+              <label>{{ 'COMPLEMENTARY_TASKS.FORM.CREATED_AT' | translate }}</label>
+              <div class="info-value">{{ formatDate(currentTask.createdAt) }}</div>
+            </div>
+            @if (currentTask.startedAt) {
+              <div class="info-item">
+                <label>{{ 'COMPLEMENTARY_TASKS.FORM.STARTED_AT' | translate }}</label>
+                <div class="info-value">{{ formatDate(currentTask.startedAt) }}</div>
+              </div>
+            }
+            @if (currentTask.completedAt) {
+              <div class="info-item">
+                <label>{{ 'COMPLEMENTARY_TASKS.FORM.COMPLETED_AT' | translate }}</label>
+                <div class="info-value">{{ formatDate(currentTask.completedAt) }}</div>
+              </div>
+            }
+            @if (currentTask.cancelledAt) {
+              <div class="info-item">
+                <label>{{ 'COMPLEMENTARY_TASKS.FORM.CANCELLED_AT' | translate }}</label>
+                <div class="info-value">{{ formatDate(currentTask.cancelledAt) }}</div>
+              </div>
+            }
+            @if (currentTask.cancellationReason) {
+              <div class="info-item full-width">
+                <label>{{ 'COMPLEMENTARY_TASKS.FORM.CANCELLATION_REASON' | translate }}</label>
+                <div class="info-value">{{ currentTask.cancellationReason }}</div>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Edit Form -->
+        <form class="edit-form" (ngSubmit)="onSubmit()">
+          <h2>{{ 'COMPLEMENTARY_TASKS.FORM.EDIT_DETAILS' | translate }}</h2>
+
+          <!-- Title -->
+          <div class="form-group">
+            <label for="title" class="required">
+              {{ 'COMPLEMENTARY_TASKS.FORM.TITLE' | translate }}
+            </label>
+            <input
+              type="text"
+              id="title"
+              [(ngModel)]="formData.title"
+              name="title"
+              [class.error]="validationErrors.title"
+              [disabled]="!canEdit()"
+              maxlength="200"
+              required
+            />
+            @if (validationErrors.title) {
+              <span class="error-message">{{ validationErrors.title }}</span>
+            }
+              <span class="character-count">{{ formData.title?.length || 0 }}/200</span>
+          </div>
+
+          <!-- Description -->
+          <div class="form-group">
+            <label for="description" class="required">
+              {{ 'COMPLEMENTARY_TASKS.FORM.DESCRIPTION' | translate }}
+            </label>
+            <textarea
+              id="description"
+              [(ngModel)]="formData.description"
+              name="description"
+              [class.error]="validationErrors.description"
+              [disabled]="!canEdit()"
+              rows="5"
+              maxlength="1000"
+              required
+            ></textarea>
+            @if (validationErrors.description) {
+              <span class="error-message">{{ validationErrors.description }}</span>
+            }
+            <span class="character-count">{{ formData.description?.length || 0 }}/1000</span>
+          </div>
+
+          <!-- Due Date -->
+          <div class="form-group">
+            <label for="dueDate" class="required">
+              {{ 'COMPLEMENTARY_TASKS.FORM.DUE_DATE' | translate }}
+            </label>
+            <input
+              type="datetime-local"
+              id="dueDate"
+              [(ngModel)]="formData.dueDate"
+              name="dueDate"
+              [class.error]="validationErrors.dueDate"
+              [disabled]="!canEdit()"
+              required
+            />
+            @if (validationErrors.dueDate) {
+              <span class="error-message">{{ validationErrors.dueDate }}</span>
+            }
+          </div>
+
+          <!-- Estimated Duration -->
+          <div class="form-group">
+            <label for="estimatedDuration" class="required">
+              {{ 'COMPLEMENTARY_TASKS.FORM.ESTIMATED_DURATION' | translate }}
+            </label>
+            <div class="duration-input">
+              <input
+                type="number"
+                id="estimatedDuration"
+                [(ngModel)]="formData.estimatedDurationHours"
+                name="estimatedDuration"
+                [class.error]="validationErrors.estimatedDuration"
+                [disabled]="!canEdit()"
+                min="1"
+                max="24"
+                step="0.5"
+                required
+              />
+              <span class="duration-unit">{{ 'COMPLEMENTARY_TASKS.FORM.HOURS' | translate }}</span>
+            </div>
+            @if (validationErrors.estimatedDuration) {
+              <span class="error-message">{{ validationErrors.estimatedDuration }}</span>
+            }
+            <span class="help-text">
+              @if (formData.estimatedDurationHours && formData.estimatedDurationHours > 0) {
+                {{ formData.estimatedDurationHours }} {{ 'COMPLEMENTARY_TASKS.FORM.HOURS' | translate }}
+              }
+            </span>
+          </div>
+
+          <!-- Assigned To -->
+          <div class="form-group">
+            <label for="assignedTo">
+              {{ 'COMPLEMENTARY_TASKS.FORM.ASSIGNED_TO' | translate }}
+            </label>
+            <div class="assigned-to-row">
+              <input
+                type="text"
+                id="assignedTo"
+                [(ngModel)]="currentTask.assignedTo"
+                name="assignedTo"
+                [disabled]="true"
+                maxlength="100"
+              />
+              <button type="button" class="btn-secondary" (click)="assignTask()">
+                {{ 'COMPLEMENTARY_TASKS.ACTIONS.REASSIGN' | translate }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Form Actions -->
+          @if (canEdit()) {
+            <div class="form-actions">
+              <button type="submit" class="btn-primary" [disabled]="loading()">
+                @if (loading()) {
+                  <span class="spinner-small"></span>
+                  {{ 'COMPLEMENTARY_TASKS.FORM.UPDATING' | translate }}
+                } @else {
+                  {{ 'COMPLEMENTARY_TASKS.FORM.UPDATE' | translate }}
+                }
+              </button>
+            </div>
+          }
+        </form>
+
+        <!-- Notes Section -->
+        <div class="notes-section">
+          <h2>{{ 'COMPLEMENTARY_TASKS.NOTES.TITLE' | translate }}</h2>
+          
+          <!-- Add Note Form -->
+          <div class="add-note-form">
+            <div class="form-group">
+              <label for="noteContent">
+                {{ 'COMPLEMENTARY_TASKS.NOTES.CONTENT' | translate }}
+              </label>
+              <textarea
+                id="noteContent"
+                [(ngModel)]="newNote.content"
+                [class.error]="validationErrors.noteContent"
+                rows="3"
+                maxlength="500"
+                [placeholder]="'COMPLEMENTARY_TASKS.NOTES.PLACEHOLDER' | translate"
+              ></textarea>
+              @if (validationErrors.noteContent) {
+                <span class="error-message">{{ validationErrors.noteContent }}</span>
+              }
+              <span class="character-count">{{ newNote.content.length }}/500</span>
+            </div>
+            <div class="form-group">
+              <label for="noteAddedBy">
+                {{ 'COMPLEMENTARY_TASKS.NOTES.AUTHOR' | translate }}
+              </label>
+              <input
+                type="text"
+                id="noteAddedBy"
+                [(ngModel)]="newNote.author"
+                [class.error]="validationErrors.noteAddedBy"
+                maxlength="100"
+                [placeholder]="'COMPLEMENTARY_TASKS.NOTES.AUTHOR_PLACEHOLDER' | translate"
+              />
+              @if (validationErrors.noteAddedBy) {
+                <span class="error-message">{{ validationErrors.noteAddedBy }}</span>
+              }
+            </div>
+            <button type="button" class="btn-primary" (click)="addNote()">
+              {{ 'COMPLEMENTARY_TASKS.NOTES.ADD' | translate }}
+            </button>
+          </div>
+
+          <!-- Notes List -->
+          @if (currentTask.notes && currentTask.notes.length > 0) {
+            <div class="notes-list">
+              @for (note of currentTask.notes; track note.timestamp) {
+                <div class="note-item">
+                  <div class="note-header">
+                    <span class="note-author">{{ note.author }}</span>
+                    <span class="note-date">{{ formatDate(note.timestamp) }}</span>
+                  </div>
+                  <div class="note-content">{{ note.content }}</div>
+                </div>
+              }
+            </div>
+          } @else {
+            <p class="no-notes">{{ 'COMPLEMENTARY_TASKS.NOTES.NO_NOTES' | translate }}</p>
+          }
+        </div>
+      </div>
+
+      <!-- Sidebar Actions -->
+      <div class="sidebar">
+        <div class="action-panel">
+          <h3>{{ 'COMPLEMENTARY_TASKS.ACTIONS.TITLE' | translate }}</h3>
+          
+          @if (canStart()) {
+            <button class="action-button start-button" (click)="startTask()">
+              <span class="icon">▶️</span>
+              {{ 'COMPLEMENTARY_TASKS.ACTIONS.START' | translate }}
+            </button>
+          }
+
+          @if (canComplete()) {
+            <button class="action-button complete-button" (click)="completeTask()">
+              <span class="icon">✅</span>
+              {{ 'COMPLEMENTARY_TASKS.ACTIONS.COMPLETE' | translate }}
+            </button>
+          }
+
+          @if (canCancel()) {
+            <button class="action-button cancel-button" (click)="cancelTask()">
+              <span class="icon">🚫</span>
+              {{ 'COMPLEMENTARY_TASKS.ACTIONS.CANCEL' | translate }}
+            </button>
+          }
+
+          <button class="action-button back-button-action" (click)="cancel()">
+            <span class="icon">←</span>
+            {{ 'COMPLEMENTARY_TASKS.ACTIONS.BACK' | translate }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

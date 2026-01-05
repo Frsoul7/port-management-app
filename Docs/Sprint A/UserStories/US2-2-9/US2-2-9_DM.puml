@@ -1,0 +1,177 @@
+@startuml US2-2-9_DM
+title US 2.2.9 - Domain Model Excerpt: Reopen Rejected VVN
+
+' Core Aggregates
+package "Visits Aggregate" {
+    class VesselVisitNotification <<aggregate root>> {
+        + VvnGuid : Guid
+        + VvnBusinessId : string
+        + State : VVNState
+        + VisitPurpose : VisitPurpose
+        + VesselImo : string
+        + Eta : DateTime
+        + Etd : DateTime
+        + RejectionReason : string?
+        + RejectedAt : DateTime?
+        --
+        + ReopenToDraft()
+        + Submit()
+        + Approve(officer, dockAssignmentId)
+        + Reject(officer, reason)
+    }
+    
+    enum VVNState {
+        IN_PROGRESS
+        SUBMITTED
+        APPROVED
+        REJECTED
+    }
+    
+    class LoadingCargoManifest {
+        + Entries : List<ManifestEntry>
+    }
+    
+    class UnloadingCargoManifest {
+        + Entries : List<ManifestEntry>
+    }
+    
+    class CrewMember {
+        + Name : string
+        + CitizenId : string
+        + Nationality : string
+        + Role : string
+    }
+}
+
+package "Organization Aggregate" {
+    class Organization <<aggregate root>> {
+        + Id : OrganizationId
+        + Identifier : string
+        + LegalName : string
+        + Type : OrganizationType
+        --
+        + AddRepresentative(rep)
+    }
+    
+    class OrganizationId <<value object>> {
+        + Value : Guid
+    }
+    
+    enum OrganizationType {
+        PORT_AUTHORITY
+        SHIPPING_AGENT
+    }
+    
+    class Representative {
+        + Id : RepresentativeId
+        + Name : string
+        + Email : string
+        + CitizenId : string
+    }
+}
+
+package "User Aggregate" {
+    class User <<aggregate root>> {
+        + Id : UserId
+        + Email : string
+        + Role : string
+    }
+    
+    class UserId <<value object>> {
+        + Value : Guid
+    }
+}
+
+package "Vessel Aggregate" {
+    class Vessel <<aggregate root>> {
+        + ImoNumber : string
+        + Name : string
+        + VesselTypeCode : string
+        + OperatorOrgId : OrganizationId
+    }
+}
+
+package "Dock Assignment Aggregate" {
+    class DockAssignment <<aggregate root>> {
+        + Id : Guid
+        + DockCode : string
+        + BerthFrom : DateTime
+        + BerthTo : DateTime
+        + VvnId : Guid
+        + AssignedByUserId : Guid
+        + Status : string
+    }
+}
+
+' Relationships for US 2.2.9 context
+VesselVisitNotification --> VVNState : current state
+VesselVisitNotification --> OrganizationId : submitted by
+VesselVisitNotification --> UserId : "0..1" submitted by user
+VesselVisitNotification --> UserId : "0..1" rejected by officer
+VesselVisitNotification --> Vessel : references
+VesselVisitNotification --> DockAssignment : "0..1" assigned to (when approved)
+VesselVisitNotification *-- LoadingCargoManifest : "0..1" contains
+VesselVisitNotification *-- UnloadingCargoManifest : "0..1" contains
+VesselVisitNotification *-- "0..*" CrewMember : includes
+
+Organization --> OrganizationId : identified by
+Organization --> OrganizationType : classified as
+Organization *-- "1..*" Representative : employs
+
+User --> UserId : identified by
+
+Vessel --> OrganizationId : operated by
+
+note right of VesselVisitNotification
+  **US 2.2.9 Focus:**
+  
+  ReopenToDraft() method allows
+  Shipping Agent Representatives to
+  transition a REJECTED VVN back to
+  IN_PROGRESS state.
+  
+  Business Rules:
+  • Only REJECTED → IN_PROGRESS
+  • Only same organization
+  • Only Shipping Agent role
+  • Preserves rejection metadata
+  
+  After reopen:
+  • VVN becomes editable
+  • Can update manifests/crew
+  • Can resubmit for approval
+end note
+
+note right of VVNState
+  State Transitions:
+  
+  CREATE → IN_PROGRESS
+  IN_PROGRESS → SUBMITTED (submit)
+  SUBMITTED → APPROVED (approve)
+  SUBMITTED → REJECTED (reject)
+  REJECTED → IN_PROGRESS (reopen) ← US 2.2.9
+  
+  Terminal: APPROVED (locked)
+  Editable: IN_PROGRESS, REJECTED
+end note
+
+note top of Organization
+  Organizational Boundary:
+  
+  Representatives can only reopen
+  VVNs belonging to their own
+  Shipping Agent organization.
+  
+  Port Authority cannot reopen VVNs.
+end note
+
+note bottom of DockAssignment
+  Created only when VVN is APPROVED.
+  
+  If VVN is reopened after rejection,
+  no DockAssignment exists yet.
+  
+  Will be assigned upon next approval.
+end note
+
+@enduml

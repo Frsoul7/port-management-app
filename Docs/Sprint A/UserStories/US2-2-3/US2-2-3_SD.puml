@@ -1,0 +1,72 @@
+@startuml
+title System Diagram – US 2.2.3 Register & Update Docks
+
+actor "Port Authority Officer" as Officer
+
+' --- Client Layer ---
+rectangle "Client Layer" {
+  [Scalar UI / API Client] as ApiClient
+}
+
+' --- Web API Layer ---
+node "Web API" {
+  [DocksController] as C_D
+}
+
+' --- Application Layer ---
+package "Application DTOs" {
+  [CreateDockDto]
+  [UpdateDockDto]
+  [DockResponseDto]
+  [VesselTypeInfoDto]
+}
+
+' --- Infrastructure Layer ---
+package "Infrastructure" {
+  [DockRepository] as DR
+  [VesselTypeRepository] as VTR
+  [PortDbContext] as Db
+  [DockConfiguration] as DC
+  database "EF Core (InMemory)" as Store
+}
+
+' --- Domain Layer ---
+package "Domain" {
+  [Dock]
+  [VesselType]
+  [StorageArea]
+  [MobileEquipment]
+  [STSCrane]
+  [DockStorageDistance]
+}
+
+' --- Interactions ---
+Officer --> ApiClient : uses API UI
+ApiClient --> C_D : HTTP\nPOST / PUT / GET /api/docks
+C_D --> DR : CRUD operations
+C_D --> VTR : lookup vessel types
+DR --> Db : query/persist
+VTR --> Db : query
+Db --> Store : persist data
+DC --> Db : configure mappings
+
+' DTO relationships
+C_D ..> CreateDockDto
+C_D ..> UpdateDockDto
+C_D ..> DockResponseDto
+DockResponseDto ..> VesselTypeInfoDto
+
+' Persistence model
+Db ..> Dock
+Db ..> VesselType
+Db ..> StorageArea
+
+' Domain relationships
+Dock "0..*" --> "0..*" VesselType : allowed vessel types
+Dock "0..*" --> "0..*" StorageArea : served by
+Dock "1" --> "0..*" MobileEquipment : current allocation
+Dock "1" --> "0..1" STSCrane : installed at
+DockStorageDistance --> Dock : from
+DockStorageDistance --> StorageArea : to
+
+@enduml

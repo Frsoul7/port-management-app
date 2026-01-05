@@ -1,0 +1,68 @@
+<div class="shipping-agents-container">
+  <!-- Header -->
+  <div class="header">
+    <div class="header-content">
+      <h1>{{ 'SHIPPING_AGENTS.TITLE' | translate }}</h1>
+      <button class="back-btn" (click)="goBack()">{{ 'NAV.BACK_TO_DASHBOARD' | translate }}</button>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="content">
+    <!-- Search Bar Component -->
+    <app-shipping-agent-search-bar 
+      (onSearch)="onSearch($event)"
+      (onAdd)="openCreateModal()">
+    </app-shipping-agent-search-bar>
+
+    <!-- Organization Table Component -->
+    <app-shipping-agent-table
+      [organizations]="filteredOrganizations"
+      [loading]="loading"
+      (onView)="onView($event)">
+    </app-shipping-agent-table>
+
+    <!-- Alert Banners -->
+    <app-alert-banner
+      [message]="errorMessage"
+      [type]="'error'"
+      (onClose)="errorMessage = ''">
+    </app-alert-banner>
+
+    <app-alert-banner
+      [message]="successMessage"
+      [type]="'success'"
+      (onClose)="successMessage = ''">
+    </app-alert-banner>
+  </div>
+
+  <!-- Form Modal Component (Create Organization) -->
+  <app-shipping-agent-form-modal
+    [show]="showFormModal"
+    [saving]="saving"
+    (onClose)="closeFormModal()"
+    (onCreate)="onFormCreate($event)">
+  </app-shipping-agent-form-modal>
+
+  <!-- View Modal Component (View Organization & Representatives) -->
+  <app-shipping-agent-view-modal
+    [show]="showViewModal"
+    [organization]="selectedOrganization"
+    (onClose)="closeViewModal()"
+    (onAddRepresentative)="openAddRepresentativeModal($event)"
+    (onEditRepresentative)="openEditRepresentativeModal($event)"
+    (onToggleStatus)="onToggleRepresentativeStatus($event)">
+  </app-shipping-agent-view-modal>
+
+  <!-- Representative Form Modal Component (Add/Edit Representative) -->
+  <app-representative-form-modal
+    [show]="showRepresentativeModal"
+    [organization]="selectedOrganization"
+    [representative]="selectedRepresentative"
+    [isEditMode]="isRepresentativeEditMode"
+    [saving]="saving"
+    (onClose)="closeRepresentativeModal()"
+    (onAdd)="onAddRepresentative($event)"
+    (onUpdate)="onUpdateRepresentative($event)">
+  </app-representative-form-modal>
+</div>

@@ -1,0 +1,42 @@
+@startuml C4_Level2_Container
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+LAYOUT_WITH_LEGEND()
+
+title C4 Container Diagram - Port Management System
+
+Person(portOfficer, "Port Authority Officer", "Manages port operations")
+Person(shippingAgent, "Shipping Agent Representative", "Submits vessel visits")
+Person(portStaff, "Port Staff Member", "Executes port operations")
+
+System_Boundary(portSystem, "Port Management System") {
+    Container(webApi, "Web API", ".NET 9 / ASP.NET Core", "Provides REST API for port management operations")
+    
+    Container(appLayer, "Application Layer", ".NET 9", "Orchestrates domain operations, enforces policies, coordinates workflows")
+    
+    Container(domainLayer, "Domain Layer", ".NET 9 / DDD", "Core business logic: Vessels, VVNs, Manifests, Resources, Organizations")
+    
+    ContainerDb(database, "Database", "In-Memory / SQL Server", "Stores vessels, VVNs, manifests, organizations, resources, docks")
+    
+    Container(infrastructure, "Infrastructure Layer", "EF Core", "Implements repositories, handles persistence, database configurations")
+}
+
+System_Ext(imoDatabase, "IMO Database", "Vessel registry")
+System_Ext(customsSystem, "Customs System", "Cargo inspection")
+System_Ext(notificationService, "Notification Service", "Email/SMS")
+
+Rel(portOfficer, webApi, "Uses", "HTTPS/JSON")
+Rel(shippingAgent, webApi, "Uses", "HTTPS/JSON")
+Rel(portStaff, webApi, "Uses", "HTTPS/JSON")
+
+Rel(webApi, appLayer, "Calls services", "In-process")
+Rel(appLayer, domainLayer, "Uses domain entities", "In-process")
+Rel(appLayer, infrastructure, "Persists/retrieves data", "In-process")
+Rel(infrastructure, database, "Reads from and writes to", "EF Core")
+Rel(infrastructure, domainLayer, "Maps to/from entities", "In-process")
+
+Rel(domainLayer, imoDatabase, "Validates IMO numbers", "HTTPS/API")
+Rel(appLayer, customsSystem, "Shares manifest data", "HTTPS/API")
+Rel(appLayer, notificationService, "Sends notifications", "SMTP/API")
+
+@enduml

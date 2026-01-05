@@ -1,0 +1,41 @@
+@startuml
+title US 4.1.1 - OEM Module Architecture (C4 Level 1 - System Context)
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+LAYOUT_WITH_LEGEND()
+
+Person(operator, "Logistics Operator", "Manages port operations")
+Person(pm, "Project Manager", "Oversees system architecture")
+
+System(spa, "Single Page Application", "Angular-based web interface")
+
+System_Boundary(backend, "Backend Services") {
+    System(oem, "OEM Backend", "Operations & Execution Management\nNode.js + TypeScript + MongoDB\nUS 4.1.1")
+    System(core, "Core Backend", ".NET + PostgreSQL\nVVN Management, IAM")
+    System(planning, "Planning Service", "Prolog-based\nScheduling algorithms")
+}
+
+System_Ext(external, "External Systems", "Maritime APIs, Weather services")
+
+Rel(operator, spa, "Uses")
+Rel(pm, oem, "Manages architecture")
+
+Rel(spa, oem, "REST API calls", "HTTPS/JSON")
+Rel(spa, core, "REST API calls", "HTTPS/JSON")
+
+Rel(oem, core, "Fetches VVN data", "REST API")
+Rel(oem, planning, "Requests operation plans", "REST API")
+Rel(core, external, "Fetches vessel data", "REST API")
+
+note right of oem
+  **US 4.1.1 Requirements:**
+  • Independent backend service
+  • REST-based API with CRUD
+  • Swagger/OpenAPI documentation
+  • JWT authentication (from Core)
+  • No direct database access
+  • RBAC/ABAC authorization
+end note
+
+@enduml

@@ -1,0 +1,50 @@
+@startuml
+title C4 Container – US 2.2.5 Organizations
+
+actor "Port Authority\nOfficer" as Officer
+
+node "Client Layer" {
+  [UI / API Client] as Client
+}
+
+node "Web API" {
+  [OrganizationsController] as Ctl
+}
+
+node "Application Layer" {
+  [OrganizationService] as Svc
+}
+
+database "Persistence" as Db
+node "Domain" as Dom {
+  [Organization] as Org
+  [Representative] as Rep
+}
+
+Officer --> Client : register organizations
+Client --> Ctl : POST/GET
+Ctl --> Svc : CRUD operations
+Svc --> Db : persist/retrieve
+Svc ..> Org : create
+Org *-- Rep : ≥1 representative
+
+note right of Org
+  Organization:
+  - Unique ID
+  - Legal name (required)
+  - Alternative name (optional)
+  - Address
+  - Tax number (unique)
+  - ≥1 Representative
+end note
+
+note right of Rep
+  Representative:
+  - Name
+  - Citizen ID
+  - Nationality (ISO 3166-1)
+  - Email (unique globally)
+  - Phone (optional)
+end note
+
+@enduml

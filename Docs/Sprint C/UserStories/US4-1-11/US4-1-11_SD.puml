@@ -1,0 +1,79 @@
+@startuml
+title SD - US 4.1.11 Complete VVE (White-box)
+
+skinparam shadowing false
+skinparam responseMessageBelowArrow true
+
+actor "SPA" as SPA
+control "Auth Middleware" as Auth
+control "VVE Controller" as C
+control "VVE Application Service" as S
+entity "IVVERepository" as Repo
+database "MongoDB" as DB
+entity "VesselVisitExecution (Domain)" as VVE
+
+== POST /unberth ==
+SPA -> Auth : request + JWT
+alt invalid token/role
+  Auth --> SPA : 403 Forbidden
+else authorized
+  Auth -> C : forward request
+  C -> C : validate(id, unberthTime)
+  alt invalid input
+    C --> SPA : 400 Bad Request
+  else valid
+    C -> S : recordUnberth(vveId, unberthTime, userId)
+    S -> Repo : findById(vveId)
+    Repo -> DB : findOne({id})
+    DB --> Repo : vveDoc
+    Repo --> S : VVE
+    S -> VVE : recordUnberthing(unberthTime)
+    alt domain error (e.g., state/time invalid)
+      VVE --> S : DomainError
+      S --> C : map error
+      C --> SPA : 409/422
+    else ok
+      VVE --> S : updated VVE
+      S -> Repo : update(VVE)
+      Repo -> DB : updateOne({id}, changes)
+      DB --> Repo : updatedDoc
+      Repo --> S : updatedVVE
+      S --> C : VVEDTO
+      C --> SPA : 200 OK VVEDTO
+    end
+  end
+end
+
+== POST /complete ==
+SPA -> Auth : request + JWT
+alt invalid token/role
+  Auth --> SPA : 403 Forbidden
+else authorized
+  Auth -> C : forward request
+  C -> C : validate(id, departureTime)
+  alt invalid input
+    C --> SPA : 400 Bad Request
+  else valid
+    C -> S : completeVve(vveId, departureTime, userId)
+    S -> Repo : findById(vveId)
+    Repo -> DB : findOne({id})
+    DB --> Repo : vveDoc
+    Repo --> S : VVE
+    S -> VVE : markAsCompleted(departureTime, userId)
+    alt domain error (missing unberth / ops unfinished / time invalid / wrong state)
+      VVE --> S : DomainError
+      S --> C : map error
+      C --> SPA : 409/422
+    else ok
+      VVE --> S : updated VVE (status=COMPLETED)
+      S -> Repo : update(VVE)
+      Repo -> DB : updateOne({id}, changes)
+      DB --> Repo : updatedDoc
+      Repo --> S : updatedVVE
+      S --> C : VVEDTO
+      C --> SPA : 200 OK VVEDTO
+    end
+  end
+end
+
+@enduml

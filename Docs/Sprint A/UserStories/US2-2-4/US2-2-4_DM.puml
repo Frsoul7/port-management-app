@@ -1,0 +1,62 @@
+@startuml
+title Domain Model – US 2.2.4 (Register & Update Storage Areas)
+
+class StorageArea {
+  + StorageAreaId : string
+  + Name : string
+  + Location : string
+  + MaxCapacityTEU : int
+  + CurrentOccupancyTEU : int
+  + ServesAllDocks : bool
+  + Type : StorageAreaType
+  --
+  + Update(name:string, location:string, maxCapacityTEU:int, servesAllDocks:bool) : void
+  + SetYardSpec(notes:string) : void
+  + SetWarehouseSpec(notes:string) : void
+  + SetServedDocks(docks:IEnumerable<Dock>) : void
+  + UpdateOccupancy(newOccupancy:int) : void
+}
+
+enum StorageAreaType {
+  ORDINARY
+  YARD
+  WAREHOUSE
+}
+
+class YardSpec {
+  + YardSpecId : int
+  + Notes : string
+}
+
+class WarehouseSpec {
+  + WarehouseSpecId : int
+  + Notes : string
+}
+
+class Dock {
+  + Code : string
+  + Name : string
+  + Location : string
+}
+
+class DockStorageDistance {
+  + DockStorageDistanceId : int
+  + DistanceMeters : int
+  + DockCode : string
+  + StorageAreaId : string
+}
+
+' Relationships
+StorageArea --> StorageAreaType : has type
+StorageArea "1" *-- "0..1" YardSpec : owns (XOR)
+StorageArea "1" *-- "0..1" WarehouseSpec : owns (XOR)
+StorageArea "*" -- "*" Dock : serves/restricted to
+DockStorageDistance "*" -- "1" Dock : from
+DockStorageDistance "*" -- "1" StorageArea : to
+
+note right of StorageArea
+  Invariant: CurrentOccupancyTEU <= MaxCapacityTEU
+  By default ServesAllDocks = true
+  YardSpec XOR WarehouseSpec based on Type
+end note
+@enduml

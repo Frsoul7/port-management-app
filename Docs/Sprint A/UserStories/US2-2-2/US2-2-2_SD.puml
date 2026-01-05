@@ -1,0 +1,58 @@
+@startuml
+title System Diagram – US 2.2.2 Register & Update Vessel Records
+
+actor "Port Authority Officer" as Officer
+
+' --- Client Layer ---
+rectangle "Client Layer" {
+  [Scalar UI / API Client] as ApiClient
+}
+
+' --- Web API Layer ---
+node "Web API" {
+  [VesselsController] as C_V
+}
+
+' --- Application Layer ---
+package "Application DTOs" {
+  [CreateVesselDto]
+  [UpdateVesselDto]
+  [VesselResponseDto]
+}
+
+' --- Infrastructure Layer ---
+package "Infrastructure" {
+  [PortDbContext] as Db
+  database "EF Core (InMemory)" as Store
+}
+
+' --- Domain Layer ---
+package "Domain" {
+  [Vessel]
+  [VesselType]
+  [Organization]
+  [OrganizationId (VO)] as OrgId
+}
+
+' --- Interactions ---
+Officer --> ApiClient : uses API UI
+ApiClient --> C_V : HTTP\nPOST / PUT / GET /api/vessels
+C_V --> Db : CRUD via EF Core
+Db --> Store : persist data
+
+' DTO relationships
+C_V ..> CreateVesselDto
+C_V ..> UpdateVesselDto
+C_V ..> VesselResponseDto
+
+' Persistence model
+Db ..> Vessel
+Db ..> VesselType
+Db ..> Organization
+
+' Domain relationships
+Vessel --> VesselType : VesselTypeId
+Vessel --> Organization : OrganizationId
+Organization --> OrgId : has
+
+@enduml

@@ -1,0 +1,38 @@
+@startuml
+title SSD – Search Shipping Agent Organizations
+
+actor "Port Authority Officer" as Officer
+participant "API Client" as Client
+participant "OrganizationsController" as C
+participant "OrganizationRepository" as OR
+participant "PortDbContext" as Db
+database "EF (InMemory)" as Store
+
+Officer -> Client : GET /api/organizations?identifier=...&legalName=...
+Client -> C : GetAll(identifier?, legalName?)
+activate C
+
+alt filters provided
+  C -> OR : SearchAsync(identifier, legalName)
+  activate OR
+  OR -> Db : query Organizations.Include(Representatives)
+  Db -> Store : apply filters
+  note right
+    - filter Identifier contains (case-insensitive)
+    - filter LegalName contains (case-insensitive)
+  end note
+  Store --> Db : List<Organization>
+  Db --> OR : List<Organization>
+  deactivate OR
+else no filters
+  C -> OR : ListAsync()
+  activate OR
+  OR -> Store : query all Organizations + Representatives
+  Store --> OR : List<Organization>
+  deactivate OR
+end
+
+C -> C : map to List<OrganizationResponseDto>
+C --> Client : 200 OK [OrganizationResponseDto...]
+deactivate C
+@enduml

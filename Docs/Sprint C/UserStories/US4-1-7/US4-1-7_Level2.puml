@@ -1,0 +1,32 @@
+@startuml
+title US 4.1.7 - Nível 2 (Fluxo Funcional / SSD)
+
+skinparam shadowing false
+
+actor "Logistics Operator" as Op
+boundary "SPA" as SPA
+system "OEM System" as OEM
+
+Op -> SPA : Submit finishTime for Cargo Operation
+SPA -> OEM : POST /cargo-operations/{id}/finish\n{finishTime}
+
+alt Invalid/unauthorized
+  OEM --> SPA : 4xx error
+  SPA --> Op : Show error
+else Validation fails (business rules)
+  OEM --> SPA : 409/422\n(reason: wrong status OR\nfinishTime < startTime OR\ninvalid VVE state OR\ninvalid timestamp)
+  SPA --> Op : Show validation message
+else Operation finished successfully
+  OEM --> SPA : 200 OK\n(status=FINISHED, finishedAt)
+  SPA --> Op : Show FINISHED state
+end
+
+note right of OEM
+Business Rules:
+- CargoOperation must be IN_PROGRESS
+- Parent VVE must be IN_PROGRESS
+- finishTime > startedAt
+- Transitions to FINISHED
+end note
+
+@enduml

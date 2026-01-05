@@ -1,0 +1,67 @@
+@startuml
+title Domain Model – US 2.2.12 (Physical Resources)
+
+class PhysicalResource <<Aggregate Root>> {
+  + ResourceId : Guid
+  + Code : string
+  + Description : string
+  + Type : ResourceType
+  + Availability : PhysicalResourceAvailability
+  + SetupTimeSeconds : int
+  + CreatedAt : DateTime
+  + DeactivatedAt : DateTime?
+  + DeactivationReason : string?
+  + RequiredQualifications : List<StaffMemberQualification>
+  --
+  + Update(...): void
+  + Deactivate(reason:string): void
+  + Activate(): void
+  + SetRequiredQualifications(...): void
+}
+
+class STSCrane <<Entity>> {
+  + AvgContainersPerHour : int
+  + InstalledAtDockCode : string?
+}
+
+class MobileEquipment <<Entity>> {
+  + MobileEquipmentType : MobileEquipmentType
+  + MaxSpeedKph : int?
+  + ContainersPerTrip : int?
+  + AvgContainersPerHour : int?
+  + CurrentDockCode : string?
+}
+
+class StaffMemberQualification <<Entity>> {
+  + QualificationId : string
+  + Name : string
+}
+
+class Dock <<Entity>> {
+  + Code : string
+  + Name : string
+}
+
+class StorageArea <<Entity>> {
+  + StorageAreaId : string
+  + Name : string
+}
+
+enum PhysicalResourceAvailability {
+  AVAILABLE
+  MAINTENANCE
+  TEMP_OUT_OF_SERVICE
+}
+
+enum MobileEquipmentType {
+  TRUCK
+  YARD_GANTRY_CRANE
+}
+
+PhysicalResource <|-- STSCrane
+PhysicalResource <|-- MobileEquipment
+PhysicalResource "1" o-- "0..*" StaffMemberQualification : requires
+STSCrane "0..1" --> "1" Dock : installedAt
+MobileEquipment "0..1" --> "1" Dock : currentAllocation
+PhysicalResource "0..1" --> "1" StorageArea : assignedTo
+@enduml

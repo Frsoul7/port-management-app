@@ -1,0 +1,7 @@
+<div class="alert-banner" 
+     *ngIf="message"
+     [class.error]="type === 'error'"
+     [class.success]="type === 'success'">
+  <span>{{ message }}</span>
+  <button (click)="close()" class="close-btn">×</button>
+</div>

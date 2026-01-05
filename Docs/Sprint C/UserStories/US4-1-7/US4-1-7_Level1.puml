@@ -1,0 +1,59 @@
+@startuml
+title US 4.1.7 - Nível 1 (Visão Arquitetural / Camadas)
+
+skinparam componentStyle rectangle
+skinparam shadowing false
+
+actor "Logistics Operator" as Op
+rectangle "SPA (UI)" as SPA
+
+package "OEM Service" {
+  rectangle "REST API" as API
+
+  package "Presentation" {
+    [CargoOperationController] as C
+    [Auth Middleware] as Auth
+  }
+
+  package "Application" {
+    [CargoOperationService] as S
+  }
+
+  package "Domain" {
+    [CargoOperation] as CO
+    [VesselVisitExecution] as VVE
+    [OperationStatus] as Status
+    [ICargoOperationRepository] as ICORepo
+    [IVesselVisitExecutionRepository] as IVVERepo
+  }
+
+  package "Infrastructure" {
+    [MongoCargoOperationRepository] as MongoRepo
+    [MongoVesselVisitExecutionRepository] as VVERepo
+    database "MongoDB" as DB
+  }
+}
+
+Op --> SPA : Marks Cargo Operation as Finished
+SPA --> API : POST /cargo-operations/{id}/finish\n{finishTime}
+
+API --> Auth
+Auth --> C : authorized request
+C --> S : finishCargoOperation(...)
+S --> ICORepo : get/update (DIP)
+S --> IVVERepo : validate/update
+ICORepo <|.. MongoRepo
+IVVERepo <|.. VVERepo
+MongoRepo --> DB
+VVERepo --> DB
+
+S --> CO : markAsFinished(...)
+CO ..> Status : IN_PROGRESS -> FINISHED
+
+note right of S
+Dependency Rule:
+Presentation/Application depend on Domain.
+Infrastructure depends on Domain interfaces.
+end note
+
+@enduml

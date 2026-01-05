@@ -1,0 +1,63 @@
+@startuml
+title C4 L4 - Code (US 4.1.11 - Complete VVE)
+
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+
+enum VveStatus {
+  PLANNED
+  IN_PROGRESS
+  COMPLETED
+}
+
+class VesselVisitExecution {
+  +id: string
+  +status: VveStatus
+  +actualBerthTime: DateTime
+  +actualUnberthTime: DateTime
+  +actualPortDepartureTime: DateTime
+  +completedAt: DateTime
+  +completedBy: string
+  +cargoOperations: List<CargoOperation>
+
+  +recordUnberthing(unberthTime: DateTime)
+  +markAsCompleted(departureTime: DateTime, completedBy: string)
+  -ensureInProgress()
+  -ensureTemporalConsistency()
+  -ensureAllOperationsFinished()
+}
+
+class CargoOperation {
+  +id: string
+  +finishedAt: DateTime
+  +isFinished(): boolean
+}
+
+interface IVesselVisitExecutionRepository {
+  +findById(id: string): VesselVisitExecution
+  +update(vve: VesselVisitExecution): VesselVisitExecution
+}
+
+class MongoVesselVisitExecutionRepository {
+  +findById(id: string): VesselVisitExecution
+  +update(vve: VesselVisitExecution): VesselVisitExecution
+}
+
+class VesselVisitExecutionService {
+  -repo: IVesselVisitExecutionRepository
+  +recordUnberth(id: string, unberthTime: DateTime, userId: string)
+  +completeVve(id: string, departureTime: DateTime, userId: string)
+}
+
+VesselVisitExecution "1" o-- "*" CargoOperation
+VesselVisitExecution ..> VveStatus
+
+VesselVisitExecutionService --> IVesselVisitExecutionRepository : DIP
+IVesselVisitExecutionRepository <|.. MongoVesselVisitExecutionRepository
+
+note right of IVesselVisitExecutionRepository
+Repository interface lives in the core layers.
+Mongo implementation is an adapter.
+end note
+
+@enduml

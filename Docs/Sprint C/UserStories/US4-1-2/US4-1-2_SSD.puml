@@ -1,0 +1,36 @@
+@startuml
+title SSD - US 4.1.2 Generate Operation Plan (Black-box)
+
+skinparam shadowing false
+skinparam responseMessageBelowArrow true
+
+actor "Logistics Operator" as Op
+boundary "SPA" as SPA
+system "OEM System" as OEM
+
+Op -> SPA : Select target date and algorithm
+SPA -> SPA : Display available algorithms\n(optimal, weighted, multi_cranes)
+Op -> SPA : Confirm generation
+
+SPA -> OEM : POST /operation-plans/generate\n{ targetDate, algorithm, vvnIds? }
+
+alt Unauthorized or invalid input
+  OEM --> SPA : 401/400\n{ error }
+  SPA --> Op : Show error message
+else Plan already exists for date
+  OEM --> SPA : 409 Conflict\n{ error: "Plan already exists" }
+  SPA --> Op : Show conflict message
+else No VVNs for date
+  OEM --> SPA : 404\n{ error: "No approved VVNs found" }
+  SPA --> Op : Show no data message
+else Planning Service failure
+  OEM --> SPA : 500\n{ error: "Planning service unavailable" }
+  SPA --> Op : Show service error
+else Success
+  OEM --> SPA : 201 Created\n{ operationPlan, status=GENERATED }
+  SPA --> Op : Display generated plan\n(operations, resource assignments, timeline)
+  Op -> SPA : Review plan details
+  SPA --> Op : Show plan with option to approve
+end
+
+@enduml

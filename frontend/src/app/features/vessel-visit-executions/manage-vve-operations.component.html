@@ -1,0 +1,374 @@
+<div class="manage-operations-container">
+  <!-- Back Button and Complete VVE Button -->
+  <div class="navigation-header">
+    <button type="button" class="btn-back" (click)="navigateBack()">
+      ← Back to VVE List
+    </button>
+    <!-- US 4.1.11: Complete VVE button -->
+    <button
+      *ngIf="canCompleteVVE()"
+      type="button"
+      class="btn-complete-vve"
+      (click)="openCompleteVVEModal()"
+      title="Complete vessel visit and record departure"
+    >
+      ✓ Complete Visit
+    </button>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading()" class="loading-container">
+    <div class="spinner"></div>
+    <p>Loading vessel visit execution...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error() && !loading()" class="error-container">
+    <p class="error-message">{{ error() }}</p>
+    <button class="btn-primary" (click)="loadVVE()">Retry</button>
+  </div>
+
+  <!-- VVE Header and Operations -->
+  <div *ngIf="!loading() && !error() && vve()" class="content-section">
+    <!-- VVE Header -->
+    <div class="vve-header">
+      <h1>Manage Operations - {{ vve()!.vveId }}</h1>
+      <div class="vve-details">
+        <div class="detail-item">
+          <label>VVN ID:</label>
+          <span>{{ vve()!.vvnId }}</span>
+        </div>
+        <div class="detail-item">
+          <label>Status:</label>
+          <span class="status-badge" [ngClass]="getStatusClass(vve()!.status)">
+            {{ vve()!.status }}
+          </span>
+        </div>
+        <div class="detail-item">
+          <label>Arrival Time:</label>
+          <span>{{ formatDate(vve()!.actualPortArrivalTime) }}</span>
+        </div>
+        <div class="detail-item" *ngIf="vve()!.actualBerthTime">
+          <label>Berth Time:</label>
+          <span>{{ formatDate(vve()!.actualBerthTime) }}</span>
+        </div>
+        <div class="detail-item" *ngIf="vve()!.assignedDock">
+          <label>Dock:</label>
+          <span>{{ vve()!.assignedDock }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Operations Section -->
+    <div class="operations-section">
+      <h2>Executed Operations ({{ operations().length }})</h2>
+
+      <div *ngIf="operations().length === 0" class="no-operations">
+        <p>No operations have been added to this vessel visit execution yet.</p>
+      </div>
+
+      <table *ngIf="operations().length > 0" class="operations-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Type</th>
+            <th>Start Time</th>
+            <th>End Time</th>
+            <th>Containers</th>
+            <th>Cranes</th>
+            <th>Staff Assigned</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let operation of operations(); let i = index" class="operation-row">
+            <td>{{ i + 1 }}</td>
+            <td>{{ operation.operationType }}</td>
+            <td>{{ formatDate(operation.startTime) }}</td>
+            <td>{{ operation.endTime ? formatDate(operation.endTime) : 'In Progress' }}</td>
+            <td>{{ operation.containersProcessed || 0 }}</td>
+            <td>{{ operation.cranesUsed }}</td>
+            <td>
+              <span *ngIf="operation.staffAssigned.length > 0">
+                {{ operation.staffAssigned.join(', ') }}
+              </span>
+              <span *ngIf="operation.staffAssigned.length === 0" class="text-muted">
+                None assigned
+              </span>
+            </td>
+            <td>
+              <span class="status-badge" [ngClass]="getStatusClass(operation.status)">
+                {{ operation.status }}
+              </span>
+            </td>
+            <td>
+              <div class="action-buttons">
+                <button
+                  *ngIf="canModifyOperation(operation)"
+                  class="btn-action btn-complete"
+                  (click)="openCompleteModal(operation, i)"
+                  title="Complete this operation"
+                >
+                  Complete
+                </button>
+                <button
+                  *ngIf="canModifyOperation(operation)"
+                  class="btn-action btn-delay"
+                  (click)="openDelayModal(operation, i)"
+                  title="Mark as delayed"
+                >
+                  Mark Delayed
+                </button>
+                <span *ngIf="!canModifyOperation(operation)" class="text-muted">
+                  No actions available
+                </span>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Complete Operation Modal -->
+  <div
+    *ngIf="showCompleteModal()"
+    class="modal-overlay"
+    (click)="closeCompleteModal()"
+  >
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Complete Operation</h3>
+        <button class="btn-close" (click)="closeCompleteModal()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Operation Details -->
+        <div class="info-section" *ngIf="selectedOperation()">
+          <h4>Operation Details</h4>
+          <div class="info-grid">
+            <div class="info-item">
+              <label>Type:</label>
+              <span>{{ selectedOperation()!.operation.operationType }}</span>
+            </div>
+            <div class="info-item">
+              <label>Start Time:</label>
+              <span>{{ formatDate(selectedOperation()!.operation.startTime) }}</span>
+            </div>
+            <div class="info-item">
+              <label>Cranes Used:</label>
+              <span>{{ selectedOperation()!.operation.cranesUsed }}</span>
+            </div>
+            <div class="info-item">
+              <label>Current Status:</label>
+              <span class="status-badge" [ngClass]="getStatusClass(selectedOperation()!.operation.status)">
+                {{ selectedOperation()!.operation.status }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Complete Form -->
+        <div class="form-section">
+          <h4>Completion Details</h4>
+
+          <div class="form-group">
+            <label for="endTime">End Time *</label>
+            <input
+              type="datetime-local"
+              id="endTime"
+              [(ngModel)]="completeForm.endTime"
+              class="input-field"
+              [disabled]="completingOperation()"
+            />
+            <small class="help-text">
+              End time must be after start time
+            </small>
+          </div>
+
+          <div class="form-group">
+            <label for="containersProcessed">Containers Processed *</label>
+            <input
+              type="number"
+              id="containersProcessed"
+              [(ngModel)]="completeForm.containersProcessed"
+              class="input-field"
+              min="0"
+              [disabled]="completingOperation()"
+            />
+            <small class="help-text">
+              Enter the total number of containers processed during this operation
+            </small>
+          </div>
+        </div>
+
+        <!-- Success Message -->
+        <div *ngIf="completeSuccess()" class="success-banner">
+          ✓ {{ completeSuccess() }}
+        </div>
+
+        <!-- Error Message -->
+        <div *ngIf="completeError()" class="error-banner">
+          ✗ {{ completeError() }}
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn-secondary"
+          (click)="closeCompleteModal()"
+          [disabled]="completingOperation()"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          class="btn-primary"
+          (click)="submitComplete()"
+          [disabled]="!isCompleteFormValid() || completingOperation()"
+        >
+          {{ completingOperation() ? 'Completing...' : 'Complete Operation' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mark as Delayed Modal -->
+  <div
+    *ngIf="showDelayModal()"
+    class="modal-overlay"
+    (click)="closeDelayModal()"
+  >
+    <div class="modal-content modal-small" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Mark Operation as Delayed</h3>
+        <button class="btn-close" (click)="closeDelayModal()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Operation Details -->
+        <div class="info-section" *ngIf="selectedOperation()">
+          <p>Are you sure you want to mark this operation as delayed?</p>
+          <div class="info-grid">
+            <div class="info-item">
+              <label>Type:</label>
+              <span>{{ selectedOperation()!.operation.operationType }}</span>
+            </div>
+            <div class="info-item">
+              <label>Start Time:</label>
+              <span>{{ formatDate(selectedOperation()!.operation.startTime) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Success Message -->
+        <div *ngIf="delaySuccess()" class="success-banner">
+          ✓ {{ delaySuccess() }}
+        </div>
+
+        <!-- Error Message -->
+        <div *ngIf="delayError()" class="error-banner">
+          ✗ {{ delayError() }}
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn-secondary"
+          (click)="closeDelayModal()"
+          [disabled]="markingDelayed()"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          class="btn-warning"
+          (click)="markAsDelayed()"
+          [disabled]="markingDelayed()"
+        >
+          {{ markingDelayed() ? 'Marking...' : 'Mark as Delayed' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- US 4.1.11: Complete VVE Modal -->
+<div
+  class="modal-overlay"
+  *ngIf="showCompleteVVEModal()"
+  (click)="closeCompleteVVEModal()"
+>
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Complete Vessel Visit Execution</h3>
+      <button class="btn-close" (click)="closeCompleteVVEModal()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="info-banner">
+        <strong>⚠️ Important:</strong> Completing the VVE will mark it as finished and record the vessel's port departure time. Ensure all operations are completed and the vessel has unberthed.
+      </div>
+
+      <!-- VVE Summary -->
+      <div class="summary-section">
+        <h4>Current Status:</h4>
+        <ul>
+          <li><strong>VVE ID:</strong> {{ vve()?.vveId }}</li>
+          <li><strong>Vessel:</strong> {{ vve()?.vvnId }}</li>
+          <li><strong>Unberth Time:</strong> {{ vve()?.actualUnberthTime ? (vve()!.actualUnberthTime | date:'short') : 'N/A' }}</li>
+          <li><strong>Total Operations:</strong> {{ vve()?.operations?.length || 0 }}</li>
+          <li><strong>Completed Operations:</strong> {{ getCompletedOperationsCount() }}</li>
+        </ul>
+      </div>
+
+      <!-- Complete VVE Form -->
+      <div class="form-group">
+        <label for="departureTime">
+          Port Departure Time <span class="required">*</span>
+        </label>
+        <input
+          type="datetime-local"
+          id="departureTime"
+          [(ngModel)]="completeVVEForm.departureTime"
+          class="form-control"
+          required
+        />
+        <small class="form-hint">
+          Time when the vessel exited port limits (must be after unberth time)
+        </small>
+      </div>
+
+      <!-- Success/Error Messages -->
+      <div class="message-container">
+        <div *ngIf="completeVVESuccess()" class="success-banner">
+          ✓ {{ completeVVESuccess() }}
+        </div>
+
+        <div *ngIf="completeVVEError()" class="error-banner">
+          ✗ {{ completeVVEError() }}
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button
+        class="btn-secondary"
+        (click)="closeCompleteVVEModal()"
+        [disabled]="completingVVE()"
+      >
+        Cancel
+      </button>
+      <button
+        class="btn-primary"
+        (click)="submitCompleteVVE()"
+        [disabled]="!isCompleteVVEFormValid() || completingVVE()"
+      >
+        {{ completingVVE() ? 'Completing...' : 'Complete Visit' }}
+      </button>
+    </div>
+  </div>
+</div>

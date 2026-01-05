@@ -1,0 +1,51 @@
+@startuml
+title C4 Container – US 2.2.10 View VVN Status
+
+actor "Shipping Agent\nRepresentative" as Agent
+
+node "Client Layer" {
+  [UI / API Client] as Client
+}
+
+node "Web API" {
+  [VesselVisitNotificationsController] as Ctl
+}
+
+node "Application Layer" {
+  [VesselVisitService] as Svc
+  [CallerContext] as Auth
+}
+
+database "Persistence" as Db
+node "Domain" as Dom {
+  [VesselVisitNotification] as Vvn
+  [DockAssignment] as DA
+  [DecisionLog] as Log
+}
+
+Agent --> Client : view VVN status
+Client --> Ctl : GET with filters
+Ctl --> Auth : verify organization
+Ctl --> Svc : query VVNs
+Svc --> Db : retrieve with filters
+Svc ..> Vvn : filter by status/vessel/time
+Vvn o-- DA : approved → dock info
+Vvn o-- Log : rejected → reason
+
+note right of Vvn
+  Filters:
+  - Vessel (IMO)
+  - Status (all states)
+  - Representative
+  - Time range
+  - Organization scope
+end note
+
+note bottom of Ctl
+  Returns:
+  - APPROVED: dock assignment
+  - REJECTED: rejection reason
+  - All: audit timestamps
+end note
+
+@enduml

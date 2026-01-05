@@ -1,0 +1,51 @@
+<div class="modal-overlay" *ngIf="show && organization" (click)="close()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ isEditMode ? 'Edit Representative' : 'Add Representative' }}</h2>
+      <button class="close-btn" (click)="close()">&times;</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="org-info">
+        <strong>Organization:</strong> {{ organization.legalName }}
+      </div>
+
+      <form>
+        <div class="form-group">
+          <label>Name*</label>
+          <input type="text" [(ngModel)]="formData.name" name="name" required>
+        </div>
+
+        <div class="form-group">
+          <label>Citizen ID*</label>
+          <input type="text" [(ngModel)]="formData.citizenId" name="citizenId" required>
+        </div>
+
+        <div class="form-group">
+          <label>Nationality*</label>
+          <input type="text" [(ngModel)]="formData.nationality" name="nationality" required>
+        </div>
+
+        <div class="form-group">
+          <label>Email*</label>
+          <input type="email" [(ngModel)]="formData.email" name="email" required>
+        </div>
+
+        <div class="form-group">
+          <label>Phone*</label>
+          <input type="tel" [(ngModel)]="formData.phone" name="phone" required>
+        </div>
+      </form>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="close()" [disabled]="saving">Cancel</button>
+      <button class="btn btn-primary" (click)="save()" [disabled]="!isFormValid() || saving">
+        {{ saving ? 'Saving...' : (isEditMode ? 'Update' : 'Add') }}
+      </button>
+    </div>
+    
+    <!-- Loading Overlay for Saving -->
+    <app-loading *ngIf="saving" [message]="'COMMON.SAVING'"></app-loading>
+  </div>
+</div>

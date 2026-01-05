@@ -1,0 +1,57 @@
+@startuml
+title Domain Model – US 2.2.3 (Register & Update Docks)
+
+class Dock {
+  + Code : string
+  + Name : string
+  + Location : string
+  + LengthM : double
+  + DepthM : double
+  + MaxDraftM : double
+  --
+  + Dock(code:string, name:string, location:string, lengthM:double, depthM:double, maxDraftM:double)
+  + Update(name:string, location:string, lengthM:double, depthM:double, maxDraftM:double) : void
+  + SetAllowedVesselTypes(vesselTypes:IEnumerable<VesselType>) : void
+  + CanAccommodateVesselType(vesselTypeId:string) : bool
+}
+
+class VesselType {
+  + VesselTypeId : string
+  + Name : string
+  + Description : string
+  + CapacityTEU : int
+  + MaxRows : int
+  + MaxBays : int
+  + MaxTiers : int
+  + OperationalConstraints : string
+}
+
+class StorageArea {
+  + StorageAreaId : string
+  + Name : string
+  + Location : string
+  + MaxCapacityTEU : int
+  + CurrentOccupancyTEU : int
+  + ServesAllDocks : bool
+  + Type : StorageAreaType
+}
+
+class DockStorageDistance {
+  + DistanceMeters : int
+}
+
+' Relationships
+Dock "0..*" --> "0..*" VesselType : allowed vessel types
+Dock "0..*" --> "0..*" StorageArea : served by
+DockStorageDistance "1" --> "1" Dock : from
+DockStorageDistance "1" --> "1" StorageArea : to
+
+note right of Dock
+**Primary Key:** Code (immutable)
+**Business Rules:**
+- Physical characteristics must be positive
+- Code is unique and uppercase
+- Can specify allowed vessel types
+end note
+
+@enduml

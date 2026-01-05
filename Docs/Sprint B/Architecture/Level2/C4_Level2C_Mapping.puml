@@ -1,0 +1,43 @@
+@startuml C4_Level2C_Mapping
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+LAYOUT_TOP_DOWN()
+
+' Spacing
+skinparam linetype ortho
+skinparam nodesep 100
+skinparam ranksep 120
+
+title Mapping Diagram (C4 Level 2C)\nLogical View → Implementation View\n[Sprint B]
+
+' ============================================
+' LOGICAL VIEW - Business Components
+' ============================================
+
+System_Boundary(logical_view, "Logical View - Business Components") {
+    Container(frontend_module, "Frontend SPA Module", "Business Component", "UI and 3D visualization")
+    Container(backend_module, "Backend Domain API Module", "Business Component", "Business logic and domain")
+    Container(iam_module, "IAM & Authentication Module", "Business Component", "Identity and access")
+    Container(planning_module, "Scheduling & Planning Module", "Business Component", "Planning algorithms")
+}
+
+' ============================================
+' IMPLEMENTATION VIEW - Deployment Containers
+' ============================================
+
+System_Boundary(implementation_view, "Implementation View - Deployment Containers") {
+    Container(frontend_container, "Frontend Container", "Angular 20")
+    Container(backend_container, "Backend Container", ".NET 9.0")
+    Container(planning_container, "Planning Container", "Prolog")
+}
+
+' ============================================
+' MAPPING RELATIONSHIPS (Dashed with <<manifest>>)
+' ============================================
+
+Rel_Down(frontend_module, frontend_container, "<<manifest>>")
+Rel_Down(backend_module, backend_container, "<<manifest>>")
+Rel_Down(iam_module, backend_container, "<<manifest>>")
+Rel_Down(planning_module, planning_container, "<<manifest>>")
+
+@enduml

@@ -1,0 +1,184 @@
+<div class="operation-plans-container">
+  <!-- Header -->
+  <div class="header">
+    <div class="header-content">
+      <h1>Operation Plans</h1>
+      <button class="back-btn" (click)="goBack()">Back to Dashboard</button>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="content">
+    <!-- Search/Filter Toolbar -->
+    <div class="toolbar">
+      <div class="search-section">
+        <input
+          type="date"
+          [(ngModel)]="targetDate"
+          class="search-input"
+          placeholder="Target Date"
+          [disabled]="isGenerating()"
+        />
+        <select
+          [(ngModel)]="selectedAlgorithm"
+          class="search-input"
+          [disabled]="isGenerating()"
+        >
+          <option value="optimal">Optimal (SPT)</option>
+          <option value="weighted">Weighted Priority</option>
+          <option value="multi_cranes">Multi-Cranes</option>
+        </select>
+        <button
+          class="btn btn-primary"
+          [disabled]="isGenerating() || !targetDate()"
+          (click)="generatePlan()"
+        >
+          {{ isGenerating() ? 'Generating...' : 'Generate Plan' }}
+        </button>
+      </div>
+      <div class="action-buttons">
+        <button
+          class="btn btn-secondary"
+          [disabled]="isGenerating()"
+          (click)="reset()"
+        >
+          Reset
+        </button>
+      </div>
+    </div>
+
+    <!-- Results Section -->
+    @if (showResults() && generatedPlan()) {
+      <!-- Plan Summary Cards -->
+      <div class="summary-container">
+        <div class="summary-card">
+          <div class="card-label">Plan ID</div>
+          <div class="card-value">{{ generatedPlan()!.operationPlanId }}</div>
+        </div>
+        <div class="summary-card">
+          <div class="card-label">Target Date</div>
+          <div class="card-value">{{ generatedPlan()!.targetDate }}</div>
+        </div>
+        <div class="summary-card">
+          <div class="card-label">Algorithm</div>
+          <div class="card-value">{{ generatedPlan()!.algorithm }}</div>
+        </div>
+        <div class="summary-card">
+          <div class="card-label">Total Operations</div>
+          <div class="card-value">{{ generatedPlan()!.operations.length }}</div>
+        </div>
+        <div class="summary-card">
+          <div class="card-label">Total Delay</div>
+          <div class="card-value">{{ generatedPlan()!.totalDelay.toFixed(2) }}h</div>
+        </div>
+        <div class="summary-card">
+          <div class="card-label">Created At</div>
+          <div class="card-value">{{ formatDate(generatedPlan()!.createdAt) }}</div>
+        </div>
+        <div class="summary-card">
+          <div class="card-label">Created By</div>
+          <div class="card-value">{{ generatedPlan()!.createdBy }}</div>
+        </div>
+        <div class="summary-card">
+          <div class="card-label">Status</div>
+          <div class="card-value">
+            <span class="badge" [ngClass]="isPlanSaved() ? 'badge-success' : 'badge-warning'">
+              {{ isPlanSaved() ? 'SAVED' : 'NOT SAVED' }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons for Save/Discard -->
+      @if (!isPlanSaved()) {
+        <div class="action-section">
+          <button class="btn btn-success" (click)="savePlan()">
+            Save Plan
+          </button>
+          <button class="btn btn-danger" (click)="discardPlan()">
+            Discard Plan
+          </button>
+        </div>
+      }
+
+      <!-- Table Container -->
+      <div class="table-container">
+        <!-- Desktop Table View -->
+        <table class="operations-table desktop-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>VVN ID</th>
+              <th>Vessel IMO</th>
+              <th>Planned Start</th>
+              <th>Planned End</th>
+              <th>Duration</th>
+              <th>Cranes</th>
+              <th>Type</th>
+              <th>Staff</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (op of generatedPlan()!.operations; track op.vvnId; let i = $index) {
+              <tr class="operation-row">
+                <td [attr.data-label]="'#'">{{ i + 1 }}</td>
+                <td [attr.data-label]="'VVN ID'"><strong>{{ op.vvnId }}</strong></td>
+                <td [attr.data-label]="'Vessel IMO'">{{ op.vesselImo }}</td>
+                <td [attr.data-label]="'Planned Start'">{{ formatDate(op.plannedStart) }}</td>
+                <td [attr.data-label]="'Planned End'">{{ formatDate(op.plannedEnd) }}</td>
+                <td [attr.data-label]="'Duration'">{{ formatDuration(op.plannedStart, op.plannedEnd) }}</td>
+                <td [attr.data-label]="'Cranes'">{{ op.assignedCranes }}</td>
+                <td [attr.data-label]="'Type'">
+                  <span class="badge" [ngClass]="getOperationTypeBadgeClass(op.operationType)">
+                    {{ getOperationTypeLabel(op.operationType) }}
+                  </span>
+                </td>
+                <td [attr.data-label]="'Staff'">{{ op.assignedStaff?.length || 0 }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+
+        <!-- Mobile Card View -->
+        <div class="operations-cards mobile-cards">
+          @for (op of generatedPlan()!.operations; track op.vvnId; let i = $index) {
+            <div class="operation-card">
+              <div class="card-header">
+                <h3>#{{ i + 1 }} - {{ op.vvnId }}</h3>
+                <span class="badge" [ngClass]="getOperationTypeBadgeClass(op.operationType)">
+                  {{ getOperationTypeLabel(op.operationType) }}
+                </span>
+              </div>
+              <div class="card-body">
+                <div class="card-row">
+                  <span class="label">Vessel IMO:</span>
+                  <span class="value">{{ op.vesselImo }}</span>
+                </div>
+                <div class="card-row">
+                  <span class="label">Planned Start:</span>
+                  <span class="value">{{ formatDate(op.plannedStart) }}</span>
+                </div>
+                <div class="card-row">
+                  <span class="label">Planned End:</span>
+                  <span class="value">{{ formatDate(op.plannedEnd) }}</span>
+                </div>
+                <div class="card-row">
+                  <span class="label">Duration:</span>
+                  <span class="value">{{ formatDuration(op.plannedStart, op.plannedEnd) }}</span>
+                </div>
+                <div class="card-row">
+                  <span class="label">Cranes:</span>
+                  <span class="value">{{ op.assignedCranes }}</span>
+                </div>
+                <div class="card-row">
+                  <span class="label">Staff:</span>
+                  <span class="value">{{ op.assignedStaff?.length || 0 }}</span>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  </div>
+</div>

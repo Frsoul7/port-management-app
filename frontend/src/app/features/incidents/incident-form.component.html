@@ -1,0 +1,185 @@
+<div class="incident-form-container">
+  <div class="header">
+    <h2>{{ isEditMode() ? 'Edit Incident' : 'Create New Incident' }}</h2>
+  </div>
+
+  @if (loading()) {
+    <div class="loading">
+      <p>Loading...</p>
+    </div>
+  }
+
+  @if (!loading()) {
+    <form (ngSubmit)="onSubmit()" #incidentForm="ngForm">
+      <!-- Success Message -->
+      @if (successMessage()) {
+        <div class="alert alert-success">
+          {{ successMessage() }}
+        </div>
+      }
+
+      <!-- Error Message -->
+      @if (errorMessage()) {
+        <div class="alert alert-error">
+          {{ errorMessage() }}
+        </div>
+      }
+
+      <!-- Incident Type -->
+      <div class="form-group">
+        <label for="incidentTypeId">Incident Type *</label>
+        <select 
+          id="incidentTypeId" 
+          name="incidentTypeId" 
+          [(ngModel)]="formData.incidentTypeId"
+          [disabled]="isEditMode()"
+          required>
+          <option value="">Select</option>
+          @for (type of incidentTypes(); track type.incidentTypeId) {
+            <option [value]="type.incidentTypeId">
+              {{ type.code }} - {{ type.typeName }}
+            </option>
+          }
+        </select>
+        @if (isEditMode()) {
+          <small class="help-text">Incident type cannot be changed after creation</small>
+        }
+      </div>
+
+      <!-- VVE ID (Optional) -->
+      <div class="form-group">
+        <label for="vveId">Vessel Visit Execution</label>
+        <input 
+          type="text" 
+          id="vveId" 
+          name="vveId" 
+          [(ngModel)]="formData.vveId"
+          placeholder="Enter VVE ID (optional)" />
+        <small class="help-text">Link this incident to a specific vessel visit execution</small>
+      </div>
+
+      <!-- Title -->
+      <div class="form-group">
+        <label for="title">Title *</label>
+        <input 
+          type="text" 
+          id="title" 
+          name="title" 
+          [(ngModel)]="formData.title"
+          maxlength="200"
+          required
+          placeholder="Enter incident title" />
+        <small class="char-count">{{ formData.title.length }}/200 characters</small>
+      </div>
+
+      <!-- Description -->
+      <div class="form-group">
+        <label for="description">Description *</label>
+        <textarea 
+          id="description" 
+          name="description" 
+          [(ngModel)]="formData.description"
+          rows="4"
+          required
+          placeholder="Describe the incident in detail"></textarea>
+      </div>
+
+      <!-- Severity -->
+      <div class="form-group">
+        <label for="severity">Severity *</label>
+        <select 
+          id="severity" 
+          name="severity" 
+          [(ngModel)]="formData.severity"
+          required>
+          @for (severity of ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']; track severity) {
+            <option [value]="severity">
+              {{ severity }}
+            </option>
+          }
+        </select>
+        <div class="severity-preview">
+          <span [class]="'badge severity-' + (formData.severity || 'low').toLowerCase()">
+            {{ formData.severity || 'LOW' }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Reported By -->
+      <div class="form-group">
+        <label for="reportedBy">Reported By *</label>
+        <input 
+          type="text" 
+          id="reportedBy" 
+          name="reportedBy" 
+          [(ngModel)]="formData.reportedBy"
+          [disabled]="isEditMode()"
+          required
+          placeholder="Enter reporter name" />
+        @if (isEditMode()) {
+          <small class="help-text">Reporter cannot be changed after creation</small>
+        }
+      </div>
+
+      <!-- Impact Description -->
+      <div class="form-group">
+        <label for="impactDescription">Impact Description</label>
+        <textarea 
+          id="impactDescription" 
+          name="impactDescription" 
+          [(ngModel)]="formData.impactDescription"
+          rows="3"
+          placeholder="Describe the impact on operations"></textarea>
+        <small class="help-text">Optional: Describe how this incident affects port operations</small>
+      </div>
+
+      <!-- External Entities Involved -->
+      <div class="form-group">
+        <label>External Entities Involved</label>
+        <div class="entity-input-group">
+          <input 
+            type="text" 
+            [(ngModel)]="newEntity"
+            name="newEntity"
+            placeholder="Enter external entity name" />
+          <button type="button" class="btn-add-entity" (click)="addExternalEntity()">
+            Add
+          </button>
+        </div>
+        @if (formData.externalEntitiesInvolved.length > 0) {
+          <div class="entity-list">
+            @for (entity of formData.externalEntitiesInvolved; track entity; let i = $index) {
+              <span class="entity-tag">
+                {{ entity }}
+                <button type="button" class="btn-remove-entity" (click)="removeExternalEntity(i)">
+                  ×
+                </button>
+              </span>
+            }
+          </div>
+        }
+        <small class="help-text">Optional: Add organizations or entities involved in this incident</small>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="form-actions">
+        <button 
+          type="button" 
+          class="btn-secondary" 
+          (click)="router.navigate(['/incidents-records'])">
+          Cancel
+        </button>
+        <button 
+          type="submit" 
+          class="btn-primary"
+          [disabled]="!incidentForm.valid || saving()">
+          @if (saving()) {
+            <span>Saving...</span>
+          } @else {
+            <span>{{ isEditMode() ? 'Update' : 'Create' }}</span>
+          }
+        </button>
+      </div>
+    </form>
+  }
+</div>

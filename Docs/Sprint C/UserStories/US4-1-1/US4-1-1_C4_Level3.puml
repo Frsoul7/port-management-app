@@ -1,0 +1,53 @@
+@startuml
+title US 4.1.1 - OEM Module Architecture (C4 Level 3 - Component)
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+LAYOUT_WITH_LEGEND()
+
+Container_Ext(spa, "SPA", "Angular")
+Container_Ext(core, "Core Backend", ".NET")
+Container_Ext(planning, "Planning Service", "Prolog")
+ContainerDb_Ext(mongodb, "MongoDB", "NoSQL")
+
+Container_Boundary(oem, "OEM Backend") {
+    Component(routes, "Routes", "Express Router", "Define endpoints\nwith validation")
+    Component(controllers, "Controllers", "TypeScript", "Handle HTTP\nrequests/responses")
+    Component(middleware, "Middleware", "Express", "Auth, logging,\nerror handling")
+    
+    Component(services, "Application Services", "TypeScript", "Orchestrate use cases")
+    Component(dtos, "DTOs", "TypeScript", "Data transfer objects")
+    
+    Component(entities, "Domain Entities", "TypeScript", "Aggregate roots:\nOperationPlan, VVE")
+    Component(valueobjects, "Value Objects", "TypeScript", "PlannedOperation,\nExecutedOperation")
+    Component(domainservices, "Domain Services", "TypeScript", "VveIdGenerator,\nConflictDetection")
+    Component(interfaces, "Repository Interfaces", "TypeScript", "IOperationPlanRepository,\nIVesselVisitExecutionRepository")
+    
+    Component(repositories, "Repository Implementations", "Mongoose", "MongoDB adapters")
+    Component(httpclients, "HTTP Clients", "Axios", "CoreBackendClient,\nPlanningClient")
+}
+
+Rel(spa, routes, "HTTPS requests", "JSON + JWT")
+Rel(routes, middleware, "Passes through")
+Rel(middleware, controllers, "Authenticated requests")
+
+Rel(controllers, services, "Calls")
+Rel(services, entities, "Uses")
+Rel(services, domainservices, "Uses")
+Rel(entities, valueobjects, "Contains")
+
+Rel(services, interfaces, "Depends on abstraction")
+Rel(interfaces, repositories, "Implemented by")
+
+Rel(repositories, mongodb, "Reads/writes")
+Rel(services, httpclients, "Calls")
+Rel(httpclients, core, "REST API")
+Rel(httpclients, planning, "REST API")
+
+note top of interfaces
+  **Dependency Inversion Principle**
+  Domain defines interfaces
+  Infrastructure implements them
+end note
+
+@enduml

@@ -1,0 +1,29 @@
+<div class="toolbar">
+  <div class="search-section">
+    <input
+      type="text"
+      [placeholder]="'RESOURCES.SEARCH_CODE' | translate"
+      [(ngModel)]="searchParams.code"
+      (keyup.enter)="handleEnter()"
+      class="search-input">
+    <input
+      type="text"
+      [placeholder]="'RESOURCES.SEARCH_DESCRIPTION' | translate"
+      [(ngModel)]="searchParams.description"
+      (keyup.enter)="handleEnter()"
+      class="search-input">
+    <select
+      [(ngModel)]="searchParams.availability"
+      (change)="search()"
+      class="search-input">
+      <option *ngFor="let option of availabilityOptions" [value]="option.value">
+        {{ ('RESOURCES.' + option.translationKey) | translate }}
+      </option>
+    </select>
+    <button class="btn btn-primary" (click)="search()">{{ 'RESOURCES.SEARCH' | translate }}</button>
+  </div>
+  <div class="action-buttons">
+    <button class="btn btn-secondary" (click)="clear()">{{ 'RESOURCES.CLEAR' | translate }}</button>
+    <button class="btn btn-success" (click)="addPhysicalResource()">{{ 'RESOURCES.ADD_RESOURCE' | translate }}</button>
+  </div>
+</div>

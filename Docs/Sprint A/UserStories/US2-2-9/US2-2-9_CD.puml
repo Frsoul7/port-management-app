@@ -1,0 +1,164 @@
+@startuml US2-2-9_CD
+title US 2.2.9 - Class Diagram: Reopen Rejected VVN
+
+package "Controllers" {
+    class VesselVisitNotificationsController {
+        - _dbContext : PortDbContext
+        - _service : VesselVisitService
+        + ReopenToDraft(id : Guid) : ActionResult
+    }
+}
+
+package "Application" {
+    class CallerContextFactory {
+        {static} + ExtractFrom(headers : IHeaderDictionary) : CallerContext
+    }
+    
+    class CallerContext {
+        + Role : string
+        + OrganizationId : Guid
+        + UserId : Guid?
+    }
+}
+
+package "Domain.Visits" {
+    class VesselVisitNotification <<aggregate root>> {
+        + VvnGuid : Guid <<identifier>>
+        + VvnBusinessId : string
+        + State : VVNState
+        + VisitPurpose : VisitPurpose
+        + VesselImo : string
+        + Eta : DateTime
+        + Etd : DateTime
+        + CreatedAt : DateTime
+        + SubmittedAt : DateTime?
+        + ApprovedAt : DateTime?
+        + RejectedAt : DateTime?
+        + RejectionReason : string?
+        + OrganizationId : OrganizationId
+        + SubmittedById : UserId?
+        + ApprovedById : UserId?
+        + RejectedById : UserId?
+        + DockAssignmentId : Guid?
+        --
+        + ReopenToDraft() : void
+        - CanEdit() : bool
+    }
+    
+    enum VVNState {
+        IN_PROGRESS
+        SUBMITTED
+        APPROVED
+        REJECTED
+    }
+    
+    enum VisitPurpose {
+        LOAD
+        UNLOAD
+        BOTH
+        MAINTENANCE
+    }
+}
+
+package "Domain.Organizations" {
+    class Organization <<aggregate root>> {
+        + Id : OrganizationId
+        + Identifier : string
+        + LegalName : string
+        + AlternativeName : string?
+        + Type : OrganizationType
+    }
+    
+    class OrganizationId <<value object>> {
+        + Value : Guid
+    }
+    
+    enum OrganizationType {
+        PORT_AUTHORITY
+        SHIPPING_AGENT
+    }
+}
+
+package "Domain.Users" {
+    class User <<aggregate root>> {
+        + Id : UserId
+        + Email : string
+        + Role : string
+    }
+    
+    class UserId <<value object>> {
+        + Value : Guid
+    }
+}
+
+package "Domain.DockAssignments" {
+    class DockAssignment <<aggregate root>> {
+        + Id : Guid
+        + DockCode : string
+        + BerthFrom : DateTime
+        + BerthTo : DateTime
+        + VvnId : Guid
+        + Status : string
+    }
+}
+
+package "Infrastructure" {
+    class PortDbContext {
+        + VesselVisitNotifications : DbSet<VesselVisitNotification>
+        + Organizations : DbSet<Organization>
+        + Users : DbSet<User>
+        + SaveChangesAsync() : Task<int>
+    }
+}
+
+' Relationships
+VesselVisitNotificationsController --> PortDbContext : uses
+VesselVisitNotificationsController --> CallerContextFactory : uses
+CallerContextFactory ..> CallerContext : creates
+VesselVisitNotificationsController ..> VesselVisitNotification : manages
+
+VesselVisitNotification --> VVNState : has
+VesselVisitNotification --> VisitPurpose : has
+VesselVisitNotification --> OrganizationId : belongs to
+VesselVisitNotification --> UserId : submitted/approved/rejected by
+VesselVisitNotification --> DockAssignment : "0..1" assigned to
+
+Organization --> OrganizationId : identified by
+Organization --> OrganizationType : has
+User --> UserId : identified by
+
+PortDbContext --> VesselVisitNotification : persists
+PortDbContext --> Organization : persists
+PortDbContext --> User : persists
+
+note right of VesselVisitNotification::ReopenToDraft
+  Business Rule:
+  - Only REJECTED VVNs can be reopened
+  - State transitions: REJECTED → IN_PROGRESS
+  - Rejection metadata is preserved
+  - After reopen, VVN becomes editable
+  
+  throws InvalidOperationException
+  if State != REJECTED
+end note
+
+note right of VesselVisitNotification::CanEdit
+  Returns true if:
+  - State == IN_PROGRESS, or
+  - State == REJECTED
+  
+  Allows editing before initial submission
+  and after rejection (for corrections)
+end note
+
+note bottom of VVNState
+  State Machine:
+  IN_PROGRESS → SUBMITTED
+  SUBMITTED → APPROVED | REJECTED
+  REJECTED → IN_PROGRESS (reopen)
+  
+  Terminal states: APPROVED
+  Editable states: IN_PROGRESS, REJECTED
+end note
+
+@enduml

@@ -1,0 +1,81 @@
+{
+  "APP": {
+    "TITLE": "Sistema de Gestão Portuária",
+    "WELCOME": "Bem-vindo"
+  },
+  "NAV": {
+    "HOME": "Início",
+    "VVN": "Notificações de Visita de Navios",
+    "OPERATION_PLANS": "Planos de Operação",
+    "VESSEL_VISIT_EXECUTIONS": "Execuções de Visita de Navios",
+    "VESSELS": "Navios",
+    "VESSEL_TYPES": "Tipos de Navio",
+    "DOCKS": "Docas",
+    "STORAGE": "Áreas de Armazenamento",
+    "RESOURCES": "Recursos Físicos",
+    "SHIPPING_AGENTS": "Agentes de Navegação",
+    "HR": "Recursos Humanos",
+    "VISUALIZATION": "Visualização 3D",
+    "USER_MANAGEMENT": "Gestão de Utilizadores",
+    "LOGOUT": "Sair",
+    "BACK_TO_DASHBOARD": "Voltar ao Painel"
+  },
+  "COMMON": {
+    "SAVE": "Guardar",
+    "CANCEL": "Cancelar",
+    "DELETE": "Eliminar",
+    "EDIT": "Editar",
+    "CREATE": "Criar",
+    "SEARCH": "Pesquisar",
+    "LOADING": "A carregar...",
+    "ERROR": "Erro",
+    "SUCCESS": "Sucesso",
+    "CONFIRM": "Confirmar",
+    "ACTIONS": "Ações"
+  },
+  "VVN": {
+    "TITLE": "Notificações de Visita de Navios",
+    "CREATE": "Criar NVN",
+    "VVN_ID": "ID NVN",
+    "VESSEL_NAME": "Nome do Navio",
+    "STATUS": "Estado",
+    "PENDING": "Pendente",
+    "APPROVED": "Aprovado",
+    "REJECTED": "Rejeitado"
+  },
+  "SHIPPING_AGENTS": {
+    "TITLE": "Organizações de Agentes de Navegação",
+    "REGISTER": "Registar Organização",
+    "IDENTIFIER": "Identificador",
+    "LEGAL_NAME": "Nome Legal",
+    "ALTERNATIVE_NAME": "Nome Alternativo",
+    "TAX_NUMBER": "Número Fiscal",
+    "ADDRESS": "Morada",
+    "REPRESENTATIVES": "Representantes",
+    "ADD_REPRESENTATIVE": "Adicionar Representante",
+    "EDIT_REPRESENTATIVE": "Editar Representante",
+    "REPRESENTATIVE_NAME": "Nome",
+    "CITIZEN_ID": "ID de Cidadão",
+    "NATIONALITY": "Nacionalidade",
+    "EMAIL": "Email",
+    "PHONE": "Telefone",
+    "ACTIVE": "Ativo",
+    "INACTIVE": "Inativo",
+    "ACTIVATE": "Ativar",
+    "DEACTIVATE": "Desativar",
+    "ORGANIZATION_INFO": "Informação da Organização",
+    "AT_LEAST_ONE_REP": "Pelo menos um representante é necessário"
+  },
+    "VISUALIZATION_3D": {
+    "TITLE": "Visualização 3D do Porto",
+    "SUBTITLE": "Vista 3D interativa",
+    "DESCRIPTION": "Explora a disposição do porto, áreas operacionais, navios e recursos físicos numa vista 3D interativa. Este ecrã vai evoluir para usar dados em tempo real das APIs principais."
+  },
+  "ERRORS": {
+    "CONNECTION": "Não é possível conectar ao servidor",
+    "UNAUTHORIZED": "Autenticação necessária",
+    "FORBIDDEN": "Permissão negada",
+    "NOT_FOUND": "Recurso não encontrado",
+    "SERVER_ERROR": "Erro no servidor"
+  }
+}

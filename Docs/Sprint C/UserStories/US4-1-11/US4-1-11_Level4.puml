@@ -1,0 +1,67 @@
+@startuml
+title US 4.1.11 - Nível 4 (Class Diagram / Domínio + DIP)
+
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+
+enum VveStatus {
+  PLANNED
+  IN_PROGRESS
+  COMPLETED
+}
+
+class VesselVisitExecution {
+  + id: string
+  + status: VveStatus
+  + actualBerthTime: DateTime
+  + actualUnberthTime: DateTime
+  + actualPortDepartureTime: DateTime
+  + completedAt: DateTime
+  + completedBy: string
+  + cargoOperations: List<CargoOperation>
+
+  + recordUnberthing(unberthTime: DateTime)
+  + markAsCompleted(departureTime: DateTime, userId: string)
+  - ensureInProgress()
+  - ensureAllOperationsFinished()
+  - ensureTemporalConsistency(...)
+}
+
+class CargoOperation {
+  + id: string
+  + finishedAt: DateTime
+  + isFinished(): boolean
+}
+
+interface IVesselVisitExecutionRepository {
+  + findById(id: string): VesselVisitExecution
+  + update(vve: VesselVisitExecution): VesselVisitExecution
+}
+
+class MongoVesselVisitExecutionRepository {
+  + findById(id: string): VesselVisitExecution
+  + update(vve: VesselVisitExecution): VesselVisitExecution
+}
+
+class VesselVisitExecutionService {
+  - repo: IVesselVisitExecutionRepository
+  + completeVve(id: string, departureTime: DateTime, userId: string)
+  + recordUnberth(id: string, unberthTime: DateTime, userId: string)
+}
+
+VesselVisitExecution "1" o-- "*" CargoOperation
+VesselVisitExecution ..> VveStatus
+
+VesselVisitExecutionService --> IVesselVisitExecutionRepository : depends on abstraction (DIP)
+IVesselVisitExecutionRepository <|.. MongoVesselVisitExecutionRepository
+
+note right of VesselVisitExecution
+Business invariants:
+- status must be IN_PROGRESS
+- unberth must exist before completion
+- departure > unberth
+- all cargo operations finished
+- once COMPLETED, read-only (except admin correction)
+end note
+
+@enduml

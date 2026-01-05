@@ -1,0 +1,88 @@
+@startuml US2-2-9_SD_Reopen
+autonumber
+title US 2.2.9 - Sequence Diagram: Reopen Rejected VVN
+
+actor "Shipping Agent\nRepresentative" as Rep
+participant ":VesselVisitNotifications\nController" as Controller
+participant ":CallerContext\nFactory" as CtxFactory
+participant "vvn:VesselVisit\nNotification" as VVN
+participant ":PortDbContext" as DB
+
+activate Rep
+
+Rep -> Controller : POST /api/vessel-visit-notifications/{id}:reopen
+activate Controller
+
+== Authentication & Authorization ==
+
+Controller -> CtxFactory : ExtractFrom(Request.Headers)
+activate CtxFactory
+CtxFactory --> Controller : CallerContext\n(Role, OrganizationId, UserId)
+deactivate CtxFactory
+
+alt Role != "ShippingAgentRepresentative" AND Role != "Admin"
+    Controller --> Rep : 403 Forbidden\n("Only Shipping Agent Representatives can reopen VVNs")
+else Organization Validation
+
+Controller -> Controller : EnsureSameOrgAsync(id, ctx.OrgId)
+note right
+  Loads VVN and checks if
+  OrganizationId matches caller's OrgId
+end note
+
+alt Organization mismatch or VVN not found
+    Controller --> Rep : 403 Forbidden\n("VVN belongs to a different organization")
+else Retrieve VVN
+
+Controller -> DB : VesselVisitNotifications\n.SingleOrDefaultAsync(v => v.VvnGuid == id)
+activate DB
+DB --> Controller : vvn (or null)
+deactivate DB
+
+alt vvn == null
+    Controller --> Rep : 404 Not Found
+else State Validation & Reopen
+
+Controller -> VVN : get State
+activate VVN
+VVN --> Controller : VVNState
+deactivate VVN
+
+alt State != REJECTED
+    Controller --> Rep : 409 Conflict\n("Only rejected VVNs can be reopened. Current state: {state}")
+else Success Path
+
+Controller -> VVN : ReopenToDraft()
+activate VVN
+
+VVN -> VVN : if (State != REJECTED)\n  throw InvalidOperationException
+
+VVN -> VVN : State = IN_PROGRESS
+note right
+  Rejection metadata cleared:
+  - RejectionReason = null
+  - RejectedAt = null
+  - RejectedById = null
+  - SubmittedAt = null
+  - SubmittedById = null
+end note
+
+VVN --> Controller : void
+deactivate VVN
+
+Controller -> DB : SaveChangesAsync()
+activate DB
+DB --> Controller : saved
+deactivate DB
+
+Controller --> Rep : 200 OK\n{\n  vvnId: "2025-PTLEI-000001",\n  state: "IN_PROGRESS",\n  message: "VVN reopened, can edit and resubmit"\n}
+
+end
+end
+end
+end
+
+deactivate Controller
+deactivate Rep
+
+@enduml

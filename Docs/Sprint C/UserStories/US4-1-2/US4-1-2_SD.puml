@@ -1,0 +1,82 @@
+@startuml
+title SD - US 4.1.2 Generate Operation Plan (White-box)
+
+skinparam shadowing false
+skinparam responseMessageBelowArrow true
+
+actor "SPA" as SPA
+control "Auth Middleware" as Auth
+control "OperationPlanController" as C
+control "OperationPlanService" as S
+entity "IOperationPlanRepository" as Repo
+control "CoreBackendClient" as CoreClient
+control "PlanningClient" as PlanClient
+database "MongoDB" as DB
+database "Core Backend" as Core
+database "Planning Service" as Planning
+entity "OperationPlan (Domain)" as OP
+
+== POST /operation-plans/generate ==
+SPA -> Auth : request + JWT
+alt invalid token/role
+  Auth --> SPA : 401 Unauthorized
+else authorized
+  Auth -> C : forward request
+  C -> C : validate(targetDate, algorithm)
+  alt invalid input
+    C --> SPA : 400 Bad Request
+  else valid
+    C -> S : generatePlanSimple(targetDate, algorithm, userId, vvnIds)
+    
+    ' Check for duplicate
+    S -> Repo : findByTargetDate(targetDate)
+    Repo -> DB : findOne({ targetDate })
+    DB --> Repo : existingPlan or null
+    alt plan exists
+      Repo --> S : existingPlan
+      S --> C : throw error "Plan already exists"
+      C --> SPA : 409 Conflict
+    else no existing plan
+      Repo --> S : null
+      
+      ' Fetch VVNs from Core Backend
+      S -> CoreClient : getApprovedVvnsForDate(targetDate)
+      CoreClient -> Core : GET /api/vessel-visit-notifications?\ndate={date}&status=APPROVED
+      Core --> CoreClient : vvnList[]
+      alt no VVNs found
+        CoreClient --> S : empty array
+        S --> C : throw error "No approved VVNs"
+        C --> SPA : 404 Not Found
+      else VVNs found
+        CoreClient --> S : vvnList[]
+        
+        ' Call Planning Service
+        S -> PlanClient : generatePlan(targetDate, algorithm, vvns)
+        PlanClient -> Planning : POST /generate-plan\n{ targetDate, algorithm, vessels }
+        Planning --> PlanClient : { operations[], totalDelay }
+        PlanClient --> S : planningResult
+        
+        ' Create domain entity
+        S -> OP : new OperationPlan({ targetDate, algorithm, ..., status=GENERATED })
+        alt domain error (past date, invalid data)
+          OP --> S : DomainError
+          S --> C : map error
+          C --> SPA : 422 Unprocessable Entity
+        else ok
+          OP --> S : operationPlan
+          
+          ' Save to DB
+          S -> Repo : save(operationPlan)
+          Repo -> DB : insertOne({ operationPlanId, ... })
+          DB --> Repo : savedDoc
+          Repo --> S : savedOperationPlan
+          
+          S --> C : OperationPlanDto
+          C --> SPA : 201 Created\n{ success, data: operationPlan }
+        end
+      end
+    end
+  end
+end
+
+@enduml

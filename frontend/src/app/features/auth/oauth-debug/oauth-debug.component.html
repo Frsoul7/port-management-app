@@ -1,0 +1,92 @@
+<div class="debug-container">
+    <h1>Google OAuth Configuration Debugger</h1>
+
+    <div class="section">
+        <h2>Current Configuration</h2>
+        <div class="config-item">
+            <label>IAM URL:</label>
+            <input type="text" [(ngModel)]="config.iamUrl" readonly>
+            <span class="status" [class.valid]="isValidUrl(config.iamUrl)">
+                {{ isValidUrl(config.iamUrl) ? 'Valid' : 'Invalid' }}
+            </span>
+        </div>
+
+        <div class="config-item">
+            <label>Client ID:</label>
+            <input type="text" [(ngModel)]="config.clientId">
+            <span class="status" [class.valid]="isValidClientId()">
+                {{ isValidClientId() ? 'Valid' : 'Invalid' }}
+            </span>
+        </div>
+
+        <div class="config-item">
+            <label>Redirect URI:</label>
+            <input type="text" [(ngModel)]="config.redirectUri">
+            <span class="status" [class.valid]="isValidRedirectUri()">
+                {{ isValidRedirectUri() ? 'Valid' : 'Invalid' }}
+            </span>
+        </div>
+
+        <div class="config-item">
+            <label>Scopes:</label>
+            <input type="text" [(ngModel)]="config.scopes" readonly>
+            <span class="status valid">Valid</span>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Validation Results</h2>
+        <ul class="validation-list">
+            <li [class.valid]="isValidClientId()" [class.invalid]="!isValidClientId()">
+                <span class="icon">{{ isValidClientId() ? 'Valid' : 'Invalid' }}</span>
+                <span>Client ID Format: {{ getClientIdValidation() }}</span>
+            </li>
+            <li [class.valid]="isValidRedirectUri()" [class.invalid]="!isValidRedirectUri()">
+                <span class="icon">{{ isValidRedirectUri() ? 'Valid' : 'Invalid' }}</span>
+                <span>Redirect URI Format: {{ getRedirectUriValidation() }}</span>
+            </li>
+            <li [class.valid]="allValid()" [class.invalid]="!allValid()">
+                <span class="icon">{{ allValid() ? 'Valid' : 'Invalid' }}</span>
+                <span>Overall Status: {{ allValid() ? 'Ready' : 'Configuration Issues' }}</span>
+            </li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>Generated OAuth URL</h2>
+        <div class="url-preview">
+            <code>{{ generateOAuthUrl() }}</code>
+        </div>
+        <button (click)="copyToClipboard()" class="btn btn-secondary">Copy URL</button>
+    </div>
+
+    <div class="section">
+        <h2>Required Google Console Settings</h2>
+        <div class="instructions">
+            <h3>Authorized JavaScript Origins:</h3>
+            <code>{{ getOrigin() }}</code>
+
+            <h3>Authorized Redirect URIs:</h3>
+            <code>{{ config.redirectUri }}</code>
+        </div>
+    </div>
+
+    <div class="actions">
+        <button (click)="testOAuth()" [disabled]="!allValid()" class="btn btn-primary">
+            Test OAuth Flow
+        </button>
+        <button (click)="resetToDefaults()" class="btn btn-secondary">
+            Reset to Defaults
+        </button>
+    </div>
+
+    <div class="section warning" *ngIf="!allValid()">
+        <h3>Configuration Issues</h3>
+        <p>Please fix the issues above before testing the OAuth flow.</p>
+        <ol>
+            <li *ngIf="!isValidClientId()">Update your Client ID in environment.ts</li>
+            <li *ngIf="!isValidRedirectUri()">Ensure Redirect URI is properly formatted</li>
+            <li>Verify these settings match exactly in Google Cloud Console</li>
+        </ol>
+    </div>
+</div>

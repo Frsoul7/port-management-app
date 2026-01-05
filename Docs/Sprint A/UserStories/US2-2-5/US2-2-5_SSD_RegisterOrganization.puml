@@ -1,0 +1,40 @@
+@startuml
+title SSD – Register Shipping Agent Organization (Create)
+
+actor "Port Authority Officer" as Officer
+participant "API Client" as Client
+participant "OrganizationsController" as C
+participant "OrganizationRepository" as OR
+participant "PortDbContext" as Db
+participant "Organization (Domain)" as O
+participant "Representative (Domain)" as R
+database "EF (InMemory)" as Store
+
+Officer -> Client : POST /api/organizations\n{ Identifier, LegalName, AlternativeName, Address, TaxNumber, Type, Representatives }
+Client -> C : Create(dto)
+activate C
+
+C -> C : validate DTO\n(required fields, Identifier format, Type, at least 1 representative if Type==ShippingAgent)
+C -> OR : ExistsWithIdentifierAsync(dto.Identifier)
+activate OR
+OR -> Store : query
+Store --> OR : false
+deactivate OR
+
+C -> O : new Organization(Guid.NewGuid(), dto.Identifier, dto.LegalName, dto.AlternativeName, dto.Address, dto.TaxNumber, dto.Type, dto.Representatives)
+activate O
+O -> O : validate business rules\nIdentifier unique, required fields, at least 1 rep
+O -> R : create Representative objects
+O --> C : organization created
+deactivate O
+
+C -> OR : AddAsync(organization)
+activate OR
+C -> Db : SaveChangesAsync()
+Db -> Store : insert Organization + Representatives
+Store --> Db : OK
+deactivate OR
+
+C --> Client : 201 Created + OrganizationResponseDto
+deactivate C
+@enduml

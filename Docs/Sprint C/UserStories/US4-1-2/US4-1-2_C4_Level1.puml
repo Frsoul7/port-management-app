@@ -1,0 +1,46 @@
+@startuml
+title US 4.1.2 - Generate Operation Plan (C4 Level 1 - System Context)
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+LAYOUT_WITH_LEGEND()
+
+Person(operator, "Logistics Operator", "Plans daily operations")
+
+System_Boundary(backend, "Backend Systems") {
+    System(oem, "OEM Backend", "Operations & Execution\nManagement Module")
+    System(core, "Core Backend", ".NET + PostgreSQL\nVVN Management")
+    System(planning, "Planning Service", "Prolog-based\nScheduling Algorithms")
+}
+
+System_Ext(spa, "SPA", "Angular Frontend")
+
+Rel(operator, spa, "Generates operation plan")
+Rel(spa, oem, "POST /operation-plans/generate", "HTTPS/JSON")
+
+Rel(oem, core, "Fetches approved VVNs", "REST API")
+Rel(oem, planning, "Requests optimized schedule", "REST API")
+
+Rel(core, oem, "Returns VVN data", "JSON")
+Rel(planning, oem, "Returns planned operations", "JSON")
+
+Rel(oem, spa, "Returns generated plan", "JSON")
+Rel(spa, operator, "Displays plan for review")
+
+note right of oem
+  **US 4.1.2 Flow:**
+  1. Receive target date & algorithm
+  2. Fetch VVNs from Core Backend
+  3. Call Planning Service (Prolog)
+  4. Store plan in MongoDB
+  5. Return plan to operator
+end note
+
+note left of planning
+  **Algorithms:**
+  • optimal (constraint satisfaction)
+  • weighted (heuristic priority)
+  • multi_cranes (parallel ops)
+end note
+
+@enduml

@@ -1,0 +1,25 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+title C4 L2 - Containers (US 4.1.6)
+
+Person(operator, "Logistics Operator")
+
+System_Boundary(sys, "Port System") {
+  Container(spa, "SPA", "Angular", "User interface for operators and officers")
+  Container(oemApi, "OEM API", "Node.js/TypeScript/Express", "CRUD + analytics over Operation Plans / VVEs / Incidents / Tasks")
+  ContainerDb(oemDb, "OEM Database", "MongoDB", "Stores Operation Plans and execution data")
+}
+
+System_Ext(iam, "IAM Provider", "Auth")
+System_Ext(core, "Core Backend", ".NET", "Master data and VVNs")
+System_Ext(planning, "Planning & Scheduling", "REST API", "Scheduling algorithms")
+
+Rel(operator, spa, "Uses", "HTTPS")
+Rel(spa, iam, "Authenticates", "OIDC")
+Rel(spa, oemApi, "GET /resource-allocations", "HTTPS/JSON")
+Rel(oemApi, oemDb, "Reads Operation Plans", "MongoDB Driver")
+Rel(oemApi, iam, "Validates token/roles", "JWT/OIDC")
+Rel(oemApi, core, "Optional data fetch", "REST/JSON")
+Rel(oemApi, planning, "Used in other US (4.1.2)", "REST/JSON")
+
+@enduml

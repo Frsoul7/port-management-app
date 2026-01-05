@@ -1,0 +1,47 @@
+@startuml
+title SSD – Review Pending VVNs
+
+actor "Port Authority Officer" as Officer
+participant "API Client" as Client
+participant "VesselVisitNotificationsController" as C
+participant "PortDbContext" as Db
+database "EF (InMemory)" as Store
+
+Officer -> Client : GET /vvns
+activate Client
+Client -> C : GetAll()
+activate C
+
+C -> Db : VesselVisitNotifications\n.Include(DockAssignment)\n.OrderByDescending(CreatedAt)\n.ToListAsync()
+activate Db
+Db -> Store : query all VVNs
+activate Store
+Store --> Db : vvns[]
+deactivate Store
+Db --> C : vvns[]
+deactivate Db
+
+C -> Db : Vessels.Include(VesselType)\n.Where(ImoNumber in vesselImos)\n.ToDictionaryAsync()
+activate Db
+Db -> Store : query vessels
+activate Store
+Store --> Db : vessels{}
+deactivate Store
+Db --> C : vessels{}
+deactivate Db
+
+C -> C : Build VvnSummaryResponse[] with:\n- VVN details\n- Vessel name & type\n- Assigned dock\n- Status (filter SUBMITTED to see pending)
+
+C --> Client : 200 OK + VvnSummaryResponse[]\n{ Id, VvnBusinessId, Status, Purpose,\n  Eta, Etd, VesselImo, VesselName,\n  VesselType, AssignedDock }
+deactivate C
+
+Client --> Officer : Display pending VVNs\n(filter by Status: SUBMITTED)
+deactivate Client
+
+note right of Officer
+  Officer reviews the list
+  and selects a VVN to
+  approve or reject
+end note
+
+@enduml

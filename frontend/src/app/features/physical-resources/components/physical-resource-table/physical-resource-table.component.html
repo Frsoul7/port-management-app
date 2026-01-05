@@ -1,0 +1,116 @@
+<div class="table-container">
+  <!-- Desktop Table View -->
+  <table class="physical-resources-table desktop-table" *ngIf="physicalResources.length > 0; else noPhysicalResources">
+    <thead>
+      <tr>
+        <th>{{ 'RESOURCES.CODE' | translate }}</th>
+        <th>{{ 'RESOURCES.TYPE' | translate }}</th>
+        <th>{{ 'RESOURCES.DESCRIPTION' | translate }}</th>
+        <th>{{ 'RESOURCES.AVAILABILITY' | translate }}</th>
+        <th>{{ 'RESOURCES.SETUP_TIME' | translate }}</th>
+        <th>{{ 'RESOURCES.STATUS' | translate }}</th>
+        <th>{{ 'RESOURCES.ACTIONS' | translate }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let resource of physicalResources" class="resource-row">
+        <td [attr.data-label]="'RESOURCES.CODE' | translate"><strong>{{ resource.code }}</strong></td>
+        <td [attr.data-label]="'RESOURCES.TYPE' | translate">
+          <span class="type-badge" [class]="'type-' + resource.resourceType.toLowerCase().replace('_', '-')">
+            {{ getResourceTypeKey(resource.resourceType) | translate }}
+          </span>
+        </td>
+        <td [attr.data-label]="'RESOURCES.DESCRIPTION' | translate">{{ resource.description || '-' }}</td>
+        <td [attr.data-label]="'RESOURCES.AVAILABILITY' | translate">
+          <span class="availability-badge" [class]="getAvailabilityClass(resource.availability)">
+            {{ getAvailabilityKey(resource.availability) | translate }}
+          </span>
+        </td>
+        <td [attr.data-label]="'RESOURCES.SETUP_TIME' | translate">{{ resource.setupTimeSeconds }}s</td>
+        <td [attr.data-label]="'RESOURCES.STATUS' | translate">
+          <span class="status-badge" [class]="isActive(resource) ? 'status-active' : 'status-inactive'">
+            {{ (isActive(resource) ? 'RESOURCES.ACTIVE' : 'RESOURCES.INACTIVE') | translate }}
+          </span>
+        </td>
+        <td class="actions" [attr.data-label]="'RESOURCES.ACTIONS' | translate">
+          <button class="btn-icon btn-view" (click)="viewPhysicalResource(resource)" [title]="'RESOURCES.VIEW_DETAILS' | translate">
+            👁️
+          </button>
+          <button class="btn-icon btn-edit" (click)="editPhysicalResource(resource)" [title]="'RESOURCES.EDIT' | translate">
+            ✏️
+          </button>
+          <button class="btn-icon btn-delete" (click)="deletePhysicalResource(resource)" [title]="'RESOURCES.DELETE' | translate">
+            🗑️
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Mobile Card View -->
+  <div class="physical-resources-cards mobile-cards" *ngIf="physicalResources.length > 0">
+    <div *ngFor="let resource of physicalResources" class="resource-card">
+      <div class="card-header">
+        <h3>{{ resource.code }}</h3>
+        <div class="card-actions">
+          <button class="btn-icon btn-view" (click)="viewPhysicalResource(resource)" [title]="'RESOURCES.VIEW_DETAILS' | translate">
+            👁️
+          </button>
+          <button class="btn-icon btn-edit" (click)="editPhysicalResource(resource)" [title]="'RESOURCES.EDIT' | translate">
+            ✏️
+          </button>
+          <button class="btn-icon btn-delete" (click)="deletePhysicalResource(resource)" [title]="'RESOURCES.DELETE' | translate">
+            🗑️
+          </button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="card-row">
+          <span class="label">{{ 'RESOURCES.TYPE' | translate }}:</span>
+          <span class="value">
+            <span class="type-badge" [class]="'type-' + resource.resourceType.toLowerCase().replace('_', '-')">
+              {{ getResourceTypeKey(resource.resourceType) | translate }}
+            </span>
+          </span>
+        </div>
+        <div class="card-row">
+          <span class="label">{{ 'RESOURCES.DESCRIPTION' | translate }}:</span>
+          <span class="value">{{ resource.description || '-' }}</span>
+        </div>
+        <div class="card-row">
+          <span class="label">{{ 'RESOURCES.AVAILABILITY' | translate }}:</span>
+          <span class="value">
+            <span class="availability-badge" [class]="getAvailabilityClass(resource.availability)">
+              {{ getAvailabilityKey(resource.availability) | translate }}
+            </span>
+          </span>
+        </div>
+        <div class="card-row">
+          <span class="label">{{ 'RESOURCES.SETUP_TIME' | translate }}:</span>
+          <span class="value">{{ resource.setupTimeSeconds }}s</span>
+        </div>
+        <div class="card-row">
+          <span class="label">{{ 'RESOURCES.STATUS' | translate }}:</span>
+          <span class="value">
+            <span class="status-badge" [class]="isActive(resource) ? 'status-active' : 'status-inactive'">
+              {{ (isActive(resource) ? 'RESOURCES.ACTIVE' : 'RESOURCES.INACTIVE') | translate }}
+            </span>
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ng-template #noPhysicalResources>
+    <div class="no-data">
+      <div class="no-data-icon">🏗️</div>
+      <p>{{ 'RESOURCES.NO_RESOURCES' | translate }}</p>
+    </div>
+  </ng-template>
+</div>
+
+<!-- Loading Indicator -->
+<div *ngIf="loading" class="loading-overlay">
+  <div class="spinner"></div>
+  <p>{{ 'RESOURCES.LOADING' | translate }}</p>
+</div>

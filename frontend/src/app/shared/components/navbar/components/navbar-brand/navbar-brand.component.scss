@@ -1,0 +1,68 @@
+.navbar-brand {
+  flex-shrink: 0;
+}
+
+.brand-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: white;
+  font-weight: 600;
+  font-size: 18px;
+  transition: opacity 0.3s;
+}
+
+.brand-link:hover {
+  opacity: 0.9;
+}
+
+.brand-text {
+  white-space: nowrap;
+}
+
+/* ===============================
+   TABLET
+=============================== */
+@media (max-width: 1024px) {
+  .brand-link {
+    font-size: 17px;
+  }
+}
+
+/* ===============================
+   MOBILE
+=============================== */
+@media (max-width: 768px) {
+  .brand-link {
+    font-size: 16px;
+  }
+}
+
+/* ===============================
+   SMALL MOBILE
+=============================== */
+@media (max-width: 480px) {
+  .brand-link {
+    font-size: 14px;
+  }
+  
+  .brand-text {
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+/* ===============================
+   EXTRA SMALL MOBILE
+=============================== */
+@media (max-width: 360px) {
+  .brand-link {
+    font-size: 13px;
+  }
+  
+  .brand-text {
+    max-width: 120px;
+  }
+}

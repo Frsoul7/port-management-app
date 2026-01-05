@@ -1,0 +1,176 @@
+@startuml
+title Class Diagram – US 2.2.3 Register & Update Docks
+
+' ===== Domain =====
+class Dock {
+  + string Code
+  + string Name
+  + string Location
+  + double LengthM
+  + double DepthM
+  + double MaxDraftM
+  + ICollection<VesselType> AllowedVesselTypes
+  + ICollection<StorageArea> ServedStorageAreas
+  + ICollection<MobileEquipment> MobileEquipments
+  + STSCrane? StsCrane
+  --
+  + Dock(string code, string name, string location, double lengthM, double depthM, double maxDraftM)
+  + Update(string name, string location, double lengthM, double depthM, double maxDraftM) : void
+  + SetAllowedVesselTypes(IEnumerable<VesselType> vesselTypes) : void
+  + CanAccommodateVesselType(string vesselTypeId) : bool
+}
+
+class VesselType {
+  + string VesselTypeId
+  + string Name
+  + string? Description
+  + int? CapacityTEU
+  + int? MaxRows
+  + int? MaxBays
+  + int? MaxTiers
+  + string? OperationalConstraints
+  + ICollection<Vessel> Vessels
+  + ICollection<Dock> AllowedDocks
+}
+
+class StorageArea {
+  + string StorageAreaId
+  + string Name
+  + string Location
+  + int MaxCapacityTEU
+  + int CurrentOccupancyTEU
+  + bool ServesAllDocks
+  + StorageAreaType Type
+  + ICollection<Dock> Docks
+}
+
+class DockStorageDistance {
+  + int DockStorageDistanceId
+  + int DistanceMeters
+  + string DockCode
+  + Dock? Dock
+  + string StorageAreaId
+  + StorageArea? StorageArea
+}
+
+' ===== Infrastructure =====
+class PortDbContext {
+  + DbSet<Dock> Docks
+  + DbSet<VesselType> VesselTypes
+  + DbSet<StorageArea> StorageAreas
+  --
+  + PortDbContext(DbContextOptions<PortDbContext> options)
+  # OnModelCreating(ModelBuilder modelBuilder) : void
+}
+
+class DockRepository {
+  + GetByCodeAsync(string code, bool includeVesselTypes) : Task<Dock?>
+  + GetAllAsync(bool includeVesselTypes) : Task<List<Dock>>
+  + SearchAsync(string? name, string? location, string? vesselTypeId) : Task<List<Dock>>
+  + ExistsAsync(string code) : Task<bool>
+  + AddAsync(Dock dock) : Task
+  + Update(Dock dock) : void
+  + Remove(Dock dock) : void
+}
+
+class VesselTypeRepository {
+  + GetByIdAsync(string id) : Task<VesselType?>
+  + GetByIdsAsync(IEnumerable<string> ids) : Task<List<VesselType>>
+  + ExistsAsync(string id) : Task<bool>
+}
+
+class DockConfiguration {
+  + Configure(EntityTypeBuilder<Dock> b) : void
+}
+
+' ===== Controllers =====
+class DocksController {
+  - DockRepository _dockRepo
+  - VesselTypeRepository _vesselTypeRepo
+  - PortDbContext _ctx
+  --
+  + GetAll(string? name, string? location, string? vesselTypeId) : Task<IActionResult>
+  + GetByCode(string code) : Task<IActionResult>
+  + Create(CreateDockDto dto) : Task<IActionResult>
+  + Update(string code, UpdateDockDto dto) : Task<IActionResult>
+  + Delete(string code) : Task<IActionResult>
+}
+
+' ===== DTOs =====
+class CreateDockDto {
+  + string Code
+  + string Name
+  + string Location
+  + double LengthM
+  + double DepthM
+  + double MaxDraftM
+  + List<string>? AllowedVesselTypeIds
+}
+
+class UpdateDockDto {
+  + string Name
+  + string Location
+  + double LengthM
+  + double DepthM
+  + double MaxDraftM
+  + List<string>? AllowedVesselTypeIds
+}
+
+class DockResponseDto {
+  + string Code
+  + string Name
+  + string Location
+  + double LengthM
+  + double DepthM
+  + double MaxDraftM
+  + List<string> AllowedVesselTypeIds
+  + List<VesselTypeInfoDto> AllowedVesselTypes
+}
+
+class VesselTypeInfoDto {
+  + string VesselTypeId
+  + string Name
+  + string? Description
+}
+
+' ===== Relationships =====
+VesselType "0..*" o-- "0..*" Dock : AllowedDocks / AllowedVesselTypes
+StorageArea "0..*" o-- "0..*" Dock : Docks / ServedStorageAreas
+DockStorageDistance "1" --> "1" Dock : measures from
+DockStorageDistance "1" --> "1" StorageArea : measures to
+
+PortDbContext --> Dock
+PortDbContext --> VesselType
+PortDbContext --> StorageArea
+
+DockRepository --> PortDbContext
+VesselTypeRepository --> PortDbContext
+DockConfiguration --> Dock
+
+DocksController --> DockRepository
+DocksController --> VesselTypeRepository
+DocksController --> PortDbContext
+DocksController ..> CreateDockDto
+DocksController ..> UpdateDockDto
+DocksController ..> DockResponseDto
+
+DockResponseDto --> VesselTypeInfoDto
+
+note right of Dock
+**Primary Key:** Code (immutable)
+**Business Rules:**
+- Physical characteristics must be positive
+- Code is unique and uppercase
+- Can specify allowed vessel types
+- Many-to-many with VesselType
+end note
+
+note bottom of DockRepository
+**Search Capabilities:**
+- By name (contains, case-insensitive)
+- By location (contains)
+- By vessel type ID (in AllowedVesselTypes)
+- Supports eager loading of relationships
+end note
+
+@enduml

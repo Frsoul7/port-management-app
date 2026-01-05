@@ -1,0 +1,60 @@
+@startuml
+title US 4.1.15 - Nível 4 (Domain Class Diagram)
+
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+
+class VesselVisitExecution {
+  +id: string
+  +status: VveStatus
+}
+
+class ComplementaryTask {
+  +id: string
+  +startTime: DateTime
+  +endTime: DateTime
+  +blocksOperations: boolean
+  +validateTimeWindow()
+}
+
+class ComplementaryTaskCategory {
+  +id: string
+  +name: string
+  +description: string
+}
+
+enum VveStatus {
+  IN_PROGRESS
+  COMPLETED
+}
+
+interface IComplementaryTaskRepository {
+  +save(task: ComplementaryTask)
+  +findByVve(vveId: string)
+}
+
+interface IVVERepository {
+  +findById(id: string): VesselVisitExecution
+}
+
+class MongoComplementaryTaskRepository
+class MongoVVERepository
+
+VesselVisitExecution "1" o-- "*" ComplementaryTask
+ComplementaryTask --> ComplementaryTaskCategory
+
+IComplementaryTaskRepository <|.. MongoComplementaryTaskRepository
+IVVERepository <|.. MongoVVERepository
+
+note right of ComplementaryTask
+Domain invariants:
+- startTime < endTime
+- category required
+end note
+
+note bottom of VesselVisitExecution
+If status == COMPLETED
+→ modifications restricted
+end note
+
+@enduml

@@ -1,0 +1,50 @@
+<div class="manifest-table-container">
+  <div *ngIf="loading" class="loading-state">
+    <p>Loading containers...</p>
+  </div>
+
+  <div *ngIf="!loading && entries.length === 0" class="empty-state">
+    <p>No containers added yet.</p>
+  </div>
+
+  <table *ngIf="!loading && entries.length > 0" class="manifest-table">
+    <thead>
+      <tr>
+        <th>Container Code</th>
+        <th>Bay</th>
+        <th>Row</th>
+        <th>Tier</th>
+        <th>Goods Description</th>
+        <th class="center">Hazardous</th>
+        <th *ngIf="editable" class="center">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let entry of entries">
+        <td class="container-code">
+          <strong>{{ entry.containerCode }}</strong>
+        </td>
+        <td class="center">{{ entry.bay }}</td>
+        <td class="center">{{ entry.row }}</td>
+        <td class="center">{{ entry.tier }}</td>
+        <td class="goods-desc">
+          <span *ngIf="entry.goodsDescription">{{ entry.goodsDescription }}</span>
+          <span *ngIf="!entry.goodsDescription" class="no-data">-</span>
+        </td>
+        <td class="center">
+          <span *ngIf="entry.hazardous" class="hazard-badge">⚠️ Yes</span>
+          <span *ngIf="!entry.hazardous" class="safe-badge">No</span>
+        </td>
+        <td *ngIf="editable" class="center actions">
+          <button
+            class="btn-delete"
+            (click)="handleDelete(entry)"
+            title="Delete container"
+            type="button">
+            🗑️
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

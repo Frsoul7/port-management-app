@@ -1,0 +1,137 @@
+<div class="modal-backdrop" *ngIf="show" (click)="onBackdropClick($event)">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>{{ (isEditMode ? 'VESSEL_TYPES.EDIT_TITLE' : 'VESSEL_TYPES.CREATE_TITLE') | translate }}</h2>
+      <button class="close-btn" (click)="onClose()" [disabled]="saving">&times;</button>
+    </div>
+
+    <form (ngSubmit)="onSubmit()" #vesselTypeForm="ngForm">
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group" [class.full-width]="isEditMode">
+            <label for="vesselTypeId">
+              {{ 'VESSEL_TYPES.VESSEL_TYPE_ID' | translate }}
+              <span *ngIf="!isEditMode" class="optional">{{ 'VESSEL_TYPES.OPTIONAL' | translate }}</span>
+            </label>
+            <input
+              id="vesselTypeId"
+              type="text"
+              [(ngModel)]="formData.vesselTypeId"
+              name="vesselTypeId"
+              [disabled]="isEditMode || saving"
+              [placeholder]="'VESSEL_TYPES.AUTO_GENERATED_PLACEHOLDER' | translate"
+            />
+            <small *ngIf="!isEditMode" class="help-text">
+              {{ 'VESSEL_TYPES.AUTO_GENERATED_HELP' | translate }}
+            </small>
+          </div>
+
+          <div class="form-group">
+            <label for="name">
+              {{ 'VESSEL_TYPES.NAME' | translate }} <span class="required">{{ 'VESSEL_TYPES.REQUIRED' | translate }}</span>
+            </label>
+            <input
+              id="name"
+              type="text"
+              [(ngModel)]="formData.name"
+              name="name"
+              required
+              [disabled]="saving"
+              [placeholder]="'VESSEL_TYPES.NAME_PLACEHOLDER' | translate"
+            />
+          </div>
+        </div>
+
+        <div class="form-group full-width">
+          <label for="description">{{ 'VESSEL_TYPES.DESCRIPTION' | translate }}</label>
+          <textarea
+            id="description"
+            [(ngModel)]="formData.description"
+            name="description"
+            rows="3"
+            [disabled]="saving"
+            [placeholder]="'VESSEL_TYPES.DESCRIPTION_PLACEHOLDER' | translate"
+          ></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="capacityTEU">{{ 'VESSEL_TYPES.CAPACITY_TEU' | translate }}</label>
+            <input
+              id="capacityTEU"
+              type="number"
+              [(ngModel)]="formData.capacityTEU"
+              name="capacityTEU"
+              min="0"
+              [disabled]="saving"
+              [placeholder]="'VESSEL_TYPES.CAPACITY_TEU_PLACEHOLDER' | translate"
+            />
+            <small class="help-text">{{ 'VESSEL_TYPES.CAPACITY_TEU_HELP' | translate }}</small>
+          </div>
+
+          <div class="form-group">
+            <label for="maxRows">{{ 'VESSEL_TYPES.MAX_ROWS' | translate }}</label>
+            <input
+              id="maxRows"
+              type="number"
+              [(ngModel)]="formData.maxRows"
+              name="maxRows"
+              min="0"
+              [disabled]="saving"
+              [placeholder]="'VESSEL_TYPES.MAX_ROWS_PLACEHOLDER' | translate"
+            />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="maxBays">{{ 'VESSEL_TYPES.MAX_BAYS' | translate }}</label>
+            <input
+              id="maxBays"
+              type="number"
+              [(ngModel)]="formData.maxBays"
+              name="maxBays"
+              min="0"
+              [disabled]="saving"
+              [placeholder]="'VESSEL_TYPES.MAX_BAYS_PLACEHOLDER' | translate"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="maxTiers">{{ 'VESSEL_TYPES.MAX_TIERS' | translate }}</label>
+            <input
+              id="maxTiers"
+              type="number"
+              [(ngModel)]="formData.maxTiers"
+              name="maxTiers"
+              min="0"
+              [disabled]="saving"
+              [placeholder]="'VESSEL_TYPES.MAX_TIERS_PLACEHOLDER' | translate"
+            />
+          </div>
+        </div>
+
+        <div class="form-group full-width">
+          <label for="operationalConstraints">{{ 'VESSEL_TYPES.OPERATIONAL_CONSTRAINTS' | translate }}</label>
+          <textarea
+            id="operationalConstraints"
+            [(ngModel)]="formData.operationalConstraints"
+            name="operationalConstraints"
+            rows="3"
+            [disabled]="saving"
+            [placeholder]="'VESSEL_TYPES.OPERATIONAL_CONSTRAINTS_PLACEHOLDER' | translate"
+          ></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" (click)="onClose()" [disabled]="saving">
+          {{ 'VESSEL_TYPES.CANCEL' | translate }}
+        </button>
+        <button type="submit" class="btn-primary" [disabled]="!vesselTypeForm.valid || saving">
+          {{ saving ? ('VESSEL_TYPES.SAVING' | translate) : ((isEditMode ? 'VESSEL_TYPES.UPDATE' : 'VESSEL_TYPES.CREATE') | translate) }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

@@ -1,0 +1,54 @@
+@startuml
+title US 4.1.1 - OEM Module Architecture (C4 Level 4 - Code)
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+LAYOUT_TOP_DOWN()
+
+Container_Boundary(app_service, "Application Service - OperationPlanService") {
+    Component(gen_method, "generatePlanSimple()", "TypeScript Method", "Main orchestration method")
+    Component(find_method, "findByFilters()", "TypeScript Method", "Query with filters")
+    Component(update_method, "updateOperation()", "TypeScript Method", "Manual updates")
+}
+
+Container_Boundary(domain, "Domain Layer") {
+    Component(op_entity, "OperationPlan", "Entity Class", "Aggregate root")
+    Component(plan_op_vo, "PlannedOperation", "Value Object", "Operation details")
+    Component(audit_vo, "AuditEntry", "Value Object", "Change tracking")
+    Component(validation, "Domain Validations", "Methods", "Business rules")
+}
+
+Container_Boundary(infra, "Infrastructure Layer") {
+    Component(repo_impl, "OperationPlanRepository", "Mongoose Repository", "MongoDB adapter")
+    Component(core_client, "CoreBackendClient", "Axios Client", "VVN fetching")
+    Component(plan_client, "PlanningClient", "Axios Client", "Prolog integration")
+    Component(mapper, "EntityMapper", "Mapper", "Domain ↔ Document")
+}
+
+Container_Boundary(presentation, "Presentation Layer") {
+    Component(controller, "OperationPlanController", "Express Controller", "HTTP handling")
+    Component(routes, "operationPlan.routes", "Express Router", "Route definitions")
+    Component(validators, "express-validator", "Middleware", "Input validation")
+}
+
+Rel(routes, validators, "Validates input")
+Rel(validators, controller, "Validated request")
+Rel(controller, gen_method, "Calls")
+Rel(gen_method, core_client, "Fetches VVNs")
+Rel(gen_method, plan_client, "Generates plan")
+Rel(gen_method, op_entity, "Creates")
+Rel(op_entity, plan_op_vo, "Contains")
+Rel(op_entity, audit_vo, "Tracks changes")
+Rel(op_entity, validation, "Enforces rules")
+Rel(gen_method, repo_impl, "Saves")
+Rel(repo_impl, mapper, "Uses")
+
+note right of op_entity
+  Domain invariants:
+  • No past dates
+  • Operations not empty
+  • Total delay >= 0
+  • Audit log initialized
+end note
+
+@enduml

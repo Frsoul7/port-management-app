@@ -1,0 +1,56 @@
+@startuml
+title US 4.1.2 - Nível 4 (Class Diagram / Domínio + DIP)
+
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+
+enum VveStatus {
+  PLANNED
+  IN_PROGRESS
+  COMPLETED
+}
+
+class VesselVisitExecution {
+  + id: string
+  + status: VveStatus
+  + actualPortArrivalTime: DateTime
+  + actualBerthTime: DateTime
+  + actualUnberthTime: DateTime
+  + actualPortDepartureTime: DateTime
+  + modifiedAt: DateTime
+  + modifiedBy: string
+
+  + recordBerthing(berthTime: DateTime, userId: string)
+  - ensurePlanned()
+  - ensureTemporalConsistency(berthTime: DateTime)
+}
+
+interface IVesselVisitExecutionRepository {
+  + findById(id: string): VesselVisitExecution
+  + update(vve: VesselVisitExecution): VesselVisitExecution
+}
+
+class MongoVesselVisitExecutionRepository {
+  + findById(id: string): VesselVisitExecution
+  + update(vve: VesselVisitExecution): VesselVisitExecution
+}
+
+class VesselVisitExecutionService {
+  - repo: IVesselVisitExecutionRepository
+  + startVve(id: string, berthTime: DateTime, userId: string)
+}
+
+VesselVisitExecution ..> VveStatus
+
+VesselVisitExecutionService --> IVesselVisitExecutionRepository : depends on abstraction (DIP)
+IVesselVisitExecutionRepository <|.. MongoVesselVisitExecutionRepository
+
+note right of VesselVisitExecution
+Business invariants:
+- status must be PLANNED
+- berthTime > actualPortArrivalTime
+- Transitions to IN_PROGRESS
+- modifiedAt and modifiedBy are set
+end note
+
+@enduml

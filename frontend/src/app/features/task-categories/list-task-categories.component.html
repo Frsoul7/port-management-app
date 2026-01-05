@@ -1,0 +1,147 @@
+<div class="task-categories-container">
+  <!-- Header -->
+  <div class="header">
+    <div class="header-content">
+      <h1>{{ 'TASK_CATEGORIES.TITLE' | translate }}</h1>
+      <button class="back-btn" (click)="goBack()">{{ 'NAV.BACK_TO_DASHBOARD' | translate }}</button>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="content">
+    <!-- Action Buttons -->
+    <div class="action-bar">
+      <button class="btn-primary" (click)="openCreateModal()">
+        + {{ 'TASK_CATEGORIES.CREATE_NEW_CATEGORY' | translate }}
+      </button>
+    </div>
+
+    <!-- Filters -->
+  <div class="filters">
+    <div class="filter-row">
+      <div class="filter-group">
+        <label>{{ 'TASK_CATEGORIES.SEARCH' | translate }}</label>
+        <input
+          type="text"
+          [(ngModel)]="filters.search"
+          (input)="applyFilters()"
+          [placeholder]="'TASK_CATEGORIES.SEARCH_PLACEHOLDER' | translate" />
+      </div>
+
+      <div class="filter-checkbox">
+        <label>
+          <input type="checkbox" [(ngModel)]="filters.showActiveOnly" (change)="loadTaskCategories()" />
+          {{ 'TASK_CATEGORIES.SHOW_ACTIVE_ONLY' | translate }}
+        </label>
+      </div>
+
+      <button class="btn-secondary" (click)="clearFilters()">{{ 'TASK_CATEGORIES.CLEAR_FILTERS' | translate }}</button>
+    </div>
+  </div>
+
+  <!-- Success Message -->
+  @if (successMessage()) {
+    <div class="alert-success">
+      {{ successMessage() }}
+    </div>
+  }
+
+  <!-- Error Message -->
+  @if (errorMessage()) {
+    <div class="alert-error">
+      {{ errorMessage() }}
+    </div>
+  }
+
+  <!-- Loading State -->
+  @if (loading()) {
+    <div class="loading">{{ 'TASK_CATEGORIES.LOADING' | translate }}</div>
+  }
+
+  <!-- Task Categories Table -->
+  @if (!loading() && !errorMessage()) {
+    <div class="table-container">
+      <table class="task-categories-table">
+        <thead>
+          <tr>
+            <th>{{ 'TASK_CATEGORIES.CODE' | translate }}</th>
+            <th>{{ 'TASK_CATEGORIES.NAME' | translate }}</th>
+            <th>{{ 'TASK_CATEGORIES.DESCRIPTION' | translate }}</th>
+            <th>{{ 'TASK_CATEGORIES.DURATION' | translate }}</th>
+            <th>{{ 'TASK_CATEGORIES.IMPACT' | translate }}</th>
+            <th>{{ 'TASK_CATEGORIES.STATUS' | translate }}</th>
+            <th>{{ 'TASK_CATEGORIES.ACTIONS' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (filteredCategories().length === 0) {
+            <tr>
+              <td colspan="7" class="no-data">
+                {{ 'TASK_CATEGORIES.NO_RESULTS' | translate }}
+                @if (filters.search || !filters.showActiveOnly) {
+                  <button class="btn-link" (click)="clearFilters()">{{ 'TASK_CATEGORIES.CLEAR_FILTERS' | translate }}</button>
+                }
+              </td>
+            </tr>
+          }
+          @for (category of filteredCategories(); track category.taskCategoryId) {
+            <tr [class.inactive]="!category.isActive">
+              <td class="code">{{ category.categoryCode }}</td>
+              <td class="name">{{ category.categoryName }}</td>
+              <td class="description">{{ category.description }}</td>
+              <td class="duration">{{ formatDuration(category.defaultDurationHours) }}</td>
+              <td class="impact">{{ category.expectedImpact || ('TASK_CATEGORIES.NOT_SPECIFIED' | translate) }}</td>
+              <td class="status">
+                <span class="badge" [class.badge-active]="category.isActive" [class.badge-inactive]="!category.isActive">
+                  {{ category.isActive ? ('TASK_CATEGORIES.ACTIVE' | translate) : ('TASK_CATEGORIES.INACTIVE' | translate) }}
+                </span>
+              </td>
+              <td class="actions">
+                <button
+                  class="btn-edit"
+                  (click)="openEditModal(category)"
+                  [title]="'TASK_CATEGORIES.EDIT' | translate">
+                  ✏️ Edit
+                </button>
+                @if (category.isActive) {
+                  <button
+                    class="btn-deactivate"
+                    (click)="deactivateCategory(category)"
+                    [title]="'TASK_CATEGORIES.DEACTIVATE' | translate">
+                    🚫 Deactivate
+                  </button>
+                } @else {
+                  <button
+                    class="btn-activate"
+                    (click)="reactivateCategory(category)"
+                    [title]="'TASK_CATEGORIES.REACTIVATE' | translate">
+                    ✅ Reactivate
+                  </button>
+                }
+                <button
+                  class="btn-delete"
+                  (click)="deleteCategory(category)"
+                  [title]="'TASK_CATEGORIES.DELETE' | translate">
+                  🗑️ Delete
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="table-footer">
+      <p>{{ 'TASK_CATEGORIES.TOTAL' | translate }}: {{ filteredCategories().length }} {{ filteredCategories().length === 1 ? ('TASK_CATEGORIES.CATEGORY' | translate) : ('TASK_CATEGORIES.CATEGORIES' | translate) }}</p>
+    </div>
+  }
+  </div>
+
+  <!-- Modal for Create/Edit -->
+@if (showModal()) {
+  <app-task-category-form
+    [category]="editingCategory()"
+    (saved)="onCategorySaved()"
+    (cancelled)="closeModal()">
+  </app-task-category-form>
+}

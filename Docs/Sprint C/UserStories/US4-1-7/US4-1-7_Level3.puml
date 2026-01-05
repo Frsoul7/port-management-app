@@ -1,0 +1,55 @@
+@startuml
+title US 4.1.7 - Nível 3 (Sequence Diagram / Componentes Internos)
+
+skinparam shadowing false
+skinparam responseMessageBelowArrow true
+
+actor "SPA" as SPA
+control "Auth Middleware" as Auth
+control "CargoOperationController" as C
+control "CargoOperationService" as S
+entity "ICargoOperationRepository" as Repo
+entity "IVesselVisitExecutionRepository" as VVERepo
+database "MongoDB" as DB
+entity "CargoOperation (Domain)" as CO
+entity "VesselVisitExecution (Domain)" as VVE
+
+SPA -> Auth : request + JWT
+alt invalid token/role
+  Auth --> SPA : 403 Forbidden
+else authorized
+  Auth -> C : forward request
+
+  C -> C : validate (id, finishTime)
+
+  C -> S : finishCargoOperation(opId, finishTime, userId)
+  S -> Repo : findById(opId)
+  Repo -> DB : findOne({id})
+  DB --> Repo : operationDocument
+  Repo --> S : CargoOperation
+
+  S -> VVERepo : findById(vveId)
+  VVERepo -> DB : findOne({id})
+  DB --> VVERepo : vveDocument
+  VVERepo --> S : VVE
+
+  S -> VVE : ensureInProgress()
+  
+  S -> CO : markAsFinished(finishTime, userId)
+
+  alt business rule violation
+    CO --> S : throws DomainError\n(wrong status / invalid timestamp /\nfinishTime < startTime / VVE not IN_PROGRESS)
+    S --> C : map to 409/422
+    C --> SPA : error response
+  else ok
+    CO --> S : updated aggregate (status=FINISHED)
+    S -> Repo : update(CO)
+    Repo -> DB : updateOne({id}, newState)
+    DB --> Repo : updatedDocument
+    Repo --> S : updatedCO
+    S --> C : CargoOperationDTO
+    C --> SPA : 200 OK CargoOperationDTO
+  end
+end
+
+@enduml

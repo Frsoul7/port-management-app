@@ -1,0 +1,42 @@
+<div class="vessel-types-container">
+  <!-- Header -->
+  <div class="header">
+    <div class="header-content">
+      <h1>{{ 'VESSEL_TYPES.TITLE' | translate }}</h1>
+      <button class="back-btn" (click)="goBack()">{{ 'VESSEL_TYPES.BACK_TO_DASHBOARD' | translate }}</button>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="content">
+    <!-- Search Bar Component -->
+    <app-vessel-type-search-bar
+      (onSearch)="onSearch($event)"
+      (onClear)="onClear()"
+      (onAdd)="openCreateModal()">
+    </app-vessel-type-search-bar>
+
+    <!-- Vessel Type Table Component -->
+    <app-vessel-type-table
+      [vesselTypes]="vesselTypes()"
+      [loading]="loading()"
+      [totalItems]="totalItems()"
+      [currentPage]="currentPage()"
+      [pageSize]="pageSize()"
+      (edit)="openEditModal($event)"
+      (pageChange)="onPageChange($event)">
+    </app-vessel-type-table>
+  </div>
+
+  <!-- Form Modal Component -->
+  <app-vessel-type-form-modal
+    *ngIf="showModal()"
+    [show]="showModal()"
+    [isEditMode]="isEditMode()"
+    [vesselType]="selectedVesselType()"
+    [saving]="saving()"
+    (close)="closeModal()"
+    (create)="onCreate($event)"
+    (update)="onUpdate(selectedVesselType()!, $event)">
+  </app-vessel-type-form-modal>
+</div>

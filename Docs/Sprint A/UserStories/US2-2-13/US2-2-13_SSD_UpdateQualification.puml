@@ -1,0 +1,35 @@
+@startuml
+title SSD – Update Qualification
+
+actor "Logistics Operator" as Operator
+participant "API Client" as Client
+participant "QualificationsController" as C
+participant "PortDbContext" as Db
+database "EF (InMemory)" as Store
+
+Operator -> Client : PUT /api/qualifications/{id}\n{Name?, Description?}
+Client -> C : Update(id, dto)
+activate C
+
+C -> Db : Qualifications.FirstOrDefaultAsync(q => q.QualificationId == id)
+activate Db
+Db -> Store : SELECT * FROM Qualifications WHERE QualificationId = ?
+Store --> Db : qualification
+deactivate Db
+
+alt not found
+  C --> Client : 404 Not Found
+else
+  C -> C : Validate Name (if provided: min 2 words, max 150)
+  C -> C : qualification.Update(name, description)
+  
+  C -> Db : SaveChangesAsync()
+  activate Db
+  Db -> Store : UPDATE Qualifications SET ...
+  Store --> Db : ok
+  deactivate Db
+
+  C --> Client : 200 OK + updated qualification
+end
+deactivate C
+@enduml

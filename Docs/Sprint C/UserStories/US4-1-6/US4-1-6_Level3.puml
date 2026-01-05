@@ -1,0 +1,46 @@
+@startuml
+title US 4.1.6 - Nível 3 (Componentes / Ports & Adapters)
+
+skinparam componentStyle rectangle
+skinparam shadowing false
+
+package "Presentation (HTTP)" {
+  [ResourceAllocationController] as C
+}
+
+package "Application (Use Cases)" {
+  [ResourceAllocationService] as S
+}
+
+package "Domain (Core)" {
+  interface "IOperationPlanRepository" as IRepo
+  [AllocationSummary] as AS
+  [OperationPlan] as OP
+  [PlannedOperation] as PO
+  [ResourceRef] as RR
+}
+
+package "Infrastructure (Adapters)" {
+  [MongoOperationPlanRepository] as MongoRepo
+  [LoggerAdapter] as Log
+  database "MongoDB" as DB
+}
+
+C --> S : call use-case
+S --> IRepo : query (port)
+IRepo <|.. MongoRepo : implements
+MongoRepo --> DB : read only
+
+S ..> OP
+S ..> PO
+S ..> RR
+S --> AS : build summary
+
+S --> Log : log(query, result)
+
+note bottom of IRepo
+Port (interface) definido no core.
+Implementação concreta fica fora.
+end note
+
+@enduml

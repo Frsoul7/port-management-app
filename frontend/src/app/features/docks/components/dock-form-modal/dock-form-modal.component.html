@@ -1,0 +1,131 @@
+<div class="modal-overlay" *ngIf="show" (click)="close()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ isEditMode ? ('DOCKS.EDIT' | translate) : ('DOCKS.ADD_NEW' | translate) }}</h2>
+      <button class="close-btn" (click)="close()">×</button>
+    </div>
+    
+    <form (ngSubmit)="save()" #dockForm="ngForm">
+      <div class="modal-body">
+        <!-- Code (readonly in edit mode) -->
+        <div class="form-group">
+          <label for="code">Dock Code *</label>
+          <input 
+            type="text" 
+            id="code"
+            name="code"
+            [(ngModel)]="currentDock.code"
+            [readonly]="isEditMode"
+            [class.readonly]="isEditMode"
+            required
+            placeholder="DOCK-01"
+            maxlength="50"
+            class="form-control">
+          <small class="form-hint">Unique identifier for the dock (e.g., DOCK-01, BERTH-A1)</small>
+        </div>
+
+        <!-- Dock Name -->
+        <div class="form-group">
+          <label for="name">Dock Name *</label>
+          <input 
+            type="text" 
+            id="name"
+            name="name"
+            [(ngModel)]="currentDock.name"
+            required
+            minlength="3"
+            placeholder="Enter dock name"
+            class="form-control">
+        </div>
+
+        <!-- Location -->
+        <div class="form-group">
+          <label for="location">Location *</label>
+          <input 
+            type="text" 
+            id="location"
+            name="location"
+            [(ngModel)]="currentDock.location"
+            required
+            placeholder="Enter location within the port"
+            class="form-control">
+          <small class="form-hint">Free-text location within the port</small>
+        </div>
+
+        <!-- Length -->
+        <div class="form-group">
+          <label for="lengthM">Length (meters) *</label>
+          <input 
+            type="number" 
+            id="lengthM"
+            name="lengthM"
+            [(ngModel)]="currentDock.lengthM"
+            required
+            min="0"
+            step="0.1"
+            placeholder="Enter length in meters"
+            class="form-control">
+        </div>
+
+        <!-- Depth -->
+        <div class="form-group">
+          <label for="depthM">Depth (meters) *</label>
+          <input 
+            type="number" 
+            id="depthM"
+            name="depthM"
+            [(ngModel)]="currentDock.depthM"
+            required
+            min="0"
+            step="0.1"
+            placeholder="Enter depth in meters"
+            class="form-control">
+        </div>
+
+        <!-- Max Draft -->
+        <div class="form-group">
+          <label for="maxDraftM">Maximum Draft (meters) *</label>
+          <input 
+            type="number" 
+            id="maxDraftM"
+            name="maxDraftM"
+            [(ngModel)]="currentDock.maxDraftM"
+            required
+            min="0"
+            step="0.1"
+            placeholder="Enter maximum draft in meters"
+            class="form-control">
+        </div>
+
+        <!-- Allowed Vessel Types -->
+        <div class="form-group">
+          <label>Allowed Vessel Types</label>
+          <div class="checkbox-group">
+            <div *ngFor="let vt of vesselTypes" class="checkbox-item">
+              <input 
+                type="checkbox" 
+                [id]="'vt-' + vt.vesselTypeId"
+                [checked]="selectedVesselTypes[vt.vesselTypeId]"
+                (change)="toggleVesselType(vt.vesselTypeId)">
+              <label [for]="'vt-' + vt.vesselTypeId">
+                {{ vt.name }}
+                <span *ngIf="vt.description" class="vt-desc">({{ vt.description }})</span>
+              </label>
+            </div>
+          </div>
+          <small class="form-hint">Select which vessel types can use this dock</small>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="close()">Cancel</button>
+        <button type="submit" class="btn btn-primary" [disabled]="!dockForm.form.valid || saving">
+          {{ saving ? 'Saving...' : (isEditMode ? 'Update Dock' : 'Create Dock') }}
+        </button>
+      </div>
+    </form>
+    
+    <!-- Loading Overlay for Saving -->
+    <app-loading *ngIf="saving" [message]="'COMMON.SAVING'"></app-loading>
+  </div>
+</div>

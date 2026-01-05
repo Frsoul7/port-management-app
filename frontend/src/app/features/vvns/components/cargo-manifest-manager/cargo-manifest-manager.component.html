@@ -1,0 +1,83 @@
+<div class="cargo-manifest-manager" *ngIf="vvn">
+  <div class="manifest-header">
+    <h3>Cargo Manifest</h3>
+    <p class="manifest-subtitle">
+      VVN: <strong>{{ vvn.vvnBusinessId }}</strong> |
+      Purpose: <strong>{{ vvn.purpose }}</strong>
+    </p>
+  </div>
+
+  <!-- Loading Containers Section -->
+  <div class="manifest-section" *ngIf="canShowLoading">
+    <div class="section-header">
+      <h4>
+        📦 Loading Containers
+        <span class="count-badge">{{ loadingEntries.length }}</span>
+      </h4>
+      <button
+        *ngIf="editable && !showLoadingForm"
+        class="btn btn-add"
+        (click)="toggleLoadingForm()"
+        [disabled]="saving || loadingData"
+        type="button">
+        + Add Loading Container
+      </button>
+    </div>
+
+    <app-cargo-manifest-entry-form
+      *ngIf="showLoadingForm"
+      [type]="ManifestType.Load"
+      [disabled]="saving"
+      (onAdd)="handleAddLoadingEntry($event)"
+      (onCancel)="cancelLoadingForm()">
+    </app-cargo-manifest-entry-form>
+
+    <app-cargo-manifest-table
+      [entries]="loadingEntries"
+      [editable]="editable"
+      [loading]="loadingData"
+      (onDelete)="handleDeleteEntry($event, ManifestType.Load)">
+    </app-cargo-manifest-table>
+  </div>
+
+  <!-- Unloading Containers Section -->
+  <div class="manifest-section" *ngIf="canShowUnloading">
+    <div class="section-header">
+      <h4>
+        📤 Unloading Containers
+        <span class="count-badge">{{ unloadingEntries.length }}</span>
+      </h4>
+      <button
+        *ngIf="editable && !showUnloadingForm"
+        class="btn btn-add"
+        (click)="toggleUnloadingForm()"
+        [disabled]="saving || loadingData"
+        type="button">
+        + Add Unloading Container
+      </button>
+    </div>
+
+    <app-cargo-manifest-entry-form
+      *ngIf="showUnloadingForm"
+      [type]="ManifestType.Unload"
+      [disabled]="saving"
+      (onAdd)="handleAddUnloadingEntry($event)"
+      (onCancel)="cancelUnloadingForm()">
+    </app-cargo-manifest-entry-form>
+
+    <app-cargo-manifest-table
+      [entries]="unloadingEntries"
+      [editable]="editable"
+      [loading]="loadingData"
+      (onDelete)="handleDeleteEntry($event, ManifestType.Unload)">
+    </app-cargo-manifest-table>
+  </div>
+
+  <!-- No Manifest Message -->
+  <div class="no-manifest-message" *ngIf="!canShowLoading && !canShowUnloading">
+    <p>
+      ℹ️ This VVN is for <strong>{{ vvn.purpose }}</strong> purpose only.
+      No cargo manifest is required.
+    </p>
+  </div>
+</div>

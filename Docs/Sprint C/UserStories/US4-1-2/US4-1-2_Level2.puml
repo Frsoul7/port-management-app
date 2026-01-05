@@ -1,0 +1,31 @@
+@startuml
+title US 4.1.2 - Nível 2 (Fluxo Funcional / SSD)
+
+skinparam shadowing false
+
+actor "Logistics Operator" as Op
+boundary "SPA" as SPA
+system "OEM System" as OEM
+
+Op -> SPA : Submit actualBerthTime
+SPA -> OEM : POST /vessel-visit-executions/{id}/berth\n{berthTime}
+
+alt Invalid/unauthorized
+  OEM --> SPA : 4xx error
+  SPA --> Op : Show error
+else Validation fails (business rules)
+  OEM --> SPA : 409/422\n(reason: wrong state OR\nberthTime <= arrivalTime OR\ninvalid timestamp)
+  SPA --> Op : Show validation message
+else Berth recorded successfully
+  OEM --> SPA : 200 OK\n(status=IN_PROGRESS, actualBerthTime)
+  SPA --> Op : Show IN_PROGRESS state
+end
+
+note right of OEM
+Business Rules:
+- VVE must be in PLANNED state
+- berthTime > actualPortArrivalTime
+- Transitions to IN_PROGRESS
+end note
+
+@enduml

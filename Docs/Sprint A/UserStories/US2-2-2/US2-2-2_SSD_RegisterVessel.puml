@@ -1,0 +1,41 @@
+@startuml
+title SSD – Register Vessel (Create)
+
+actor "Port Authority Officer" as User
+participant "Scalar / API Client" as Client
+participant "VesselsController" as C
+participant "PortDbContext" as Db
+participant "Vessel (Domain)" as D
+database "EF (InMemory)" as Store
+
+User -> Client : POST /api/vessels\n{ ImoNumber, Name, VesselTypeId, OrganizationId, CapacityTEU }
+Client -> C : Create(dto)
+activate C
+
+C -> D : IsValidImo(dto.ImoNumber)
+D --> C : true/false
+alt invalid IMO
+  C --> Client : 400 Bad Request\n"Invalid IMO..."
+  deactivate C
+else valid IMO
+  C -> Db : AnyAsync(Vessels where ImoNumber == NormalizeImo(dto.ImoNumber))
+  Db -> Store : query
+  Store --> Db : false
+
+  C -> Db : AnyAsync(VesselTypes where VesselTypeId == dto.VesselTypeId)
+  Db -> Store : query
+  Store --> Db : true
+
+  C -> Db : AnyAsync(Organizations where OrganizationId.Value == Guid.Parse(dto.OrganizationId))
+  Db -> Store : query
+  Store --> Db : true
+
+  C -> Db : Add(new Vessel(normImo, dto.Name, dto.VesselTypeId, new OrganizationId(guid), dto.CapacityTEU))
+  C -> Db : SaveChangesAsync()
+  Db -> Store : insert
+  Store --> Db : ok
+
+  C --> Client : 201 Created + VesselResponseDto
+  deactivate C
+end
+@enduml

@@ -1,0 +1,58 @@
+<div class="modal-overlay" *ngIf="show" (click)="close()">
+  <div class="modal modal-view" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ 'DOCKS.DOCK_INFO' | translate }}</h2>
+      <button class="close-btn" (click)="close()">×</button>
+    </div>
+    
+    <div class="modal-body" *ngIf="dock">
+      <div class="detail-grid">
+        <div class="detail-item">
+          <label>Dock Code</label>
+          <div class="detail-value">{{ dock.code }}</div>
+        </div>
+
+        <div class="detail-item">
+          <label>Dock Name</label>
+          <div class="detail-value">{{ dock.name }}</div>
+        </div>
+
+        <div class="detail-item">
+          <label>Location</label>
+          <div class="detail-value">{{ dock.location }}</div>
+        </div>
+
+        <div class="detail-item">
+          <label>Length (meters)</label>
+          <div class="detail-value">{{ dock.lengthM }} m</div>
+        </div>
+
+        <div class="detail-item">
+          <label>Depth (meters)</label>
+          <div class="detail-value">{{ dock.depthM }} m</div>
+        </div>
+
+        <div class="detail-item">
+          <label>Maximum Draft (meters)</label>
+          <div class="detail-value">{{ dock.maxDraftM }} m</div>
+        </div>
+
+        <div class="detail-item" *ngIf="dock.allowedVesselTypes && dock.allowedVesselTypes.length > 0">
+          <label>Allowed Vessel Types</label>
+          <div class="detail-value">
+            <div class="vessel-type-list">
+              <span *ngFor="let vt of dock.allowedVesselTypes" class="vessel-type-badge">
+                {{ vt.name }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="close()">Close</button>
+      <button class="btn btn-primary" (click)="edit()">Edit Dock</button>
+    </div>
+  </div>
+</div>

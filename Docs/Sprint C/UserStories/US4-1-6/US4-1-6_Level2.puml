@@ -1,0 +1,35 @@
+@startuml
+title US 4.1.6 - Nível 2 (Fluxo Funcional)
+
+skinparam shadowing false
+
+actor "Logistics Operator" as Op
+boundary "SPA" as SPA
+control "ResourceAllocationController" as C
+control "ResourceAllocationService" as S
+entity "IOperationPlanRepository" as Repo
+
+Op -> SPA : Seleciona recurso + período\n(Carregar/Consultar)
+SPA -> C : GET /resource-allocations\n?resourceId=&type=&from=&to=
+
+C -> C : Validar inputs\n(from < to, type válido)
+alt Inputs inválidos
+  C --> SPA : 400 Bad Request\n(mensagem de erro)
+else Inputs válidos
+  C -> S : getAllocationSummary(resourceId,type,from,to)
+  S -> Repo : findByResourceAndPeriod(resourceId,type,from,to)
+
+  alt Sem planos no período
+    Repo --> S : []
+    S -> S : summary = {total=0, count=0}
+    S --> C : summary
+    C --> SPA : 200 OK\nsummary (0,0)
+  else Existem planos
+    Repo --> S : operationPlans[]
+    S -> S : Agregar duração por operação\nsomar janelas (start/end)\ncontar operações
+    S --> C : summary\n(totalAllocatedTime, operationCount)
+    C --> SPA : 200 OK\nsummary
+  end
+end
+
+@enduml

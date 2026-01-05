@@ -1,0 +1,75 @@
+@startuml
+title Domain Model – US 2.2.1 (Create & Update Vessel Types)
+
+class VesselType <<Aggregate Root>> {
+  + VesselTypeId : string
+  + Name : string
+  + Description : string
+  + MaxCapacityTEU : int
+  + MaxRows : int
+  + MaxBays : int
+  + MaxTiers : int
+  + MaxLength : decimal
+  + MaxBeam : decimal
+  + MaxDraft : decimal
+  --
+  + VesselType(name:string, description:string, maxCapacityTEU:int, maxRows:int, maxBays:int, maxTiers:int, maxLength:decimal, maxBeam:decimal, maxDraft:decimal)
+  + Update(description:string, maxCapacityTEU:int, maxRows:int, maxBays:int, maxTiers:int, maxLength:decimal, maxBeam:decimal, maxDraft:decimal) : void
+}
+
+class Vessel {
+  + ImoNumber : string
+  + Name : string
+  + VesselTypeId : string
+  + Length : decimal
+  + Beam : decimal
+  + Draft : decimal
+  + CapacityTEU : int
+  --
+  Constraints:
+  Length <= VesselType.MaxLength
+  Beam <= VesselType.MaxBeam
+  Draft <= VesselType.MaxDraft
+  CapacityTEU <= VesselType.MaxCapacityTEU
+}
+
+class Dock {
+  + DockCode : string
+  + Length : decimal
+  + Depth : decimal
+  + DockType : enum
+  --
+  Can accommodate vessels where:
+  Vessel.Length <= Dock.Length
+  Vessel.Draft <= Dock.Depth
+}
+
+note right of VesselType
+  **Invariants:**
+  - Name must be unique
+  - All numeric values must be positive
+  - Name cannot be null or empty
+  
+  **Purpose:**
+  Defines maximum operational constraints
+  and physical dimensions for vessel classification
+end note
+
+note left of Vessel
+  Individual vessels reference a VesselType
+  and cannot exceed its maximum dimensions.
+  This is validated in US 2.2.2.
+end note
+
+note right of Dock
+  Docks must be able to accommodate
+  vessel types based on physical constraints.
+  VesselType max dimensions inform dock
+  capacity planning.
+end note
+
+' Relationships
+VesselType "1" o-- "0..*" Vessel : classifies >
+Dock "0..*" -- "0..*" VesselType : can accommodate >
+
+@enduml

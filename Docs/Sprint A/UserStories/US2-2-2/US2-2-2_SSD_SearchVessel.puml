@@ -1,0 +1,26 @@
+@startuml
+title SSD – Search Vessels (IMO / Name / Operator)
+
+actor "Port Authority Officer" as User
+participant "Scalar / API Client" as Client
+participant "VesselsController" as C
+participant "PortDbContext" as Db
+database "EF (InMemory)" as Store
+
+User -> Client : GET /api/vessels?imo=...&name=...&operator=...
+Client -> C : Search(imo?, name?, operator?, typeId?, organizationId?)
+activate C
+
+C -> Db : query Vessels.Include(VesselType, Organization)
+Db -> Store : apply filters:
+note right
+- if (imo) where ImoNumber == NormalizeImo(imo)
+- if (name) where v.Name contains
+- if (operator) where v.Organization.Name contains
+- if (typeId) where v.VesselTypeId == typeId
+- if (organizationId) where v.OrganizationId.Value == Guid.Parse(...)
+end note
+Store --> Db : list
+C --> Client : 200 OK [VesselResponseDto...]
+deactivate C
+@enduml

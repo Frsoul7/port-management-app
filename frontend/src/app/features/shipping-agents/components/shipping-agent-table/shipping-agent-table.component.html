@@ -1,0 +1,73 @@
+<div class="table-container">
+  <!-- Desktop Table View -->
+  <table class="organizations-table desktop-table" *ngIf="organizations.length > 0; else noOrganizations">
+    <thead>
+      <tr>
+        <th>{{ 'SHIPPING_AGENTS.IDENTIFIER' | translate }}</th>
+        <th>{{ 'SHIPPING_AGENTS.LEGAL_NAME' | translate }}</th>
+        <th>{{ 'SHIPPING_AGENTS.ALTERNATIVE_NAME' | translate }}</th>
+        <th>{{ 'SHIPPING_AGENTS.TAX_NUMBER' | translate }}</th>
+        <th>{{ 'SHIPPING_AGENTS.REPRESENTATIVES' | translate }}</th>
+        <th>{{ 'COMMON.ACTIONS' | translate }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let org of organizations" class="org-row">
+        <td [attr.data-label]="'SHIPPING_AGENTS.IDENTIFIER' | translate"><strong>{{ org.identifier }}</strong></td>
+        <td [attr.data-label]="'SHIPPING_AGENTS.LEGAL_NAME' | translate">{{ org.legalName }}</td>
+        <td [attr.data-label]="'SHIPPING_AGENTS.ALTERNATIVE_NAME' | translate">{{ org.alternativeName }}</td>
+        <td [attr.data-label]="'SHIPPING_AGENTS.TAX_NUMBER' | translate">{{ org.taxNumber }}</td>
+        <td [attr.data-label]="'SHIPPING_AGENTS.REPRESENTATIVES' | translate">
+          <span class="badge">{{ org.representatives.length || 0 }}</span>
+        </td>
+        <td class="actions" [attr.data-label]="'COMMON.ACTIONS' | translate">
+          <button class="btn-icon btn-view" (click)="viewOrganization(org)" [title]="'SHIPPING_AGENTS.VIEW_DETAILS' | translate">
+            👁️
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Mobile Card View -->
+  <div class="organizations-cards mobile-cards" *ngIf="organizations.length > 0">
+    <div *ngFor="let org of organizations" class="org-card">
+      <div class="card-header">
+        <h3>{{ org.legalName }}</h3>
+        <div class="card-actions">
+          <button class="btn-icon btn-view" (click)="viewOrganization(org)" [title]="'SHIPPING_AGENTS.VIEW_DETAILS' | translate">
+            👁️
+          </button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="card-row">
+          <span class="label">{{ 'SHIPPING_AGENTS.IDENTIFIER' | translate }}:</span>
+          <span class="value"><strong>{{ org.identifier }}</strong></span>
+        </div>
+        <div class="card-row">
+          <span class="label">{{ 'SHIPPING_AGENTS.ALTERNATIVE_NAME' | translate }}:</span>
+          <span class="value">{{ org.alternativeName }}</span>
+        </div>
+        <div class="card-row">
+          <span class="label">{{ 'SHIPPING_AGENTS.TAX_NUMBER' | translate }}:</span>
+          <span class="value">{{ org.taxNumber }}</span>
+        </div>
+        <div class="card-row">
+          <span class="label">{{ 'SHIPPING_AGENTS.REPRESENTATIVES' | translate }}:</span>
+          <span class="value"><span class="badge">{{ org.representatives.length || 0 }}</span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ng-template #noOrganizations>
+    <div class="no-data">
+      <div class="no-data-icon">🏢</div>
+      <p>{{ 'SHIPPING_AGENTS.NO_ORGANIZATIONS' | translate }}</p>
+    </div>
+  </ng-template>
+</div>
+
+<!-- Loading Indicator -->
+<app-loading *ngIf="loading" [message]="'SHIPPING_AGENTS.LOADING'"></app-loading>

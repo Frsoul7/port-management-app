@@ -1,0 +1,74 @@
+<div class="checker-container">
+    <h1>OAuth Redirect URI Checker</h1>
+
+    <div class="section">
+        <h2>Your Current Configuration</h2>
+        <div class="config-box">
+            <div class="config-item">
+                <strong>Client ID:</strong>
+                <code>{{ clientId }}</code>
+            </div>
+            <div class="config-item">
+                <strong>Redirect URI in Code:</strong>
+                <code class="highlight">{{ redirectUri }}</code>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>What to Configure in Google Cloud Console</h2>
+
+        <div class="instruction-box">
+            <h3>1. Authorized JavaScript origins</h3>
+            <div class="copy-box">
+                <code>{{ origin }}</code>
+                <button (click)="copy(origin)" class="copy-btn">Copy</button>
+            </div>
+        </div>
+
+        <div class="instruction-box">
+            <h3>2. Authorized redirect URIs</h3>
+            <div class="copy-box">
+                <code class="highlight">{{ redirectUri }}</code>
+                <button (click)="copy(redirectUri)" class="copy-btn">Copy</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="section warning">
+        <h2>Common Mistakes to Avoid</h2>
+        <ul>
+            <li>Don't add trailing slashes: <code>http://vm.nunoepteixeira.me/</code></li>
+            <li>Don't forget the path: <code>http://vm.nunoepteixeira.me</code> (missing /auth/callback)</li>
+            <li>Don't use https for localhost: <code>https://vm.nunoepteixeira.me/auth/callback</code></li>
+            <li>Don't use wrong port: <code>http://localhost:3000/auth/callback</code></li>
+            <li>Use exactly: <code class="highlight">{{ redirectUri }}</code></li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>Step-by-Step Instructions</h2>
+        <ol class="steps">
+            <li>
+                Go to: <a href="https://console.cloud.google.com/apis/credentials" target="_blank">
+                    Google Cloud Console - Credentials
+                </a>
+            </li>
+            <li>Select your project: <strong>LAPR5PortManagement</strong></li>
+            <li>Click on your <strong>OAuth 2.0 Client ID</strong></li>
+            <li>Under "Authorized JavaScript origins", click <strong>+ ADD URI</strong></li>
+            <li>Paste: <code>{{ origin }}</code> (use the Copy button above)</li>
+            <li>Under "Authorized redirect URIs", click <strong>+ ADD URI</strong></li>
+            <li>Paste: <code class="highlight">{{ redirectUri }}</code> (use the Copy button above)</li>
+            <li>Click <strong>SAVE</strong> at the bottom</li>
+            <li><strong>Wait 5 minutes</strong> for Google to update the configuration</li>
+            <li>Try logging in again</li>
+        </ol>
+    </div>
+
+    <div class="section" *ngIf="copied">
+        <div class="success-message">
+            Copied to clipboard!
+        </div>
+    </div>
+</div>

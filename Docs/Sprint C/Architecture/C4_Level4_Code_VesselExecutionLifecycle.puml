@@ -1,0 +1,145 @@
+@startuml C4_Level4_Code_VesselExecutionLifecycle
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Sequence.puml
+
+skinparam shadowing false
+skinparam DefaultFontName Arial
+skinparam DefaultFontSize 11
+skinparam linetype ortho
+
+title Sequence Diagram (C4 Level 4)\nVessel Visit Execution Lifecycle\n[Complete Flow from Initialization to Completion]
+
+Person(portStaff, "Port Staff", "Executes vessel operations")
+Container(frontend, "Angular Frontend", "Web UI")
+Component(controller, "VesselVisitExecutionController", "Express Router")
+Component(service, "VesselVisitExecutionService", "Application Service")
+Component(aggregate, "VesselVisitExecution", "Aggregate Root")
+Component(executedOpVO, "ExecutedOperation", "Value Object")
+Component(repository, "VesselVisitExecutionRepository", "Mongoose Repository")
+Component(opPlanRepo, "OperationPlanRepository", "Mongoose Repository")
+ContainerDb(mongodb, "MongoDB", "Database")
+
+== Phase 1: Initialize Execution ==
+
+Rel(portStaff, frontend, "1. Starts execution for VVN", "HTTPS")
+Rel(frontend, controller, "2. POST /vessel-visit-executions\n{vvnId, operationPlanId}", "REST + JWT")
+Rel(controller, service, "3. initializeExecution(dto, userId)", "")
+
+Rel(service, opPlanRepo, "4. findById(operationPlanId)", "Fetch plan")
+Rel(opPlanRepo, mongodb, "4.1 Query", "")
+Rel(mongodb, opPlanRepo, "4.2 Returns plan", "")
+Rel(opPlanRepo, service, "4.3 Returns OperationPlan", "")
+
+Rel(service, aggregate, "5. new VesselVisitExecution({\n  vvnId,\n  operationPlanId,\n  plannedOperations,\n  createdBy\n})", "")
+
+note right of aggregate
+  **Initial State**
+  status = PENDING
+  operations = []
+  incidents = []
+end note
+
+Rel(service, repository, "6. save(vve)", "")
+Rel(repository, mongodb, "6.1 Insert", "")
+Rel(service, controller, "7. Returns VVEDto (PENDING)", "")
+Rel(controller, frontend, "8. HTTP 201 Created", "")
+
+== Phase 2: Port Arrival ==
+
+Rel(portStaff, frontend, "9. Records port arrival", "")
+Rel(frontend, controller, "10. PATCH /vessel-visit-executions/:id/port-arrival\n{arrivalTime}", "")
+Rel(controller, service, "11. recordPortArrival(vveId, arrivalTime)", "")
+
+Rel(service, repository, "12. findById(vveId)", "")
+Rel(repository, mongodb, "12.1 Query", "")
+Rel(service, aggregate, "13. vve.recordPortArrival(arrivalTime)", "State transition")
+
+note right of aggregate
+  **Business Rules**
+  - Must be in PENDING status
+  - Sets actualPortArrival
+  - Changes status to IN_PROGRESS
+end note
+
+Rel(service, repository, "14. update(vve)", "")
+Rel(repository, mongodb, "14.1 Update", "")
+Rel(service, controller, "15. Returns VVEDto (IN_PROGRESS)", "")
+
+== Phase 3: Berthing ==
+
+Rel(portStaff, frontend, "16. Records berthing", "")
+Rel(frontend, controller, "17. PATCH /:id/berthing\n{berthingTime, dockId}", "")
+Rel(controller, service, "18. recordBerthing(vveId, berthingTime, dockId)", "")
+
+Rel(service, repository, "19. findById(vveId)", "")
+Rel(service, aggregate, "20. vve.recordBerthing(berthingTime, dockId)", "")
+
+note right of aggregate
+  **Business Rules**
+  - Must be IN_PROGRESS
+  - Sets actualBerthing & assignedDock
+  - Remains IN_PROGRESS
+end note
+
+Rel(service, repository, "21. update(vve)", "")
+
+== Phase 4: Execute Operations ==
+
+Rel(portStaff, frontend, "22. Records completed operation", "")
+Rel(frontend, controller, "23. POST /:id/operations\n{type, startTime, endTime, containers, cranes}", "")
+Rel(controller, service, "24. addExecutedOperation(vveId, dto)", "")
+
+Rel(service, repository, "25. findById(vveId)", "")
+Rel(service, executedOpVO, "26. new ExecutedOperation({...})", "Create immutable record")
+
+note right of executedOpVO
+  **Validation**
+  - endTime > startTime
+  - containers >= 0
+  - cranes > 0
+end note
+
+Rel(service, aggregate, "27. vve.addExecutedOperation(operation)", "Add to history")
+Rel(service, repository, "28. update(vve)", "")
+Rel(service, controller, "29. Returns updated VVEDto", "")
+
+== Phase 5: Unberthing ==
+
+Rel(portStaff, frontend, "30. Records unberthing", "")
+Rel(frontend, controller, "31. PATCH /:id/unberthing\n{unberthingTime}", "")
+Rel(controller, service, "32. recordUnberthing(vveId, unberthingTime)", "")
+
+Rel(service, repository, "33. findById(vveId)", "")
+Rel(service, aggregate, "34. vve.recordUnberthing(unberthingTime)", "")
+
+note right of aggregate
+  **Business Rules**
+  - Must be IN_PROGRESS
+  - Sets actualUnberthing
+  - Remains IN_PROGRESS
+end note
+
+Rel(service, repository, "35. update(vve)", "")
+
+== Phase 6: Port Departure (Completion) ==
+
+Rel(portStaff, frontend, "36. Records port departure", "")
+Rel(frontend, controller, "37. PATCH /:id/port-departure\n{departureTime}", "")
+Rel(controller, service, "38. recordPortDeparture(vveId, departureTime)", "")
+
+Rel(service, repository, "39. findById(vveId)", "")
+Rel(service, aggregate, "40. vve.recordPortDeparture(departureTime)", "Final state")
+
+note right of aggregate
+  **Business Rules**
+  - Must be IN_PROGRESS
+  - Sets actualPortDeparture
+  - Changes status to COMPLETED
+  - **Execution finished**
+end note
+
+Rel(service, repository, "41. update(vve)", "")
+Rel(service, controller, "42. Returns VVEDto (COMPLETED)", "")
+Rel(controller, frontend, "43. HTTP 200 OK", "")
+Rel(frontend, portStaff, "44. Shows completed execution", "")
+
+@enduml

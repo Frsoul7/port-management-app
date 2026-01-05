@@ -1,0 +1,95 @@
+@startuml C4_Level4_Code_ApproveOperationPlan
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Sequence.puml
+
+skinparam shadowing false
+skinparam DefaultFontName Arial
+skinparam DefaultFontSize 11
+skinparam linetype ortho
+
+title Sequence Diagram (C4 Level 4)\nApprove Operation Plan\n[PATCH /api/v1/operation-plans/:id/status]
+
+Person(portOfficer, "Port Officer", "Reviews and approves plans")
+Container(frontend, "Angular Frontend", "Web UI")
+Component(controller, "OperationPlanController", "Express Router")
+Component(authMiddleware, "AuthMiddleware", "JWT Validator")
+Component(service, "OperationPlanService", "Application Service")
+Component(aggregate, "OperationPlan", "Aggregate Root")
+Component(repository, "OperationPlanRepository", "Mongoose Repository")
+ContainerDb(mongodb, "MongoDB", "Database")
+
+Rel(portOfficer, frontend, "1. Reviews plan and clicks 'Approve'", "HTTPS")
+Rel(frontend, controller, "2. PATCH /operation-plans/:id/approve", "REST + JWT")
+
+Rel(controller, authMiddleware, "3. Validate JWT token", "Middleware")
+Rel(authMiddleware, controller, "4. Returns authenticated user", "")
+
+note right of authMiddleware
+  **Authorization**
+  - Validates JWT signature
+  - Extracts user role
+  - Only Port Officers can approve
+end note
+
+Rel(controller, service, "5. approvePlan(operationPlanId)", "Delegate to service")
+
+Rel(service, repository, "6. findById(operationPlanId)", "Fetch plan")
+Rel(repository, mongodb, "6.1 db.operationplans.findOne({_id})", "Mongoose query")
+Rel(mongodb, repository, "6.2 Returns document", "")
+Rel(repository, service, "6.3 Returns OperationPlan entity", "Hydrated aggregate")
+
+alt Plan not found
+    Rel(service, controller, "7a. throw Error('Plan not found')", "")
+    Rel(controller, frontend, "7b. HTTP 404 Not Found", "")
+else Plan found
+
+    Rel(service, aggregate, "8. plan.approve()", "Domain method")
+
+    note right of aggregate
+      **Business Rules Enforced**
+      - Current status must be PENDING
+      - Throws error if already APPROVED
+      - Throws error if IN_EXECUTION
+      - Throws error if COMPLETED
+
+      **State Transition**
+      status: PENDING → APPROVED
+    end note
+
+    alt Invalid state transition
+        Rel(aggregate, service, "9a. throw Error('Invalid status')", "Domain exception")
+        Rel(service, controller, "9b. Propagate error", "")
+        Rel(controller, frontend, "9c. HTTP 400 Bad Request", "")
+    else Valid transition
+
+        Rel(aggregate, service, "10. Returns updated aggregate", "status = APPROVED")
+
+        Rel(service, repository, "11. update(operationPlan)", "Persist state change")
+        Rel(repository, mongodb, "11.1 db.operationplans.updateOne(\n  {_id},\n  {$set: {status: 'APPROVED'}}\n)", "Atomic update")
+        Rel(mongodb, repository, "11.2 Returns updated document", "")
+        Rel(repository, service, "11.3 Returns OperationPlan", "")
+
+        Rel(service, service, "12. toDto(updatedPlan)", "Convert to DTO")
+
+        note right of service
+          **DTO Mapping**
+          - operationPlanId
+          - targetDate (YYYY-MM-DD)
+          - algorithm
+          - status: "APPROVED"
+          - totalDelay
+          - operations[]
+          - createdAt, createdBy
+        end note
+
+        Rel(service, controller, "13. Returns OperationPlanDto", "")
+        Rel(controller, frontend, "14. HTTP 200 OK\n{...plan, status: 'APPROVED'}", "JSON response")
+        Rel(frontend, portOfficer, "15. Shows success notification", "UI update")
+
+        note left of frontend
+          Plan is now APPROVED
+          and can be started for execution
+        end note
+    end
+end
+
+@enduml

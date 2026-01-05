@@ -1,0 +1,62 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Dynamic.puml
+title C4 Dynamic - US 4.1.15 (Create Complementary Task)
+
+Person(operator, "Logistics Operator")
+Container(spa, "SPA", "Angular", "UI for port operators")
+Container(oemApi, "OEM API", "Node.js + TypeScript + Express", "Executes OEM use cases")
+ContainerDb(oemDb, "OEM Database", "MongoDB", "Stores VVEs, tasks and categories")
+System_Ext(iam, "IAM Provider", "OIDC/JWT tokens")
+
+Rel(operator, spa, "Uses", "HTTPS")
+Rel(spa, iam, "Authenticates", "OIDC")
+Rel(spa, oemApi, "POST /vessel-visit-executions/{vveId}/complementary-tasks", "HTTPS/JSON")
+Rel(oemApi, oemDb, "Reads/Writes", "MongoDB driver")
+Rel(oemApi, iam, "Validates token/roles", "JWT/OIDC")
+
+Boundary(oemBoundary, "OEM API Internals") {
+  Component(auth, "Auth Middleware", "JWT/OIDC Middleware", "Validates token and roles")
+  Component(controller, "ComplementaryTaskController", "Controller", "Validates input and routes request")
+  Component(service, "ComplementaryTaskService", "Application Service", "Applies policies and orchestrates persistence")
+  Component(vveRepo, "VVERepository Adapter", "Repository", "Loads VVE to validate state")
+  Component(catRepo, "TaskCategoryRepository Adapter", "Repository", "Validates category")
+  Component(taskRepo, "ComplementaryTaskRepository Adapter", "Repository", "Persists task")
+}
+
+Rel(controller, auth, "Uses", "middleware")
+Rel(controller, service, "Invokes", "createForVve(vveId, dto, userId)")
+Rel(service, vveRepo, "Loads VVE", "findById(vveId)")
+Rel(service, catRepo, "Loads Category", "findById(categoryId)")
+Rel(service, taskRepo, "Creates Task", "create(task)")
+Rel(vveRepo, oemDb, "Reads", "MongoDB")
+Rel(catRepo, oemDb, "Reads", "MongoDB")
+Rel(taskRepo, oemDb, "Writes", "MongoDB")
+
+' Dynamic flow
+Lay_Down(spa, auth)
+Lay_Down(auth, controller)
+Lay_Down(controller, service)
+Lay_Down(service, vveRepo)
+Lay_Down(service, catRepo)
+Lay_Down(service, taskRepo)
+
+' Main success scenario
+DynamicRel(spa, auth, "1. Send request with JWT")
+DynamicRel(auth, controller, "2. Validate token + role; forward")
+DynamicRel(controller, service, "3. Validate input; call use case")
+DynamicRel(service, vveRepo, "4. Load VVE and check state")
+DynamicRel(service, catRepo, "5. Validate category exists")
+DynamicRel(service, taskRepo, "6. Persist new complementary task")
+DynamicRel(taskRepo, oemDb, "7. Insert task document")
+DynamicRel(controller, spa, "8. Return 201 Created + task DTO")
+
+' Alternate paths (high-level)
+note over service
+Alternatives:
+A) VVE not found -> 404
+B) Category invalid -> 422
+C) VVE COMPLETED and no admin override -> 403
+D) startTime >= endTime -> 400/422
+end note
+
+@enduml

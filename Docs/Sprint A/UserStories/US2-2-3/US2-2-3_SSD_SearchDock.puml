@@ -1,0 +1,39 @@
+@startuml
+title SSD – Search Docks (Name / Location / Vessel Type)
+
+actor "Port Authority Officer" as User
+participant "Scalar / API Client" as Client
+participant "DocksController" as C
+participant "DockRepository" as DR
+participant "PortDbContext" as Db
+database "EF (InMemory)" as Store
+
+User -> Client : GET /api/docks?name=...&location=...&vesselTypeId=...
+Client -> C : GetAll(name?, location?, vesselTypeId?)
+activate C
+
+alt filters provided
+  C -> DR : SearchAsync(name, location, vesselTypeId)
+  activate DR
+  DR -> Db : query Docks.Include(AllowedVesselTypes)
+  Db -> Store : apply filters:
+  note right
+  - if (name) where d.Name contains\nor d.Code contains
+  - if (location) where d.Location contains
+  - if (vesselTypeId) where d.AllowedVesselTypes\ncontains vesselTypeId
+  end note
+  Store --> Db : list
+  Db --> DR : List<Dock>
+  deactivate DR
+else no filters
+  C -> DR : GetAllAsync(includeVesselTypes: true)
+  activate DR
+  DR -> Store : query all
+  Store --> DR : List<Dock>
+  deactivate DR
+end
+
+C -> C : map to List<DockResponseDto>
+C --> Client : 200 OK [DockResponseDto...]\n(with allowed vessel types)
+deactivate C
+@enduml

@@ -1,0 +1,48 @@
+@startuml
+title C4 Container – US 2.2.7 Approve/Reject VVN
+
+actor "Port Authority\nOfficer" as Officer
+
+node "Client Layer" {
+  [UI / API Client] as Client
+}
+
+node "Web API" {
+  [VesselVisitNotificationsController] as Ctl
+}
+
+node "Application Layer" {
+  [VesselVisitService] as Svc
+  [DockAssignmentService] as DockSvc
+}
+
+database "Persistence" as Db
+node "Domain" as Dom {
+  [VesselVisitNotification] as Vvn
+  [DockAssignment] as DA
+  [DecisionLog] as Log
+}
+
+Officer --> Client : review VVNs
+Client --> Ctl : POST approve/reject
+Ctl --> Svc : approve/reject
+Svc --> DockSvc : assign dock (if approved)
+Svc --> Db : persist decision
+Svc ..> Vvn : transition state
+Svc ..> DA : create assignment
+Svc ..> Log : record decision
+
+note right of Vvn
+  State transitions:
+  SUBMITTED → APPROVED (+ dock)
+  SUBMITTED → REJECTED (+ reason)
+end note
+
+note right of DA
+  Dock Assignment:
+  - Dock
+  - Berth time window (from/to)
+  - No overlaps allowed
+end note
+
+@enduml

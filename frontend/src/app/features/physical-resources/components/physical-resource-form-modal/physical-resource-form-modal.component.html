@@ -1,0 +1,112 @@
+<div class="modal-overlay" *ngIf="show" (click)="close()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ (isEditMode ? 'RESOURCES.EDIT_TITLE' : 'RESOURCES.CREATE_TITLE') | translate }}</h2>
+      <button class="close-btn" (click)="close()">×</button>
+    </div>
+
+    <form (ngSubmit)="save()" #physicalResourceForm="ngForm">
+      <div class="modal-body">
+        <!-- Resource Type -->
+        <div class="form-group">
+          <label for="resourceType">{{ 'RESOURCES.RESOURCE_TYPE_REQUIRED' | translate }}</label>
+          <select id="resourceType" [(ngModel)]="currentResource.resourceType" name="resourceType"
+            (change)="onResourceTypeChange()" [disabled]="isEditMode" [class.readonly]="isEditMode" required
+            class="form-control">
+            <option *ngFor="let type of resourceTypes" [value]="type.value">
+              {{ ('RESOURCES.' + type.translationKey) | translate }}
+            </option>
+          </select>
+          <small class="form-hint" *ngIf="isEditMode">{{ 'RESOURCES.RESOURCE_TYPE_CANNOT_CHANGE' | translate }}</small>
+        </div>
+
+        <!-- Code -->
+        <div class="form-group">
+          <label for="code">{{ 'RESOURCES.CODE_REQUIRED' | translate }}</label>
+          <input type="text" id="code" [(ngModel)]="currentResource.code" name="code" [readonly]="isEditMode"
+            [class.readonly]="isEditMode" required maxlength="20" [placeholder]="'RESOURCES.CODE_PLACEHOLDER' | translate"
+            class="form-control">
+          <small class="form-hint">{{ 'RESOURCES.CODE_HINT' | translate }}</small>
+        </div>
+
+        <!-- Description -->
+        <div class="form-group">
+          <label for="description">{{ 'RESOURCES.DESCRIPTION_LABEL' | translate }}</label>
+          <textarea id="description" [(ngModel)]="currentResource.description" name="description" rows="3"
+            [placeholder]="'RESOURCES.DESCRIPTION_PLACEHOLDER' | translate" class="form-control"></textarea>
+          <small class="form-hint">{{ 'RESOURCES.DESCRIPTION_HINT' | translate }}</small>
+        </div>
+
+        <!-- Setup Time -->
+        <div class="form-group">
+          <label for="setupTimeSeconds">{{ 'RESOURCES.SETUP_TIME_SECONDS' | translate }}</label>
+          <input type="number" id="setupTimeSeconds" [(ngModel)]="currentResource.setupTimeSeconds"
+            name="setupTimeSeconds" required min="0" [placeholder]="'RESOURCES.SETUP_TIME_PLACEHOLDER' | translate" class="form-control">
+          <small class="form-hint">{{ 'RESOURCES.SETUP_TIME_HINT' | translate }}</small>
+        </div>
+
+        <!-- STS Crane Specific Fields -->
+        <div *ngIf="currentResource.resourceType === 'STS_CRANE'">
+          <div class="form-group">
+            <label for="avgContainersPerHour">{{ 'RESOURCES.AVG_CONTAINERS_PER_HOUR' | translate }}</label>
+            <input type="number" id="avgContainersPerHour" [(ngModel)]="currentResource.avgContainersPerHour"
+              name="avgContainersPerHour" required min="1" [placeholder]="'RESOURCES.AVG_CONTAINERS_PER_HOUR_PLACEHOLDER' | translate"
+              class="form-control">
+            <small class="form-hint">{{ 'RESOURCES.AVG_CONTAINERS_PER_HOUR_HINT' | translate }}</small>
+          </div>
+
+          <div class="form-group">
+            <label for="installedAtDockCode">{{ 'RESOURCES.INSTALLED_AT_DOCK' | translate }}</label>
+            <select id="installedAtDockCode" [(ngModel)]="currentResource.installedAtDockCode"
+              name="installedAtDockCode" class="form-control">
+              <option value="">{{ 'RESOURCES.SELECT_DOCK' | translate }}</option>
+              <option *ngFor="let dock of docks" [value]="dock.code">
+                {{ dock.code }} - {{ dock.name }}
+              </option>
+            </select>
+            <small class="form-hint">{{ 'RESOURCES.INSTALLED_AT_DOCK_HINT' | translate }}</small>
+          </div>
+        </div>
+
+        <!-- Mobile Equipment Specific Fields -->
+        <div *ngIf="currentResource.resourceType === 'MOBILE_EQUIPMENT'">
+          <div class="form-group">
+            <label for="mobileType">{{ 'RESOURCES.MOBILE_TYPE' | translate }}</label>
+            <select id="mobileType" [(ngModel)]="currentResource.mobileType" name="mobileType" required
+              class="form-control">
+              <option [ngValue]="null">{{ 'RESOURCES.SELECT_TYPE' | translate }}</option>
+              <option *ngFor="let type of mobileTypes" [ngValue]="type.value">
+                {{ ('RESOURCES.' + type.translationKey) | translate }}
+              </option>
+            </select>
+            <small class="form-hint">{{ 'RESOURCES.MOBILE_TYPE_HINT' | translate }}</small>
+          </div>
+
+          <div class="form-group">
+            <label for="maxSpeedKph">{{ 'RESOURCES.MAX_SPEED' | translate }}</label>
+            <input type="number" id="maxSpeedKph" [(ngModel)]="currentResource.maxSpeedKph" name="maxSpeedKph" min="0"
+              [placeholder]="'RESOURCES.MAX_SPEED_PLACEHOLDER' | translate" class="form-control">
+            <small class="form-hint">{{ 'RESOURCES.MAX_SPEED_HINT' | translate }}</small>
+          </div>
+
+          <div class="form-group">
+            <label for="containersPerTrip">{{ 'RESOURCES.CONTAINERS_PER_TRIP' | translate }}</label>
+            <input type="number" id="containersPerTrip" [(ngModel)]="currentResource.containersPerTrip"
+              name="containersPerTrip" min="0" [placeholder]="'RESOURCES.CONTAINERS_PER_TRIP_PLACEHOLDER' | translate" class="form-control">
+            <small class="form-hint">{{ 'RESOURCES.CONTAINERS_PER_TRIP_HINT' | translate }}</small>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="close()">{{ 'RESOURCES.CANCEL' | translate }}</button>
+        <button type="submit" class="btn btn-primary" [disabled]="!physicalResourceForm.form.valid || saving">
+          {{ saving ? ('RESOURCES.SAVING' | translate) : ((isEditMode ? 'RESOURCES.UPDATE' : 'RESOURCES.SAVE') | translate) }}
+        </button>
+      </div>
+    </form>
+
+    <!-- Loading Overlay for Saving -->
+    <app-loading *ngIf="saving" [message]="'RESOURCES.SAVING' | translate"></app-loading>
+  </div>
+</div>

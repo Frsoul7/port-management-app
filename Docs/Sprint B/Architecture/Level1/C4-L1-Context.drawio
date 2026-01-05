@@ -1,0 +1,73 @@
+<mxfile host="Electron" modified="2025-11-23T22:58:11.046Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/22.1.11 Chrome/114.0.5735.289 Electron/25.9.8 Safari/537.36" etag="diDmrDrWs5vlWUj69VNQ" version="22.1.11" type="device">
+  <diagram name="Level 1 - System Context" id="C4L1Context">
+    <mxGraphModel dx="1418" dy="820" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="pms_system" value="&lt;b&gt;Port Management System&lt;/b&gt;&lt;br&gt;«system»&lt;br&gt;&lt;br&gt;Comprehensive port operations management system&lt;br&gt;&lt;br&gt;Key Capabilities:&lt;br&gt;• Vessel and vessel type management&lt;br&gt;• Vessel Visit Notification (VVN) management&lt;br&gt;• Organization and resource management&lt;br&gt;• Dock and storage area management&lt;br&gt;• 3D port visualization (Three.js)&lt;br&gt;• User authentication (Google OAuth)&lt;br&gt;• Scheduling and planning (Prolog)&lt;br&gt;&lt;br&gt;Technology Stack:&lt;br&gt;• Frontend: Angular 20 + Three.js&lt;br&gt;• Backend: .NET 9.0 + ASP.NET Core&lt;br&gt;• Database: SQL Server&lt;br&gt;• Auth: Google OAuth 2.0 + JWT" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;align=center;verticalAlign=top;fontSize=11;spacingTop=10;spacingLeft=10;spacingRight=10;" parent="1" vertex="1">
+          <mxGeometry x="360" y="300" width="380" height="400" as="geometry" />
+        </mxCell>
+        <mxCell id="actor_port_authority" value="&lt;b&gt;Port Authority Officer&lt;/b&gt;&lt;br&gt;&lt;br&gt;Manages port operations,&lt;br&gt;approves vessel visits,&lt;br&gt;monitors dock assignments" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#e1d5e7;strokeColor=#9673a6;" parent="1" vertex="1">
+          <mxGeometry x="80" y="90" width="60" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="actor_shipping_agent" value="&lt;b&gt;Shipping Agent&lt;/b&gt;&lt;br&gt;&lt;br&gt;Submits vessel visit requests,&lt;br&gt;manages vessel information,&lt;br&gt;tracks visit status" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#e1d5e7;strokeColor=#9673a6;" parent="1" vertex="1">
+          <mxGeometry x="80" y="300" width="60" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="actor_logistics" value="&lt;b&gt;Logistics Planner&lt;/b&gt;&lt;br&gt;&lt;br&gt;Plans vessel schedules,&lt;br&gt;optimizes dock assignments,&lt;br&gt;manages resource allocation" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#e1d5e7;strokeColor=#9673a6;" parent="1" vertex="1">
+          <mxGeometry x="80" y="510" width="60" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="actor_admin" value="&lt;b&gt;System Administrator&lt;/b&gt;&lt;br&gt;&lt;br&gt;Manages users and roles,&lt;br&gt;configures system settings,&lt;br&gt;monitors system health" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#e1d5e7;strokeColor=#9673a6;" parent="1" vertex="1">
+          <mxGeometry x="80" y="730" width="60" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="ext_google_oauth" value="&lt;b&gt;Google OAuth Provider&lt;/b&gt;&lt;br&gt;«external system»&lt;br&gt;&lt;br&gt;Third-party authentication service&lt;br&gt;&lt;br&gt;Purpose:&lt;br&gt;• User identity verification&lt;br&gt;• OAuth 2.0 token exchange&lt;br&gt;• Single Sign-On (SSO)&lt;br&gt;&lt;br&gt;Integration:&lt;br&gt;• Google.Apis.Auth library&lt;br&gt;• AuthenticationService.cs" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;align=center;verticalAlign=top;fontSize=10;spacingTop=10;" parent="1" vertex="1">
+          <mxGeometry x="880" y="250" width="200" height="240" as="geometry" />
+        </mxCell>
+        <mxCell id="ext_smtp" value="&lt;b&gt;Email Service (SMTP)&lt;/b&gt;&lt;br&gt;«external system»&lt;br&gt;&lt;br&gt;Email notification service&lt;br&gt;via Gmail SMTP&lt;br&gt;&lt;br&gt;Purpose:&lt;br&gt;• User account activation&lt;br&gt;• Account verification emails&lt;br&gt;&lt;br&gt;Configuration:&lt;br&gt;• Gmail SMTP server&lt;br&gt;• Port 587 (TLS)&lt;br&gt;• SmtpEmailService.cs&lt;br&gt;&lt;br&gt;Note: NOT used for&lt;br&gt;VVN notifications in Sprint B" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;align=center;verticalAlign=top;fontSize=10;spacingTop=10;" parent="1" vertex="1">
+          <mxGeometry x="880" y="530" width="200" height="280" as="geometry" />
+        </mxCell>
+        <mxCell id="rel_port_authority" value="Uses" style="endArrow=block;endFill=1;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.2;entryDx=0;entryDy=0;" parent="1" source="actor_port_authority" target="pms_system" edge="1">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="140" y="260" as="sourcePoint" />
+            <mxPoint x="300" y="260" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel_shipping_agent" value="Uses" style="endArrow=block;endFill=1;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.4;entryDx=0;entryDy=0;" parent="1" source="actor_shipping_agent" target="pms_system" edge="1">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="140" y="440" as="sourcePoint" />
+            <mxPoint x="300" y="440" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel_logistics" value="Uses" style="endArrow=block;endFill=1;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.6;entryDx=0;entryDy=0;" parent="1" source="actor_logistics" target="pms_system" edge="1">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="140" y="620" as="sourcePoint" />
+            <mxPoint x="300" y="620" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel_admin" value="Uses" style="endArrow=block;endFill=1;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.8;entryDx=0;entryDy=0;" parent="1" source="actor_admin" target="pms_system" edge="1">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="140" y="800" as="sourcePoint" />
+            <mxPoint x="300" y="800" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel_google_oauth" value="Authenticates users" style="endArrow=block;endFill=1;html=1;exitX=1;exitY=0.3;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="pms_system" target="ext_google_oauth" edge="1">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="740" y="370" as="sourcePoint" />
+            <mxPoint x="900" y="370" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rel_smtp" value="Sends account emails" style="endArrow=block;endFill=1;html=1;exitX=1;exitY=0.7;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="pms_system" target="ext_smtp" edge="1">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="740" y="580" as="sourcePoint" />
+            <mxPoint x="900" y="580" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="title" value="&lt;b&gt;System Context Diagram (C4 Level 1)&lt;/b&gt;&lt;br&gt;Port Management System [Sprint B]" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=16;fontStyle=1;" parent="1" vertex="1">
+          <mxGeometry x="360" y="40" width="380" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="legend" value="&lt;b&gt;Legend:&lt;/b&gt;&lt;br&gt;Purple Actor = User/Role&lt;br&gt;Blue Rectangle = Main System&lt;br&gt;Gray Rectangle = External System&lt;br&gt;Arrow = Relationship/Interaction" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;align=left;verticalAlign=top;spacingLeft=10;spacingTop=10;fontSize=10;" parent="1" vertex="1">
+          <mxGeometry x="840" y="10" width="240" height="100" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

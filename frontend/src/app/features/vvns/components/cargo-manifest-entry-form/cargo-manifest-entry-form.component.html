@@ -1,0 +1,114 @@
+<div class="entry-form">
+  <h4>Add {{ type === 'Load' ? 'Loading' : 'Unloading' }} Container</h4>
+
+  <form (ngSubmit)="handleSubmit()">
+    <div class="form-row">
+      <div class="form-group">
+        <label for="containerCode">Container Code * <small>(ISO 6346: 3 letters + U/J/Z + 7 digits)</small></label>
+        <input
+          id="containerCode"
+          type="text"
+          [(ngModel)]="formData.containerCode"
+          name="containerCode"
+          placeholder="e.g., MSCU1234560 (ISO 6346)"
+          [disabled]="disabled"
+          [class.error]="validationErrors['containerCode']"
+          maxlength="11"
+          style="text-transform: uppercase;"
+          class="form-control">
+        <small class="error-message" *ngIf="validationErrors['containerCode']">
+          {{ validationErrors['containerCode'] }}
+        </small>
+      </div>
+    </div>
+
+    <div class="form-row three-columns">
+      <div class="form-group">
+        <label for="bay">Bay *</label>
+        <input
+          id="bay"
+          type="number"
+          [(ngModel)]="formData.bay"
+          name="bay"
+          min="1"
+          [disabled]="disabled"
+          [class.error]="validationErrors['bay']"
+          class="form-control">
+        <small class="error-message" *ngIf="validationErrors['bay']">
+          {{ validationErrors['bay'] }}
+        </small>
+      </div>
+
+      <div class="form-group">
+        <label for="row">Row *</label>
+        <input
+          id="row"
+          type="number"
+          [(ngModel)]="formData.row"
+          name="row"
+          min="1"
+          [disabled]="disabled"
+          [class.error]="validationErrors['row']"
+          class="form-control">
+        <small class="error-message" *ngIf="validationErrors['row']">
+          {{ validationErrors['row'] }}
+        </small>
+      </div>
+
+      <div class="form-group">
+        <label for="tier">Tier *</label>
+        <input
+          id="tier"
+          type="number"
+          [(ngModel)]="formData.tier"
+          name="tier"
+          min="1"
+          [disabled]="disabled"
+          [class.error]="validationErrors['tier']"
+          class="form-control">
+        <small class="error-message" *ngIf="validationErrors['tier']">
+          {{ validationErrors['tier'] }}
+        </small>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="goodsDescription">Goods Description (optional)</label>
+        <input
+          id="goodsDescription"
+          type="text"
+          [(ngModel)]="formData.goodsDescription"
+          name="goodsDescription"
+          placeholder="Description of cargo"
+          [disabled]="disabled"
+          class="form-control">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group checkbox-group">
+        <label class="checkbox-label">
+          <input
+            type="checkbox"
+            [(ngModel)]="formData.hazardous"
+            name="hazardous"
+            [disabled]="disabled">
+          <span class="hazard-label">
+            <span class="hazard-icon" *ngIf="formData.hazardous">⚠️</span>
+            Hazardous Goods
+          </span>
+        </label>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" class="btn btn-secondary" (click)="handleCancel()" [disabled]="disabled">
+        Cancel
+      </button>
+      <button type="submit" class="btn btn-primary" [disabled]="disabled">
+        Add Container
+      </button>
+    </div>
+  </form>
+</div>

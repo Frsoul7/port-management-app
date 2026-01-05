@@ -1,0 +1,65 @@
+@startuml
+title US 4.1.6 - Nível 4 (DIP + Testabilidade)
+
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+
+class ResourceAllocationService {
+  - repo: IOperationPlanRepository
+  + getAllocationSummary(resourceId, type, from, to): AllocationSummary
+}
+
+interface IOperationPlanRepository {
+  + findByResourceAndPeriod(resourceId, type, from, to): List<OperationPlan>
+}
+
+class MongoOperationPlanRepository {
+  + findByResourceAndPeriod(...): List<OperationPlan>
+}
+
+class FakeOperationPlanRepository {
+  - data: List<OperationPlan>
+  + findByResourceAndPeriod(...): List<OperationPlan>
+}
+
+class OperationPlan {
+  + id
+  + date
+  + operations: List<PlannedOperation>
+}
+
+class PlannedOperation {
+  + startTime
+  + endTime
+  + resourceRefs: List<ResourceRef>
+  + durationMinutes(): int
+}
+
+class ResourceRef {
+  + resourceId
+  + type
+}
+
+class AllocationSummary {
+  + totalAllocatedMinutes
+  + operationCount
+}
+
+ResourceAllocationService --> IOperationPlanRepository : depends on abstraction (DIP)
+IOperationPlanRepository <|.. MongoOperationPlanRepository
+IOperationPlanRepository <|.. FakeOperationPlanRepository
+
+ResourceAllocationService ..> AllocationSummary
+ResourceAllocationService ..> OperationPlan
+OperationPlan "1" o-- "*" PlannedOperation
+PlannedOperation "*" o-- "*" ResourceRef
+
+note right of FakeOperationPlanRepository
+Usado em testes unitários:\nsem DB, rápido e determinístico.
+end note
+
+note bottom of ResourceAllocationService
+SRP: agrega e calcula métricas.\nSem HTTP/DB aqui.
+end note
+
+@enduml

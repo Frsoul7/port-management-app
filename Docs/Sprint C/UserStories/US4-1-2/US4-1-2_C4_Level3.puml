@@ -1,0 +1,60 @@
+@startuml
+title US 4.1.2 - Generate Operation Plan (C4 Level 3 - Component)
+
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+LAYOUT_WITH_LEGEND()
+
+Container_Ext(spa, "SPA", "Angular")
+Container_Ext(core, "Core Backend", ".NET")
+Container_Ext(planning, "Planning Service", "Prolog")
+ContainerDb_Ext(mongodb, "MongoDB", "NoSQL")
+
+Container_Boundary(oem, "OEM Backend - Operation Plan Generation") {
+    Component(routes, "OperationPlan Routes", "Express Router", "/operation-plans/generate")
+    Component(auth, "Auth Middleware", "JWT", "Token validation")
+    Component(validators, "Validators", "express-validator", "Input validation")
+    Component(controller, "OperationPlanController", "TypeScript", "generatePlan()")
+    
+    Component(service, "OperationPlanService", "TypeScript", "generatePlanSimple()")
+    
+    Component(entity, "OperationPlan", "Domain Entity", "Aggregate root")
+    Component(vo, "PlannedOperation", "Value Object", "Operation details")
+    Component(audit, "AuditEntry", "Value Object", "Change tracking")
+    
+    Component(repo, "OperationPlanRepository", "Mongoose", "MongoDB persistence")
+    Component(core_client, "CoreBackendClient", "Axios", "Fetch VVNs")
+    Component(plan_client, "PlanningClient", "Axios", "Generate schedule")
+}
+
+Rel(spa, routes, "POST /generate", "JSON + JWT")
+Rel(routes, auth, "Validate")
+Rel(auth, validators, "Validated token")
+Rel(validators, controller, "Validated input")
+
+Rel(controller, service, "generatePlanSimple()")
+
+Rel(service, repo, "findByTargetDate()\nsave()")
+Rel(service, core_client, "getApprovedVvnsForDate()")
+Rel(service, plan_client, "generatePlan()")
+
+Rel(core_client, core, "REST API")
+Rel(plan_client, planning, "REST API")
+
+Rel(service, entity, "Creates")
+Rel(entity, vo, "Contains")
+Rel(entity, audit, "Tracks")
+
+Rel(repo, mongodb, "CRUD")
+
+note right of service
+  US 4.1.2 Logic:
+  1. Check duplicate (repo)
+  2. Fetch VVNs (Core)
+  3. Generate plan (Prolog)
+  4. Validate (domain)
+  5. Save (repo)
+  6. Return DTO
+end note
+
+@enduml

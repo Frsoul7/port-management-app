@@ -1,0 +1,26 @@
+@startuml C4_Level1_Context
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+LAYOUT_WITH_LEGEND()
+
+title C4 Context Diagram - Port Management System
+
+Person(portOfficer, "Port Authority Officer", "Manages port operations, approves vessel visits, assigns resources")
+Person(shippingAgent, "Shipping Agent Representative", "Represents shipping companies, submits vessel visit notifications")
+Person(portStaff, "Port Staff Member", "Executes port operations, uses physical resources")
+
+System(portSystem, "Port Management System", "Manages vessel visits, cargo manifests, resources, and port operations")
+
+System_Ext(imoDatabase, "IMO Database", "International Maritime Organization vessel registry")
+System_Ext(customsSystem, "Customs System", "Customs clearance and cargo inspection")
+System_Ext(notificationService, "Email/SMS Service", "Sends notifications about VVN status changes")
+
+Rel(portOfficer, portSystem, "Registers vessels, approves/rejects VVNs, assigns docks", "HTTPS")
+Rel(shippingAgent, portSystem, "Creates VVNs, manages cargo manifests, updates visit details", "HTTPS")
+Rel(portStaff, portSystem, "Views assigned tasks, reports resource usage", "HTTPS")
+
+Rel(portSystem, imoDatabase, "Validates vessel IMO numbers", "HTTPS/API")
+Rel(portSystem, customsSystem, "Shares cargo manifest data", "HTTPS/API")
+Rel(portSystem, notificationService, "Sends VVN status notifications", "SMTP/API")
+
+@enduml

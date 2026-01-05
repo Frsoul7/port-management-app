@@ -1,0 +1,119 @@
+@startuml
+title Class Diagram – US 2.2.5 Register Organizations
+
+' ===== Domain =====
+class Organization {
+  + OrganizationId
+  + string Identifier
+  + string LegalName
+  + string AlternativeName
+  + string AddressLine
+  + string TaxNumber
+  + OrganizationType Type
+  + IReadOnlyCollection<Representative> Representatives
+  --
+  + AddRepresentatives(IEnumerable<Representative> reps) : void
+}
+
+enum OrganizationType {
+  SHIPPING_AGENT
+  PORT_AUTHORITY
+  TERMINAL_OPERATOR
+}
+
+class Representative {
+  + RepresentativeId
+  + string Name
+  + string CitizenId
+  + string Nationality
+  + string Email
+  + string Phone
+  + bool IsActive
+  + DateTime CreatedAt
+}
+
+' ===== Infrastructure =====
+class PortDbContext {
+  + DbSet<Organization> Organizations
+  + DbSet<Representative> Representatives
+}
+
+class OrganizationRepository {
+  + ListAsync() : Task<List<Organization>>
+  + GetByIdAsync(string id) : Task<Organization?>
+  + AddAsync(Organization org) : Task
+  + ExistsWithIdentifierAsync(string identifier) : Task<bool>
+}
+
+class OrganizationConfiguration {
+  + Configure(EntityTypeBuilder<Organization> b) : void
+}
+
+' ===== Controllers =====
+class OrganizationsController {
+  - OrganizationRepository _orgRepo
+  - PortDbContext _ctx
+  --
+  + Create(CreateOrganizationDto dto) : Task<IActionResult>
+  + GetById(string id) : Task<IActionResult>
+  + List() : Task<IActionResult>
+}
+
+' ===== DTOs =====
+class CreateOrganizationDto {
+  + string Identifier
+  + string LegalName
+  + string AlternativeName
+  + string Address
+  + string TaxNumber
+  + OrganizationType Type
+  + List<RepresentativeInputDto>? Representatives
+}
+
+class RepresentativeInputDto {
+  + string Name
+  + string CitizenId
+  + string Nationality
+  + string Email
+  + string? Phone
+}
+
+class OrganizationResponseDto {
+  + string OrganizationId
+  + string Identifier
+  + string LegalName
+  + string AlternativeName
+  + string Address
+  + string TaxNumber
+  + OrganizationType Type
+  + List<RepresentativeResponseDto> Representatives
+}
+
+class RepresentativeResponseDto {
+  + string RepresentativeId
+  + string Name
+  + string CitizenId
+  + string Nationality
+  + string Email
+  + string Phone
+  + bool IsActive
+  + DateTime CreatedAt
+}
+
+' ===== Relationships =====
+Organization "1" o-- "0..*" Representative : has
+OrganizationRepository --> Organization
+OrganizationRepository --> PortDbContext
+PortDbContext --> Organization
+PortDbContext --> Representative
+OrganizationConfiguration --> Organization
+
+OrganizationsController --> OrganizationRepository
+OrganizationsController --> PortDbContext
+OrganizationsController ..> CreateOrganizationDto
+OrganizationsController ..> OrganizationResponseDto
+OrganizationResponseDto --> RepresentativeResponseDto
+RepresentativeResponseDto --> RepresentativeInputDto
+Organization --> OrganizationType
+
+@enduml

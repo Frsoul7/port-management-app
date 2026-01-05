@@ -1,0 +1,109 @@
+<div class="incident-types-container">
+  <div class="header">
+    <h2>Incident Types Catalog</h2>
+    <button class="btn btn-primary" (click)="createIncidentType()">
+      <span class="icon">+</span> Add Incident Type
+    </button>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters">
+    <div class="filter-group">
+      <label for="typeNameFilter">Filter by Type:</label>
+      <select id="typeNameFilter" [(ngModel)]="filters.typeNameFilter" (change)="applyFilters()">
+        <option value="">All Types</option>
+        @for (type of allIncidentTypes(); track type.incidentTypeId) {
+          <option [value]="type.typeName">{{ type.typeName }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label>
+        <input type="checkbox" [(ngModel)]="filters.activeOnly" (change)="applyFilters()">
+        Active only
+      </label>
+    </div>
+
+    <div class="filter-group">
+      <button class="btn btn-secondary" (click)="clearFilters()">Clear Filters</button>
+    </div>
+  </div>
+
+  <!-- Loading state -->
+  @if (loading()) {
+    <div class="loading">
+      <div class="spinner"></div>
+      <p>Loading incident types...</p>
+    </div>
+  }
+
+  <!-- Error state -->
+  @if (error()) {
+    <div class="error-message">
+      <span class="icon">⚠️</span>
+      <p>{{ error() }}</p>
+      <button class="btn btn-secondary" (click)="loadIncidentTypes()">Retry</button>
+    </div>
+  }
+
+  <!-- Tree View -->
+  @if (!loading() && !error()) {
+    <div class="tree-view">
+      @if (treeNodes().length === 0) {
+        <div class="empty-state">
+          <p>No incident types found. Create one to get started.</p>
+        </div>
+      } @else {
+        @for (node of getFlatList(); track node.type.incidentTypeId) {
+          <div class="tree-node" [style.padding-left.px]="node.level * 30">
+            <div class="tree-node-content">
+              <!-- Expand/Collapse button -->
+              @if (node.children.length > 0) {
+                <button
+                  class="expand-btn"
+                  (click)="toggleNode(node)"
+                  [attr.aria-expanded]="node.expanded">
+                  {{ node.expanded ? '▼' : '▶' }}
+                </button>
+              } @else {
+                <span class="expand-spacer"></span>
+              }
+
+              <!-- Type info -->
+              <div class="type-info">
+                <div class="type-header">
+                  <span class="type-code">{{ node.type.code }}</span>
+                  <span class="type-name">{{ node.type.typeName }}</span>
+                  <span class="badge" [class]="getCategoryClass(node.type.categoryCode)">
+                    {{ node.type.categoryName }}
+                  </span>
+                  <span class="badge" [class]="getSeverityClass(node.type.defaultSeverity)">
+                    {{ node.type.defaultSeverity }}
+                  </span>
+                  @if (!node.type.isActive) {
+                    <span class="badge badge-inactive">Inactive</span>
+                  }
+                </div>
+                <div class="type-description">
+                  {{ node.type.description }}
+                </div>
+              </div>
+
+              <!-- Actions -->
+              <div class="actions">
+                <button class="btn btn-sm" (click)="editIncidentType(node.type.incidentTypeId)" title="Edit">✏️</button>
+                @if (node.type.isActive) {
+                  <button class="btn btn-sm btn-warning" (click)="deactivateIncidentType(node.type)" title="Deactivate">🚫</button>
+                } @else {
+                  <button class="btn btn-sm btn-success" (click)="reactivateIncidentType(node.type)" title="Reactivate">✅</button>
+                }
+                <button class="btn btn-sm btn-danger" (click)="deleteIncidentType(node.type)" title="Delete">🗑️</button>
+              </div>
+            </div>
+          </div>
+        }
+      }
+    </div>
+  }
+</div>

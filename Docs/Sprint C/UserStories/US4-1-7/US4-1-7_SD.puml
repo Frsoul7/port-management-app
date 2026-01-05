@@ -1,0 +1,110 @@
+@startuml
+title SD - US 4.1.7 Create VVE (White-box)
+
+skinparam shadowing false
+skinparam responseMessageBelowArrow true
+
+actor "SPA" as SPA
+control "Auth Middleware" as Auth
+control "VVEController" as C
+control "VVEService" as S
+entity "IOperationPlanRepository" as PlanRepo
+entity "IVVERepository" as VveRepo
+control "VveIdGenerator" as Gen
+database "MongoDB" as DB
+entity "VesselVisitExecution (Domain)" as VVE
+entity "OperationPlan (Domain)" as Plan
+
+== POST /vessel-visit-executions/initialize ==
+SPA -> Auth : request + JWT
+alt invalid token/role
+  Auth --> SPA : 401 Unauthorized
+else authorized
+  Auth -> C : forward request
+  C -> C : validate(operationPlanId, vvnId, arrivalTime)
+  alt invalid input
+    C --> SPA : 400 Bad Request
+  else valid
+    C -> S : initializeVveFromPlan({ operationPlanId, vvnId, arrivalTime, createdBy })
+    
+    ' Step 1: Fetch operation plan
+    S -> PlanRepo : findById(operationPlanId)
+    PlanRepo -> DB : findOne({ _id })
+    DB --> PlanRepo : planDoc
+    alt plan not found
+      PlanRepo --> S : null
+      S --> C : throw error "Plan not found"
+      C --> SPA : 404 Not Found
+    else plan found
+      PlanRepo --> S : OperationPlan
+      
+      ' Step 2: Verify plan status
+      alt plan not APPROVED
+        S --> C : throw error "Plan must be APPROVED"
+        C --> SPA : 422 Unprocessable Entity
+      else plan approved
+        
+        ' Step 3: Filter operations for VVN
+        S -> S : filter operations by vvnId
+        alt no operations for VVN
+          S --> C : throw error "No operations for VVN"
+          C --> SPA : 404 Not Found
+        else operations found
+          
+          ' Step 4: Check for duplicate VVE
+          S -> VveRepo : findByVvnId(vvnId)
+          VveRepo -> DB : findOne({ vvnId })
+          DB --> VveRepo : vveDoc or null
+          alt VVE exists
+            VveRepo --> S : existingVVE
+            S --> C : throw error "VVE already exists"
+            C --> SPA : 409 Conflict
+          else no duplicate
+            VveRepo --> S : null
+            
+            ' Step 5: Generate VVE ID
+            S -> VveRepo : getNextSequentialNumber()
+            VveRepo -> DB : count({})
+            DB --> VveRepo : count
+            VveRepo --> S : count + 1
+            S -> Gen : generate(sequentialNumber)
+            Gen --> S : "VVE-000001"
+            
+            ' Step 6: Create ExecutedOperations from PlannedOperations
+            S -> S : map PlannedOperations to ExecutedOperations\n(operationType, startTime, cranes, staff, status=STARTED)
+            
+            ' Step 7: Create VVE entity
+            S -> VVE : new VesselVisitExecution({ vveId, vvnId, operationPlanId,\n  actualPortArrivalTime, operations[], status=IN_PROGRESS })
+            alt domain error
+              VVE --> S : DomainError
+              S --> C : map error
+              C --> SPA : 422 Unprocessable Entity
+            else ok
+              VVE --> S : vve
+              
+              ' Step 8: Save VVE
+              S -> VveRepo : save(vve)
+              VveRepo -> DB : insertOne({ vveId, ... })
+              DB --> VveRepo : savedDoc
+              VveRepo --> S : savedVVE
+              
+              ' Step 9: Update operation plan status
+              S -> Plan : startExecution()
+              Plan --> S : updated (status=IN_EXECUTION)
+              S -> PlanRepo : update(operationPlan)
+              PlanRepo -> DB : updateOne({ _id }, { status: IN_EXECUTION })
+              DB --> PlanRepo : updatedDoc
+              PlanRepo --> S : updatedPlan
+              
+              ' Step 10: Return DTO
+              S --> C : VesselVisitExecutionDto
+              C --> SPA : 201 Created\n{ success, data: vve }
+            end
+          end
+        end
+      end
+    end
+  end
+end
+
+@enduml

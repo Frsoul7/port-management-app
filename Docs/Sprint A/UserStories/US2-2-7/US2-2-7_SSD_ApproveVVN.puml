@@ -1,0 +1,85 @@
+@startuml
+title SSD – Approve VVN
+
+actor "Port Authority Officer" as Officer
+participant "API Client" as Client
+participant "VesselVisitNotificationsController" as C
+participant "PortDbContext" as Db
+participant "VesselVisitNotification (Domain)" as VVN
+participant "DockAssignment (Domain)" as DA
+participant "DecisionLog (Domain)" as DL
+database "EF (InMemory)" as Store
+
+Officer -> Client : POST /vvns/{id}/approve\n{ DockCode, BerthFrom, BerthTo, Notes }
+Client -> C : Approve(id, request)
+activate C
+
+C -> C : ValidatePortAuthorityAccess(caller)
+alt not Port Authority
+  C --> Client : 403 Forbidden\n"Only Port Authority Officers can perform this action"
+else VVN not found
+  C -> Db : FindAsync(VVN where VvnGuid == id)
+  Db -> Store : query
+  Store --> Db : null
+  C --> Client : 404 Not Found
+else VVN not in SUBMITTED state
+  C -> Db : FindAsync(VVN where VvnGuid == id)
+  Db -> Store : query
+  Store --> Db : vvn (state != SUBMITTED)
+  C --> Client : 409 Conflict\n"Only pending (SUBMITTED) VVNs can be approved"
+else dock not found
+  C -> Db : FindAsync(VVN where VvnGuid == id)
+  Db -> Store : query
+  Store --> Db : vvn
+  C -> Db : FindAsync(Dock where Code == request.DockCode)
+  Db -> Store : query
+  Store --> Db : null
+  C --> Client : 422 Unprocessable Entity\n"Dock does not exist"
+else has overlap
+  C -> Db : FindAsync(VVN where VvnGuid == id)
+  Db -> Store : query
+  Store --> Db : vvn
+  C -> Db : FindAsync(Dock where Code == request.DockCode)
+  Db -> Store : query
+  Store --> Db : dock
+  C -> Db : AnyAsync(DockAssignments where\nDockCode == dock.Code AND\nBerthTo > request.BerthFrom AND\nBerthFrom < request.BerthTo)
+  Db -> Store : query overlaps
+  Store --> Db : true (overlap found)
+  C --> Client : 422 Unprocessable Entity\n"Scheduling conflict"
+else successful approval
+  C -> Db : FindAsync(VVN where VvnGuid == id)
+  Db -> Store : query
+  Store --> Db : vvn
+  
+  C -> Db : FindAsync(Dock where Code == request.DockCode)
+  Db -> Store : query
+  Store --> Db : dock
+  
+  C -> Db : AnyAsync(DockAssignments where\nDockCode == dock.Code AND\nBerthTo > request.BerthFrom AND\nBerthFrom < request.BerthTo)
+  Db -> Store : query overlaps
+  Store --> Db : false (no overlap)
+  
+  C -> DA : Create(vvnId, dockCode, berthFrom, berthTo, assignedByUserId, timestamp)
+  DA --> C : assignment
+  
+  C -> Db : DockAssignments.Add(assignment)
+  
+  C -> VVN : Approve(approverUserId, dockAssignmentId)
+  VVN --> C : state = APPROVED
+  
+  C -> DL : Approved(vvnId, approverUserId, dockAssignmentId, timestamp, notes)
+  DL --> C : decisionLog
+  
+  C -> Db : DecisionLogs.Add(decisionLog)
+  C -> Db : SaveChangesAsync()
+  Db -> Store : commit transaction
+  Store --> Db : ok
+  
+  C -> Db : Load organization details
+  Db -> Store : query orgs
+  Store --> Db : organizations
+  
+  C --> Client : 200 OK + ApproveVvnResponse\n{ VvnId, Status: APPROVED, AssignedDock,\n  ApprovalInfo, SubmitterInfo }
+end
+deactivate C
+@enduml

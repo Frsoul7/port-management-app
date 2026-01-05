@@ -1,0 +1,31 @@
+<div class="navbar-user">
+  <div class="user-info" (click)="toggleDropdown()">
+    <img *ngIf="user?.profilePictureUrl" 
+         [src]="user?.profilePictureUrl" 
+         alt="Profile" 
+         class="user-avatar"
+         referrerpolicy="no-referrer"
+         crossorigin="anonymous">
+    <div style="flex: 1; min-width: 0;">
+      <div class="user-name">{{ user?.fullName || user?.username }}</div>
+      <div class="user-role">{{ formatRole(user?.role) }}</div>
+    </div>
+    <span class="dropdown-arrow">▼</span>
+  </div>
+  
+  <div class="user-dropdown" *ngIf="showDropdown()">
+    <a routerLink="/profile/data-rights" class="dropdown-item" (click)="showDropdown.set(false)">
+      <span class="dropdown-icon">📊</span>
+      {{ 'NAV.MY_DATA_RIGHTS' | translate }}
+    </a>
+    <a routerLink="/privacy-policy" class="dropdown-item" (click)="showDropdown.set(false)">
+      <span class="dropdown-icon">🔒</span>
+      {{ 'NAV.PRIVACY_POLICY' | translate }}
+    </a>
+    <hr class="dropdown-divider">
+    <button class="dropdown-item logout-item" (click)="onLogout()">
+      <span class="dropdown-icon">🚪</span>
+      {{ 'NAV.LOGOUT' | translate }}
+    </button>
+  </div>
+</div>

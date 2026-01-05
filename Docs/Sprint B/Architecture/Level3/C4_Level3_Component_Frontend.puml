@@ -1,0 +1,133 @@
+@startuml C4_Level3_Component_Frontend
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+skinparam componentStyle uml2
+skinparam shadowing false
+skinparam DefaultFontName Arial
+skinparam DefaultFontSize 11
+skinparam linetype ortho
+skinparam nodesep 180
+skinparam ranksep 200
+skinparam padding 30
+
+title Component Diagram (C4 Level 3)\nFrontend Container - Internal Structure\n[Sprint B]
+
+' ============================================
+' USERS - OUTSIDE BOUNDARY (TOP)
+' ============================================
+
+actor "Users" as Users
+
+' ============================================
+' CONTAINER BOUNDARY - FRONTEND CONTAINER
+' ============================================
+
+rectangle "<<component>>\n<<C4 Container>>\n**Frontend Container**" as FrontendContainer {
+
+    ' Core Module Components
+    rectangle "<<component>>\n**App Component**" as AppComponent
+    rectangle "<<component>>\n**Core Module**" as CoreModule
+    rectangle "<<component>>\n**Auth Service**" as AuthService
+    rectangle "<<component>>\n**HTTP Interceptors**" as Interceptors
+    rectangle "<<component>>\n**Route Guards**" as Guards
+    
+    ' Feature Modules
+    rectangle "<<component>>\n**Vessels Feature**" as VesselsFeature
+    rectangle "<<component>>\n**Vessel Types Feature**" as VesselTypesFeature
+    rectangle "<<component>>\n**VVN Feature**" as VvnFeature
+    rectangle "<<component>>\n**Organizations Feature**" as OrganizationsFeature
+    rectangle "<<component>>\n**Docks Feature**" as DocksFeature
+    rectangle "<<component>>\n**Storage Areas Feature**" as StorageFeature
+    rectangle "<<component>>\n**Physical Resources Feature**" as PhysicalResourcesFeature
+    rectangle "<<component>>\n**Human Resources Feature**" as HumanResourcesFeature
+    rectangle "<<component>>\n**Visualization Feature**" as VisualizationFeature
+    rectangle "<<component>>\n**Dashboard Feature**" as DashboardFeature
+    rectangle "<<component>>\n**Admin Feature**" as AdminFeature
+    
+    ' 3D Visualization Component
+    rectangle "<<component>>\n**Port 3D Component**" as Port3D
+    
+    ' Shared Module
+    rectangle "<<component>>\n**Shared Module**" as SharedModule
+}
+
+' ============================================
+' EXTERNAL SYSTEMS
+' ============================================
+
+rectangle "<<component>>\n<<External System>>\n**Backend API**" as BackendAPI
+rectangle "<<component>>\n<<External System>>\n**Google OAuth**" as GoogleOAuth
+
+' ============================================
+' EXTERNAL LIBRARIES
+' ============================================
+
+rectangle "<<component>>\n<<Library>>\n**Three.js**" as ThreeJS
+
+' ============================================
+' RELATIONSHIPS
+' ============================================
+
+' Users to App
+Users --> AppComponent : Interacts with
+
+' App Component relationships
+AppComponent --> CoreModule : Uses
+AppComponent --> VesselsFeature : Routes to
+AppComponent --> VesselTypesFeature : Routes to
+AppComponent --> VvnFeature : Routes to
+AppComponent --> OrganizationsFeature : Routes to
+AppComponent --> DocksFeature : Routes to
+AppComponent --> StorageFeature : Routes to
+AppComponent --> PhysicalResourcesFeature : Routes to
+AppComponent --> HumanResourcesFeature : Routes to
+AppComponent --> VisualizationFeature : Routes to
+AppComponent --> DashboardFeature : Routes to
+AppComponent --> AdminFeature : Routes to
+
+' Core Module relationships
+CoreModule --> AuthService : Contains
+CoreModule --> Interceptors : Contains
+CoreModule --> Guards : Contains
+
+' Auth Service relationships
+AuthService --> GoogleOAuth : Authenticates via
+AuthService --> BackendAPI : Calls auth endpoints
+
+' Interceptors relationship
+Interceptors --> BackendAPI : Adds JWT tokens to requests
+
+' Guards relationship
+Guards --> AuthService : Checks authentication
+
+' Features to Backend API
+VesselsFeature --> BackendAPI : Calls vessels API
+VesselTypesFeature --> BackendAPI : Calls vessel types API
+VvnFeature --> BackendAPI : Calls VVN API
+OrganizationsFeature --> BackendAPI : Calls organizations API
+DocksFeature --> BackendAPI : Calls docks API
+StorageFeature --> BackendAPI : Calls storage API
+PhysicalResourcesFeature --> BackendAPI : Calls resources API
+HumanResourcesFeature --> BackendAPI : Calls HR API
+DashboardFeature --> BackendAPI : Calls multiple APIs
+AdminFeature --> BackendAPI : Calls users API
+
+' Visualization Feature
+VisualizationFeature --> Port3D : Contains
+Port3D --> ThreeJS : Uses
+Port3D --> BackendAPI : Fetches port data
+
+' Shared Module relationships
+VesselsFeature --> SharedModule : Uses UI components
+VesselTypesFeature --> SharedModule : Uses UI components
+VvnFeature --> SharedModule : Uses UI components
+OrganizationsFeature --> SharedModule : Uses UI components
+DocksFeature --> SharedModule : Uses UI components
+StorageFeature --> SharedModule : Uses UI components
+PhysicalResourcesFeature --> SharedModule : Uses UI components
+HumanResourcesFeature --> SharedModule : Uses UI components
+VisualizationFeature --> SharedModule : Uses UI components
+DashboardFeature --> SharedModule : Uses UI components
+AdminFeature --> SharedModule : Uses UI components
+
+@enduml

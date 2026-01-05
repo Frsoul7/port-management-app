@@ -1,0 +1,118 @@
+<div class="table-container">
+  <!-- Desktop Table View -->
+  <table class="users-table desktop-table" *ngIf="users.length > 0; else noUsers">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Organization</th>
+        <th>Role</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let user of users" class="user-row">
+        <td data-label="Name">{{ user.name }}</td>
+        <td data-label="Email">{{ user.email }}</td>
+        <td data-label="Organization">{{ user.organizationName }}</td>
+        <td data-label="Role">
+          <span class="role-badge" [class]="'role-' + user.role.toLowerCase()">
+            {{ formatRole(user.role) }}
+          </span>
+        </td>
+        <td data-label="Status">
+          <span class="status-badge" [class]="getStatusBadge(user)">
+            {{ getStatusText(user) }}
+          </span>
+        </td>
+        <td class="actions" data-label="Actions">
+          <button 
+            *ngIf="canActivate(user)" 
+            class="btn-icon btn-activate" 
+            (click)="activateUser(user, $event)" 
+            title="Activate User">
+            ✅
+          </button>
+          <button 
+            *ngIf="canDeactivate(user)" 
+            class="btn-icon btn-deactivate" 
+            (click)="deactivateUser(user, $event)" 
+            title="Deactivate User">
+            🚫
+          </button>
+          <button class="btn-icon btn-edit" (click)="editUser(user)" title="Edit User">
+            ✏️
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Mobile Card View -->
+  <div class="users-cards mobile-cards" *ngIf="users.length > 0">
+    <div *ngFor="let user of users" class="user-card">
+      <div class="card-header">
+        <h3>{{ user.name }}</h3>
+        <div class="card-actions">
+          <button 
+            *ngIf="canActivate(user)" 
+            class="btn-icon btn-activate" 
+            (click)="activateUser(user, $event)" 
+            title="Activate User">
+            ✅
+          </button>
+          <button 
+            *ngIf="canDeactivate(user)" 
+            class="btn-icon btn-deactivate" 
+            (click)="deactivateUser(user, $event)" 
+            title="Deactivate User">
+            🚫
+          </button>
+          <button class="btn-icon btn-edit" (click)="editUser(user)" title="Edit User">
+            ✏️
+          </button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="card-row">
+          <span class="label">Email:</span>
+          <span class="value">{{ user.email }}</span>
+        </div>
+        <div class="card-row">
+          <span class="label">Organization:</span>
+          <span class="value">{{ user.organizationName }}</span>
+        </div>
+        <div class="card-row">
+          <span class="label">Role:</span>
+          <span class="value">
+            <span class="role-badge" [class]="'role-' + user.role.toLowerCase()">
+              {{ formatRole(user.role) }}
+            </span>
+          </span>
+        </div>
+        <div class="card-row">
+          <span class="label">Status:</span>
+          <span class="value">
+            <span class="status-badge" [class]="getStatusBadge(user)">
+              {{ getStatusText(user) }}
+            </span>
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ng-template #noUsers>
+    <div class="no-data">
+      <div class="no-data-icon">👥</div>
+      <p>No users found. Try adjusting your search criteria.</p>
+    </div>
+  </ng-template>
+</div>
+
+<!-- Loading Indicator -->
+<div *ngIf="loading" class="loading-overlay">
+  <div class="spinner"></div>
+  <p>Loading users...</p>
+</div>

@@ -1,0 +1,60 @@
+@startuml
+title SSD - US 4.1.1 OEM Module Setup (Black-box)
+
+skinparam shadowing false
+skinparam responseMessageBelowArrow true
+
+actor "Project Manager" as PM
+actor "Developer" as Dev
+actor "Logistics Operator" as Op
+boundary "SPA" as SPA
+system "OEM Backend" as OEM
+
+== Module Setup and Deployment ==
+PM -> Dev : Request independent OEM backend service\nwith REST API and proper documentation
+
+Dev -> OEM : Implement backend service\n• Clean Architecture + DDD\n• Node.js + TypeScript + MongoDB\n• Express + REST API\n• JWT authentication\n• Swagger documentation
+
+OEM --> Dev : Service deployed\nAPI available at http://localhost:3000
+
+Dev -> Dev : Verify deployment
+
+== API Documentation Access ==
+Dev -> OEM : GET /api-docs
+OEM --> Dev : Swagger UI\n(OpenAPI specification)
+
+Dev -> Dev : Review endpoints:\n• Operation Plans (CRUD)\n• Vessel Visit Executions (CRUD)\n• Incidents (CRUD)\n• Complementary Tasks (CRUD)
+
+== Authentication Integration ==
+Dev -> OEM : Test JWT authentication\nPOST /operation-plans/generate\nAuthorization: Bearer <token>
+
+alt Invalid or missing token
+  OEM --> Dev : 401 Unauthorized\n{ error: "Invalid token" }
+else Valid token
+  OEM --> Dev : Authenticated\nRequest processed
+end
+
+== Module Integration ==
+Dev -> SPA : Configure SPA to call OEM API\n(environment configuration)
+
+Op -> SPA : Access operation management features
+SPA -> OEM : REST API calls\n(with JWT token)
+OEM --> SPA : JSON responses
+SPA --> Op : Display operation data
+
+== Health Check ==
+PM -> OEM : GET /health
+OEM --> PM : 200 OK\n{ success: true,\n  message: "OEM Backend is running",\n  environment: "production" }
+
+note right of OEM
+  US 4.1.1 Deliverables:
+  ✓ Independent backend service
+  ✓ REST API with CRUD operations
+  ✓ Swagger/OpenAPI docs at /api-docs
+  ✓ JWT authentication integrated
+  ✓ No direct database access
+  ✓ RBAC/ABAC ready
+  ✓ Modular, decentralized architecture
+end note
+
+@enduml

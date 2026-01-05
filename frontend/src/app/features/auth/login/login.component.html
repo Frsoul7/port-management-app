@@ -1,0 +1,31 @@
+<div class="login-container">
+    <div class="login-card">
+        <h1>Port Management System</h1>
+        <p>Please sign in with your Google account</p>
+
+        <button class="google-login-btn" (click)="loginWithGoogle()">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google logo">
+            Sign in with Google
+        </button>
+
+        <div class="admin-link">
+            <a routerLink="/admin/login">Administrator Login</a>
+        </div>
+
+        <div class="config-check" *ngIf="showDebug">
+            <h3>Configuration Check:</h3>
+            <ul>
+                <li>Client ID: {{ isClientIdValid ? 'Valid' : 'Invalid' }} {{ clientIdStatus }}</li>
+                <li>Redirect URI: {{ redirectUri }}</li>
+                <li>Scopes: {{ scopes }}</li>
+            </ul>
+            <p class="warning" *ngIf="!isClientIdValid">
+                Please update your Google Client ID in environment.ts
+            </p>
+        </div>
+
+        <button class="debug-toggle" (click)="showDebug = !showDebug">
+            {{ showDebug ? 'Hide' : 'Show' }} Debug Info
+        </button>
+    </div>
+</div>

@@ -1,0 +1,57 @@
+@startuml
+title SSD – Create Vessel Type
+
+actor "Port Authority Officer" as User
+participant "Scalar / API Client" as Client
+participant "VesselTypesController" as C
+participant "PortDbContext" as Db
+database "EF (InMemory)" as Store
+
+User -> Client : POST /api/vessel-types\n{ Name, Description, MaxCapacityTEU,\nMaxRows, MaxBays, MaxTiers,\nMaxLength, MaxBeam, MaxDraft }
+activate Client
+Client -> C : Create(dto)
+activate C
+
+alt invalid authentication (not Port Authority Officer)
+  C --> Client : 403 Forbidden\n"Only Port Authority Officers can create vessel types"
+  Client --> User : Error: Access denied
+else name already exists
+  C -> Db : AnyAsync(VesselTypes where Name == dto.Name)
+  activate Db
+  Db -> Store : query
+  activate Store
+  Store --> Db : true (duplicate)
+  deactivate Store
+  deactivate Db
+  
+  C --> Client : 409 Conflict\n"Vessel type with this name already exists"
+  Client --> User : Error: Duplicate name
+else negative values in capacity or dimensions
+  C --> Client : 400 Bad Request\n"All numeric values must be positive"
+  Client --> User : Error: Invalid input
+else valid data
+  C -> Db : AnyAsync(VesselTypes where Name == dto.Name)
+  activate Db
+  Db -> Store : query
+  activate Store
+  Store --> Db : false (name available)
+  deactivate Store
+  deactivate Db
+  
+  C -> C : new VesselType(dto.Name, dto.Description,\ndto.MaxCapacityTEU, dto.MaxRows,\ndto.MaxBays, dto.MaxTiers,\ndto.MaxLength, dto.MaxBeam, dto.MaxDraft)
+  C -> Db : Add(vesselType)
+  activate Db
+  C -> Db : SaveChangesAsync()
+  Db -> Store : insert
+  activate Store
+  Store --> Db : ok
+  deactivate Store
+  deactivate Db
+  
+  C --> Client : 201 Created + VesselTypeResponseDto\n{ VesselTypeId, Name, Description,\nMaxCapacityTEU, MaxRows, MaxBays,\nMaxTiers, MaxLength, MaxBeam, MaxDraft }
+  Client --> User : Display created vessel type details
+end
+
+deactivate C
+deactivate Client
+@enduml
