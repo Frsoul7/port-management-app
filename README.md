@@ -93,7 +93,7 @@ npm start
 
 </div>
 
-### Vessel Visit Management
+### Shipping Companies Management
 
 <div align="center">
 
@@ -107,13 +107,16 @@ npm start
 
 </div>
 
-### 3D Port Visualization
+### Vessels and Vessel's types Management
 
 <div align="center">
 
 ![Manage vessels and its types](Docs/Screenshots/5.png)
 
 *Manage vessels and its types*
+</div>
+
+### Port's Physical Resources Management
 
 ![Port's physical resources management](Docs/Screenshots/6.png)
 
@@ -121,7 +124,7 @@ npm start
 
 </div>
 
-### Operations & Planning
+### Users Management
 
 <div align="center">
 
@@ -129,9 +132,17 @@ npm start
 
 *Add users, their roles and current access. Activate and deactivate accounts*
 
+</div>
+
+### 3D Visualization
+
 ![Real-time 3D visualization of port layout with WebGL rendering](Docs/Screenshots/8.png)
 
 *Real-time vessel visit execution monitoring*
+
+### Privacy Policies
+
+<div align="center">
 
 ![Privacy Policy applied to Port's Management](Docs/Screenshots/9.png)
 
@@ -144,33 +155,6 @@ npm start
 **Institution**: [Instituto Superior de Engenharia do Porto (ISEP)](http://www.isep.ipp.pt/)  
 **Program**: [Informatics Engineering (LEI)](http://www.isep.ipp.pt/Course/Course/26)  
 **Academic Year**: 2025-2026  
-**Team**: Group 3DE-05
-
-### Courses Integration
-
-- **LAPR5** - Software Engineering & Architecture (Clean Architecture, DDD)
-- **ARQSI** - Software Architecture (Microservices, RESTful APIs)
-- **SGRAI** - Computer Graphics (Three.js, WebGL, 3D modeling)
-- **ASIST** - Information Systems Security (OAuth, JWT, GDPR)
-- **GESTA** - Project Management (Agile/Scrum methodology)
-- **IARTI** - Artificial Intelligence (Prolog planning algorithms)
-
-### Team Members
-
-- Gonçalo Da Silva Araújo - [1220671@isep.ipp.pt]
-- Inês Fernandes Ressurreição - [1221197@isep.ipp.pt]
-- Martim Abreu Monteiro - [1230772@isep.ipp.pt]
-- Nuno Eduardo Pinheiro Teixeira - [1231375@isep.ipp.pt]
-- Fernando Regalado Lobo Ribeiro - [1060064@isep.ipp.pt]
-
-### Faculty
-
-- Jorge Manuel Neves Coelho (LAPR5, IARTI)
-- José Antonio Reis Tavares (ARQSI)
-- João Paulo Jorge Pereira (SGRAI)
-- Daniel Jorge da Costa Lima de Paiva Valente (ASIST)
-- Maria Beatriz Cabral Ribeiro da Fonseca Pinheiro (GESTA)
-
 
 ## 🎯 Key Features
 
