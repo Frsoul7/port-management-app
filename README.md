@@ -1,22 +1,3 @@
-# LEI-SEM5-PI-2025-26-3DE-05
-Projecto Integrador 5
-Grupo 3DE-05
-
-### Formação do Grupo ###
-* Gonçalo Da Silva Araújo [1220671@isep.ipp.pt]
-* Inês Fernandes Ressurreição [1221197@isep.ipp.pt]
-* Martim Abreu Monteiro [1230772@isep.ipp.pt]
-* Nuno Eduardo Pinheiro Teixeira [1231375@isep.ipp.pt]
-* Fernando Regalado Lobo Ribeiro [1060064@isep.ipp.pt]
-
-### Docentes ###
-* Jorge Manuel Neves Coelho (LAPR5)
-* José Antonio Reis Tavares (ARQSI)
-* João Paulo Jorge Pereira (SGRAI)
-* Daniel Jorge da Costa Lima de Paiva Valente (ASIST)
-* Maria Beatriz Cabral Ribeiro da Fonseca Pinheiro (GESTA)
-* Jorge Manuel Neves Coelho (IARTI)
-
 # Port Management System
 
 This project implements a Port Visit Notification and Management System using Clean Architecture principles with DDD (Domain-Driven Design) and 3D visualization.
